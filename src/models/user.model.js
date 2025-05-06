@@ -38,7 +38,7 @@ const userSchema = new mongoose.Schema(
     },
     userType: {
       type: String,
-      enum: ["normal", "doctor", "pharmacist", "pregnant"],
+      enum: ["normal", "pharmacist", "pregnant"],
       default: "normal",
     },
     active: {

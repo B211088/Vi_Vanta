@@ -8,7 +8,7 @@ const districtSchema = new Schema(
     },
     provinceId: {
       type: Schema.Types.ObjectId,
-      ref: "Province", // Tham chiếu tới Province
+      ref: "Province",
       required: true,
     },
   },

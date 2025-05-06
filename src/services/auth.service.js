@@ -1,5 +1,12 @@
 import jwt from "jsonwebtoken";
-import { User, Address } from "../models/index.js";
+import {
+  User,
+  Address,
+  Ward,
+  Province,
+  District,
+  Doctor,
+} from "../models/index.js";
 import cloudinary from "../config/cloudinaryConfig.js";
 import { JWT_SECRET, JWT_EXPIRATION } from "../config/auth.config.js";
 import fs from "fs";
@@ -59,6 +66,27 @@ export const setRoles = async (userId, newRoles) => {
     return user;
   } catch (error) {
     console.error("Error setting roles:", error.message);
+    throw error;
+  }
+};
+
+export const removeRoles = async (userId, rolesRemove) => {
+  try {
+    const validRoles = ["user", "admin", "doctor"];
+
+    const isValid = rolesRemove.every((role) => validRoles.includes(role));
+    if (!isValid) throw new Error("Invalid role in rolesRemove");
+
+    const user = await User.findById(userId);
+    if (!user) throw new Error("Không tìm thấy người dùng");
+
+    user.roles = user.roles.filter((role) => !rolesRemove.includes(role));
+
+    await user.save();
+
+    return user;
+  } catch (error) {
+    console.error("Error removing roles:", error.message);
     throw error;
   }
 };
@@ -135,10 +163,33 @@ export const updateUserAvatar = async (userId, avatarUrl) => {
 
 export const handleGetUserAddressByUserId = async (userId) => {
   try {
-    const userAddress = await Address.find({ userId }).select("-__v");
-    return userAddress;
+    const userAddress = await Address.findOne({ userId }).select(
+      "-__v -createAt -updateAt"
+    );
+    if (!userAddress) {
+      throw new Error("Địa chỉ người dùng không tồn tại");
+    }
+
+    const userProvince = await Province.findById(userAddress.provinceId).select(
+      "-__v -createdAt -updatedAt"
+    );
+    const userDistrict = await District.findById(userAddress.districtId).select(
+      "-__v -createdAt -updatedAt"
+    );
+    const userWard = await Ward.findById(userAddress.wardId).select(
+      "-__v -createdAt -updatedAt"
+    );
+
+    return {
+      province: userProvince,
+      district: userDistrict,
+      ward: userWard,
+      specificAddress: userAddress.specificAddress,
+    };
   } catch (error) {
-    throw new Error("Có lỗi xảy ra trong quá trình lấy địa chỉ người dùng");
+    throw new Error(
+      "Có lỗi xảy ra trong quá trình lấy địa chỉ người dùng: " + error.message
+    );
   }
 };
 
@@ -167,5 +218,69 @@ export const hanldeUpdateUserAddress = async (userId, payload) => {
     throw new Error(
       "Có lỗi xảy ra trong quá trình cập nhật/thêm địa chỉ người dùng"
     );
+  }
+};
+
+export const getDoctorProfileHandle = async (userId) => {
+  try {
+    const doctorProfile = await Doctor.find({ userId }).select(
+      "-__v -createdAt -updatedAt"
+    );
+    return doctorProfile;
+  } catch (error) {
+    throw new Error("Có lỗi trong quá trình lấy hồ sơ bác sĩ");
+  }
+};
+
+export const setDoctorProfileHandle = async (userId, payload) => {
+  try {
+    const { specialty, hospital, licenseNumber, education, experienceYears } =
+      payload;
+    const doctorExisting = await Doctor.findById(userId);
+    if (doctorExisting) {
+      throw new Error("Đã có thông tin bác sĩ không thẻ tạo mới");
+    }
+    const doctorProfile = new Doctor({
+      userId,
+      specialty,
+      hospital,
+      licenseNumber,
+      education,
+      experienceYears,
+    });
+
+    const doctorData = doctorProfile.save();
+    return doctorData;
+  } catch (error) {
+    throw new Error("Có lỗi trong quá trình tạo hồ sơ bác sĩ");
+  }
+};
+
+export const updateDoctorProfileHandle = async (userId, payload) => {
+  try {
+    const { specialty, hospital, licenseNumber, education, experienceYears } =
+      payload;
+
+    const doctorProfile = {
+      userId,
+      specialty,
+      hospital,
+      licenseNumber,
+      education,
+      experienceYears,
+    };
+
+    const doctorData = await Doctor.findByIdAndUpdate(
+      userId,
+      {
+        $set: doctorProfile,
+      },
+      {
+        new: true,
+      }
+    ).select("-__v ");
+    return doctorData;
+  } catch (error) {
+    throw new Error("Có lỗi trong quá trình tạo hồ sơ bác sĩ");
   }
 };

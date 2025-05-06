@@ -8,6 +8,9 @@ import {
   handleGetUserAddressByUserId,
   hanldeUpdateUserAddress,
   setRoles,
+  setDoctorProfileHandle,
+  removeRoles,
+  getDoctorProfileHandle,
 } from "../services/auth.service.js";
 import {
   ConfirmationCodeByRegister,
@@ -19,7 +22,7 @@ export const register = async (req, res) => {
     const user = await registerUser(req.body);
     res.status(201).json({ message: "Đăng ký thành công!", user });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -35,7 +38,7 @@ export const login = async (req, res) => {
     });
     res.status(200).json({ message: "Đăng nhập thành công!" });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -44,7 +47,7 @@ export const profile = async (req, res) => {
     const user = await getUserProfile(req.user.userId);
     res.status(200).json({ message: "Thông tin người dùng", user });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -56,7 +59,7 @@ export const setProfile = async (req, res) => {
     const user = await setUserProfile(req.body, req.user.userId);
     res.status(200).json({ message: "Thông tin người dùng", user });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -117,7 +120,7 @@ export const getUserAddress = async (req, res) => {
     const userAddress = await handleGetUserAddressByUserId(req.user.userId);
     res.status(200).json({ userAddress });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -129,15 +132,98 @@ export const updateUserAddress = async (req, res) => {
     );
     res.status(200).json({ userAddress });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
 
 export const addUserRole = async (req, res) => {
   try {
-    const userRole = await setRoles(req.user.userId, req.body.roles);
+    const { roles } = req.body;
+
+    if (!Array.isArray(roles) || roles.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Danh sách vai trò không hợp lệ" });
+    }
+    const userRole = await setRoles(req.user.userId, roles);
     res.status(200).json({ userRole });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const removeUserRole = async (req, res) => {
+  try {
+    const { roles } = req.body;
+
+    if (!Array.isArray(roles) || roles.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Danh sách vai trò không hợp lệ" });
+    }
+
+    const updatedUser = await removeRoles(req.user.userId, roles);
+    res
+      .status(200)
+      .json({ message: "Xóa vai trò thành công", user: updatedUser });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getDoctorProfile = async (req, res) => {
+  const userId = req.user.userId;
+  if (!userId) {
+    res.status(401).json("Không thể xác định người dùng!");
+  }
+
+  try {
+    const doctorProfile = await getDoctorProfileHandle(userId);
+    res
+      .status(200)
+      .json({ message: "Lấy hồ sơ bác sĩ thành công", data: doctorProfile });
+  } catch (error) {
+    res.status(501).json({ message: error.message });
+  }
+};
+
+export const createDoctorProfile = async (req, res) => {
+  const userId = req.user.userId;
+  const payload = req.body;
+  if (!userId) {
+    res.status(401).json("Không thể xác định người dùng!");
+  }
+  if (!payload) {
+    res.status(401).json("Vui lòng thêm dữ liệu");
+  }
+  try {
+    const crateDoctorProfile = await setDoctorProfileHandle(userId, payload);
+    await setRoles(userId, ["doctor"]);
+    res.status(200).json({
+      message: "Tạo hồ sơ bác sĩ thành công",
+      data: crateDoctorProfile,
+    });
+  } catch (error) {
+    res.status(501).json({ message: error.message });
+  }
+};
+
+export const updateDoctorProfile = async (req, res) => {
+  const userId = req.params.id;
+  const payload = req.body;
+  if (!userId) {
+    res.status(401).json("Không thể xác định người dùng!");
+  }
+  if (!payload) {
+    res.status(401).json("Vui lòng thêm dữ liệu");
+  }
+  try {
+    const crateDoctorProfile = await setDoctorProfileHandle(userId, payload);
+    res.status(200).json({
+      message: "Tạo hồ sơ bác sĩ thành công",
+      data: crateDoctorProfile,
+    });
+  } catch (error) {
+    res.status(501).json("Tạo hồ sơ bác sĩ thành công");
   }
 };

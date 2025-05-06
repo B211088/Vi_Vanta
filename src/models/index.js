@@ -6,6 +6,10 @@ import District from "./district.model.js";
 import Ward from "./ward.model.js";
 import EmergencyContact from "./emergencyContact.model.js";
 import InformationSociety from "./informationSociety.model.js";
+import Doctor from "./doctor.model.js";
+import Pregnancy from "./pregnancy.model.js";
+import PregnancyVisit from "./pregnancyVisit.model.js";
+import VisitType from "./visitType.model.js";
 
 export {
   User,
@@ -16,4 +20,8 @@ export {
   Ward,
   EmergencyContact,
   InformationSociety,
+  Doctor,
+  Pregnancy,
+  PregnancyVisit,
+  VisitType,
 };
