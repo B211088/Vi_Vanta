@@ -9,9 +9,16 @@ import {
 
 const router = express.Router();
 
+// Lấy danh sách tất cả thông tin liên hệ khẩn cấp
 router.get("/getAll", verifyToken, getEmergencyContact);
+
+// Tạo thông tin liên hệ khẩn cấp
 router.post("/create", verifyToken, createEmergencyContact);
+
+// Cập nhật thông tin liên hệ khẩn cấp
 router.put("/update/:id", verifyToken, updateEmergencyContact);
+
+// Xóa thông tin liên hệ khẩn cấp
 router.delete("/delete/:id", verifyToken, removeEmergencyContact);
 
 export default router;

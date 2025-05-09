@@ -17,7 +17,7 @@ const pregnancyVisitSchema = new Schema(
     date: { type: Date, required: true },
     result: String,
     note: String,
-    imageUrl: [String],
+    imageUrls: [String],
     status: {
       type: String,
       enum: ["scheduled", "completed", "canceled"],

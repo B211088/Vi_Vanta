@@ -1,9 +1,9 @@
+import { uploads } from "../utils/uploadImagesToCloud.js";
 import {
   registerUser,
   loginUser,
   getUserProfile,
   setUserProfile,
-  uploadAvatarToCloudinary,
   updateUserAvatar,
   handleGetUserAddressByUserId,
   hanldeUpdateUserAddress,
@@ -72,7 +72,7 @@ export const uploadAvatar = async (req, res) => {
       return res.status(400).json({ message: "Vui lòng chọn ảnh!" });
     }
 
-    const avatarUrl = await uploadAvatarToCloudinary(file, userId);
+    const avatarUrl = await uploads(file, userId, "avatars");
 
     const updatedUser = await updateUserAvatar(userId, avatarUrl);
 
@@ -181,7 +181,7 @@ export const getDoctorProfile = async (req, res) => {
     const doctorProfile = await getDoctorProfileHandle(userId);
     res
       .status(200)
-      .json({ message: "Lấy hồ sơ bác sĩ thành công", data: doctorProfile });
+      .json({ message: "Lấy hồ sơ bác sĩ thành công", doctorProfile });
   } catch (error) {
     res.status(501).json({ message: error.message });
   }
@@ -197,11 +197,11 @@ export const createDoctorProfile = async (req, res) => {
     res.status(401).json("Vui lòng thêm dữ liệu");
   }
   try {
-    const crateDoctorProfile = await setDoctorProfileHandle(userId, payload);
+    const doctorProfile = await setDoctorProfileHandle(userId, payload);
     await setRoles(userId, ["doctor"]);
     res.status(200).json({
       message: "Tạo hồ sơ bác sĩ thành công",
-      data: crateDoctorProfile,
+      doctorProfile,
     });
   } catch (error) {
     res.status(501).json({ message: error.message });
@@ -218,10 +218,10 @@ export const updateDoctorProfile = async (req, res) => {
     res.status(401).json("Vui lòng thêm dữ liệu");
   }
   try {
-    const crateDoctorProfile = await setDoctorProfileHandle(userId, payload);
+    const doctorProfile = await setDoctorProfileHandle(userId, payload);
     res.status(200).json({
       message: "Tạo hồ sơ bác sĩ thành công",
-      data: crateDoctorProfile,
+      doctorProfile,
     });
   } catch (error) {
     res.status(501).json("Tạo hồ sơ bác sĩ thành công");

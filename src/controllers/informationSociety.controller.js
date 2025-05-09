@@ -1,9 +1,9 @@
+import { uploads } from "../utils/uploadImagesToCloud.js";
 import {
   createInformationSocietyHandle,
   getInformationSocietyHandle,
   removeInformationSocietyHandle,
   updateInformationSocietyHandle,
-  uploadpictureDocumentToCloudinary,
 } from "../services/informationSociety.service.js";
 
 export const getInformationSociety = async (req, res) => {
@@ -27,7 +27,7 @@ export const createInformationSociety = async (req, res) => {
     }
 
     const pictureDocumentUrls = await Promise.all(
-      files.map((file) => uploadpictureDocumentToCloudinary(file, userId))
+      files.map((file) => uploads(file, userId, "InformationSociety"))
     );
 
     const createdInfo = await createInformationSocietyHandle(userId, {
@@ -49,7 +49,7 @@ export const updateInformationSociety = async (req, res) => {
     const files = req.files;
 
     const pictureDocumentUrls = await Promise.all(
-      files.map((file) => uploadpictureDocumentToCloudinary(file, userId))
+      files.map((file) => uploads(file, userId, "InformationSociety"))
     );
 
     const updateInformation = await updateInformationSocietyHandle(

@@ -1,5 +1,7 @@
-import { Pregnancy } from "../models/index.js";
+import { Pregnancy, VisitType, PregnancyVisit } from "../models/index.js";
+import PregnancyWeek from "../models/pregnancyWeek.model.js";
 
+// Tính toán ngày dự sinh từ các thông tin đầu vào
 const calculatePregnancyDates = (payload) => {
   const {
     lastMenstrualCyclesDate,
@@ -60,6 +62,7 @@ const calculatePregnancyDates = (payload) => {
   };
 };
 
+// tao một thông tin thai kỳ mới
 export const createInfoPregnancyHandle = async (userId, payload) => {
   try {
     const {
@@ -101,6 +104,8 @@ export const createInfoPregnancyHandle = async (userId, payload) => {
     throw error;
   }
 };
+
+// Lấy tất cả thông tin thai kỳ của người dùng
 export const getAllInfoPregnanciesHandle = async (userId) => {
   try {
     const infoPregnancys = await Pregnancy.find({ userId }).select(
@@ -110,6 +115,7 @@ export const getAllInfoPregnanciesHandle = async (userId) => {
   } catch (error) {}
 };
 
+// Lấy thông tin thai kỳ theo ID
 export const getInfoPregnancyHandle = async (pregnancyId) => {
   try {
     const infoPregnancy = await Pregnancy.findById(pregnancyId).select(
@@ -119,6 +125,7 @@ export const getInfoPregnancyHandle = async (pregnancyId) => {
   } catch (error) {}
 };
 
+// Cập nhật thông tin thai kỳ
 export const updateInfoPregnancyHandle = async (pregnancyId, payload) => {
   try {
     const {
@@ -165,6 +172,7 @@ export const updateInfoPregnancyHandle = async (pregnancyId, payload) => {
   }
 };
 
+// Xóa thông tin thai kỳ
 export const deleteInfoPregnancyHandle = async (pregnancyId) => {
   try {
     const deleted = await Pregnancy.findByIdAndDelete(pregnancyId);
@@ -173,7 +181,277 @@ export const deleteInfoPregnancyHandle = async (pregnancyId) => {
     }
     return { message: "Xóa thông tin thai kỳ thành công" };
   } catch (error) {
-    console.error("Lỗi khi xóa thông tin thai kỳ:", error.message);
-    throw error;
+    throw new Error("Lỗi khi xóa thông tin thai kỳ");
+  }
+};
+
+// Lấy tất cả loại khám thai định kỳ
+export const getVisitTypesHandle = async () => {
+  try {
+    const visitTypes = await VisitType.find();
+
+    return visitTypes;
+  } catch (error) {
+    throw new Error("Lỗi khi lấy loại khám khám thai định kỳ");
+  }
+};
+
+// Tạo một loại khám thai định kỳ mới
+export const createVisitTypeHandle = async (payload) => {
+  try {
+    const { code, name, week, description, color, iconUrl } = payload;
+    const createVisitType = new VisitType({
+      code,
+      name,
+      week,
+      description,
+      color,
+      iconUrl,
+    });
+    await createVisitType.save();
+    return createVisitType;
+  } catch (error) {
+    throw new Error("Lỗi khi tạo loại khám khám thai định kỳ");
+  }
+};
+
+// Cập nhật thông tin một loại khám thai định kỳ
+export const updateVisitTypeHandle = async (visitTypeId, payload) => {
+  try {
+    const { code, name, week, description, color, iconUrl } = payload;
+    const updateVisitType = {
+      code,
+      name,
+      week,
+      description,
+      color,
+      iconUrl,
+    };
+
+    const updateVisitTypeData = await VisitType.findByIdAndUpdate(
+      { _id: visitTypeId },
+      updateVisitType,
+      { new: true }
+    );
+    if (!updateVisitTypeData) {
+      throw new Error("Không tìm thấy loại khám thai định kỳ để cập nhật");
+    }
+    return updateVisitType;
+  } catch (error) {
+    console.error("Lỗi khi cập nhật loại khám thai định kỳ:", error.message);
+    throw new Error("Lỗi khi cập nhật loại khám khám thai định kỳ");
+  }
+};
+
+// Xóa một loại khám thai định kỳ
+export const deletedVisitTypesHandle = async (visitTypeId) => {
+  try {
+    const deletedVisitType = await VisitType.findByIdAndDelete(visitTypeId);
+
+    if (!deletedVisitType) {
+      throw new Error("Không tìm thấy loại khám thai định kỳ để xóa");
+    }
+
+    return deletedVisitType._id;
+  } catch (error) {
+    console.error("Lỗi khi xóa loại khám thai định kỳ:", error.message);
+    throw new Error("Lỗi khi xóa loại khám thai định kỳ");
+  }
+};
+
+// Lấy danh sách các lần khám thai theo ID thai kỳ
+export const getPregnancyVisitsHandle = async (pregnancyId) => {
+  try {
+    const visits = await PregnancyVisit.find({ pregnancyId })
+      .populate("visitTypeId", "name week description")
+      .select("-__v -createdAt -updatedAt");
+    return visits;
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách lần khám thai:", error.message);
+    throw new Error("Lỗi khi lấy danh sách lần khám thai");
+  }
+};
+
+// Tạo một lần khám thai mới
+export const createPregnancyVisitHandle = async (payload) => {
+  try {
+    const {
+      pregnancyId,
+      visitTypeId,
+      title,
+      date,
+      result,
+      note,
+      imageUrls,
+      status,
+    } = payload;
+
+    const newVisit = new PregnancyVisit({
+      pregnancyId,
+      visitTypeId,
+      title,
+      date,
+      result,
+      note,
+      imageUrls,
+      status,
+    });
+
+    await newVisit.save();
+    return newVisit;
+  } catch (error) {
+    console.error("Lỗi khi tạo lần khám thai:", error.message);
+    throw new Error("Lỗi khi tạo lần khám thai");
+  }
+};
+
+// Cập nhật thông tin một lần khám thai
+export const updatePregnancyVisitHandle = async (visitId, payload) => {
+  try {
+    const { title, date, result, note, imageUrls, status } = payload;
+
+    const updatedVisit = await PregnancyVisit.findByIdAndUpdate(
+      visitId,
+      {
+        $set: {
+          title,
+          date,
+          result,
+          note,
+          imageUrls,
+          status,
+        },
+      },
+      { new: true }
+    ).select("-__v -createdAt -updatedAt");
+
+    if (!updatedVisit) {
+      throw new Error("Không tìm thấy lần khám thai để cập nhật");
+    }
+
+    return updatedVisit;
+  } catch (error) {
+    console.error("Lỗi khi cập nhật lần khám thai:", error.message);
+    throw new Error("Lỗi khi cập nhật lần khám thai");
+  }
+};
+
+export const deletePregnancyVisitHandle = async (visitId) => {
+  try {
+    const deletedVisit = await PregnancyVisit.findByIdAndDelete(visitId);
+
+    if (!deletedVisit) {
+      throw new Error("Không tìm thấy lần khám thai để xóa");
+    }
+
+    return { message: "Xóa lần khám thai thành công" };
+  } catch (error) {
+    console.error("Lỗi khi xóa lần khám thai:", error.message);
+    throw new Error("Lỗi khi xóa lần khám thai");
+  }
+};
+
+// Lấy danh sách các tuần thai kỳ theo ID thai kỳ
+export const getPregnancyWeeksHandle = async () => {
+  try {
+    const weeks = await PregnancyWeek.find().select(
+      "-__v -createdAt -updatedAt"
+    );
+    return weeks;
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách các tuần thai kỳ:", error.message);
+    throw new Error("Lỗi khi lấy danh sách các tuần thai kỳ");
+  }
+};
+
+// Lấy thông tin tuần thai kỳ theo số tuần
+export const getPregnancyWeekHandle = async (weekNumber) => {
+  try {
+    const week = await PregnancyWeek.find({ weekNumber }).select(
+      "-__v -createdAt -updatedAt"
+    );
+    if (!week) {
+      throw new Error("Không tìm thấy thông tin tuần thai kỳ");
+    }
+    return week;
+  } catch (error) {
+    console.error("Lỗi khi lấy thông tin tuần thai kỳ:", error.message);
+    throw new Error("Lỗi khi lấy thông tin tuần thai kỳ");
+  }
+};
+
+// Tạo một tuần thai kỳ mới
+export const createPregnancyWeekHandle = async (payload) => {
+  try {
+    const {
+      pregnancyId,
+      weekNumber,
+      fetalDevelopment,
+      motherChanges,
+      advice,
+      imageUrl,
+    } = payload;
+
+    const newWeek = new PregnancyWeek({
+      pregnancyId,
+      weekNumber,
+      fetalDevelopment,
+      motherChanges,
+      advice,
+      imageUrl,
+    });
+
+    await newWeek.save();
+    return newWeek;
+  } catch (error) {
+    console.error("Lỗi khi tạo tuần thai kỳ:", error.message);
+    throw new Error("Lỗi khi tạo tuần thai kỳ");
+  }
+};
+
+// Cập nhật thông tin một tuần thai kỳ
+export const updatePregnancyWeekHandle = async (weekId, payload) => {
+  try {
+    const { weekNumber, fetalDevelopment, motherChanges, advice, imageUrl } =
+      payload;
+
+    const updatedWeek = await PregnancyWeek.findByIdAndUpdate(
+      weekId,
+      {
+        $set: {
+          weekNumber,
+          fetalDevelopment,
+          motherChanges,
+          advice,
+          imageUrl,
+        },
+      },
+      { new: true }
+    ).select("-__v -createdAt -updatedAt");
+
+    if (!updatedWeek) {
+      throw new Error("Không tìm thấy tuần thai kỳ để cập nhật");
+    }
+
+    return updatedWeek;
+  } catch (error) {
+    console.error("Lỗi khi cập nhật tuần thai kỳ:", error.message);
+    throw new Error("Lỗi khi cập nhật tuần thai kỳ");
+  }
+};
+
+// Xóa một tuần thai kỳ
+export const deletePregnancyWeekHandle = async (weekId) => {
+  try {
+    const deletedWeek = await PregnancyWeek.findByIdAndDelete(weekId);
+
+    if (!deletedWeek) {
+      throw new Error("Không tìm thấy tuần thai kỳ để xóa");
+    }
+
+    return { message: "Xóa tuần thai kỳ thành công" };
+  } catch (error) {
+    console.error("Lỗi khi xóa tuần thai kỳ:", error.message);
+    throw new Error("Lỗi khi xóa tuần thai kỳ");
   }
 };

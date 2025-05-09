@@ -10,6 +10,8 @@ import Doctor from "./doctor.model.js";
 import Pregnancy from "./pregnancy.model.js";
 import PregnancyVisit from "./pregnancyVisit.model.js";
 import VisitType from "./visitType.model.js";
+import Health from "./health.model.js";
+import Children from "./children.model.js";
 
 export {
   User,
@@ -24,4 +26,6 @@ export {
   Pregnancy,
   PregnancyVisit,
   VisitType,
+  Health,
+  Children,
 };

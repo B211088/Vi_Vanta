@@ -128,25 +128,6 @@ export const setUserProfile = async (payload, userId) => {
   return updatedUser;
 };
 
-export const uploadAvatarToCloudinary = async (file, userId) => {
-  try {
-    const result = await cloudinary.uploader.upload(file.path, {
-      folder: "avatars",
-      public_id: `avatar_${userId}`,
-      resource_type: "auto",
-    });
-
-    const avatarUrl = result.secure_url;
-
-    fs.unlinkSync(file.path);
-
-    return avatarUrl;
-  } catch (error) {
-    console.error("Error uploading avatar:", error);
-    throw new Error("Có lỗi xảy ra trong quá trình upload ảnh");
-  }
-};
-
 export const updateUserAvatar = async (userId, avatarUrl) => {
   try {
     const user = await User.findByIdAndUpdate(
