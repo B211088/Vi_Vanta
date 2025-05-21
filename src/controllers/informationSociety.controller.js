@@ -47,14 +47,19 @@ export const updateInformationSociety = async (req, res) => {
   try {
     const userId = req.user.userId;
     const files = req.files;
+    const payload = req.body;
+    const informationSocietyId = req.params.id;
+    if (!files || files.length === 0) {
+      return res.status(400).json({ message: "Vui lòng thêm ảnh!" });
+    }
 
     const pictureDocumentUrls = await Promise.all(
       files.map((file) => uploads(file, userId, "InformationSociety"))
     );
 
     const updateInformation = await updateInformationSocietyHandle(
-      req.params.id,
-      { documentName: req.body.documentName, pictureDocumentUrls }
+      informationSocietyId,
+      { documentName: payload.documentName, pictureDocumentUrls }
     );
     if (updateInformation) {
       res
@@ -71,9 +76,13 @@ export const updateInformationSociety = async (req, res) => {
 };
 
 export const removeInformationSociety = async (req, res) => {
+  const informationSocietyId = req.params.id;
+  if (!informationSocietyId) {
+    return res.status(400).json({ message: "Vui lòng thêm id!" });
+  }
   try {
     const removeInformation = await removeInformationSocietyHandle(
-      req.params.id
+      informationSocietyId
     );
     if (removeInformation.succes) {
       res.status(200).json({ message: removeInformation.message });

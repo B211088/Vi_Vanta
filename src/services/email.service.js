@@ -1,7 +1,7 @@
 import { Code, User } from "../models/index.js";
 import { transporter } from "../utils/mailer.js";
 
-export const sendConfirmationCode = async (toEmail, code) => {
+export const sendConfirmationCodeHandle = async (toEmail, code) => {
   const expirationTime = 2 * 60 * 1000;
   const expiresAt = new Date(Date.now() + expirationTime);
 
@@ -86,7 +86,7 @@ export const sendConfirmationCode = async (toEmail, code) => {
   }
 };
 
-export const ConfirmationCodeByRegister = async (email, code) => {
+export const confirmationCodeHandle = async (email, code) => {
   try {
     const confirmation = await Code.findOne({ email, code });
 

@@ -1,5 +1,10 @@
-import { Pregnancy, VisitType, PregnancyVisit } from "../models/index.js";
-import PregnancyWeek from "../models/pregnancyWeek.model.js";
+import {
+  Pregnancy,
+  VisitType,
+  PregnancyVisit,
+  PregnancyWeek,
+  PregnancyVisitAddress,
+} from "../models/index.js";
 
 // Tính toán ngày dự sinh từ các thông tin đầu vào
 const calculatePregnancyDates = (payload) => {
@@ -453,5 +458,113 @@ export const deletePregnancyWeekHandle = async (weekId) => {
   } catch (error) {
     console.error("Lỗi khi xóa tuần thai kỳ:", error.message);
     throw new Error("Lỗi khi xóa tuần thai kỳ");
+  }
+};
+
+// Tạo một địa chỉ khám thai mới
+export const createPregnancyVisitAddressHandle = async (payload) => {
+  try {
+    const {
+      pregnancyVisitId,
+      phoneNumber,
+      clinicName,
+      wardId,
+      districtId,
+      provinceId,
+    } = payload;
+
+    const newAddress = new PregnancyVisitAddress({
+      pregnancyVisitId,
+      clinicName,
+      phoneNumber,
+      wardId,
+      districtId,
+      provinceId,
+    });
+
+    await newAddress.save();
+    return newAddress;
+  } catch (error) {
+    console.error("Lỗi khi tạo địa chỉ khám thai:", error.message);
+    throw new Error("Lỗi khi tạo địa chỉ khám thai");
+  }
+};
+
+// Lấy danh sách tất cả địa chỉ khám thai
+export const getAllPregnancyVisitAddressesHandle = async () => {
+  try {
+    const addresses = await PregnancyVisitAddress.find().select(
+      "-__v -createdAt -updatedAt"
+    );
+    return addresses;
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách địa chỉ khám thai:", error.message);
+    throw new Error("Lỗi khi lấy danh sách địa chỉ khám thai");
+  }
+};
+
+// Lấy thông tin địa chỉ khám thai theo ID
+export const getPregnancyVisitAddressByIdHandle = async (addressId) => {
+  try {
+    const address = await PregnancyVisitAddress.findById(addressId).select(
+      "-__v -createdAt -updatedAt"
+    );
+
+    if (!address) {
+      throw new Error("Không tìm thấy địa chỉ khám thai");
+    }
+
+    return address;
+  } catch (error) {
+    console.error("Lỗi khi lấy thông tin địa chỉ khám thai:", error.message);
+    throw new Error("Lỗi khi lấy thông tin địa chỉ khám thai");
+  }
+};
+
+// Cập nhật thông tin địa chỉ khám thai
+export const updatePregnancyVisitAddressHandle = async (addressId, payload) => {
+  try {
+    const { phoneNumber, clinicName, wardId, districtId, provinceId } = payload;
+
+    const updatedAddress = await PregnancyVisitAddress.findByIdAndUpdate(
+      addressId,
+      {
+        $set: {
+          clinicName,
+          phoneNumber,
+          wardId,
+          districtId,
+          provinceId,
+        },
+      },
+      { new: true }
+    ).select("-__v -createdAt -updatedAt");
+
+    if (!updatedAddress) {
+      throw new Error("Không tìm thấy địa chỉ khám thai để cập nhật");
+    }
+
+    return updatedAddress;
+  } catch (error) {
+    console.error("Lỗi khi cập nhật địa chỉ khám thai:", error.message);
+    throw new Error("Lỗi khi cập nhật địa chỉ khám thai");
+  }
+};
+
+// Xóa một địa chỉ khám thai
+export const deletePregnancyVisitAddressHandle = async (addressId) => {
+  try {
+    const deletedAddress = await PregnancyVisitAddress.findByIdAndDelete(
+      addressId
+    );
+
+    if (!deletedAddress) {
+      throw new Error("Không tìm thấy địa chỉ khám thai để xóa");
+    }
+
+    return { message: "Xóa địa chỉ khám thai thành công" };
+  } catch (error) {
+    console.error("Lỗi khi xóa địa chỉ khám thai:", error.message);
+    throw new Error("Lỗi khi xóa địa chỉ khám thai");
   }
 };

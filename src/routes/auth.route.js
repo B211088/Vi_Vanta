@@ -1,6 +1,9 @@
 import express from "express";
 import upload from "../middlewares/uploadMiddleware.js";
 import verifyToken from "../middlewares/verifyToken.js";
+import { sanitizeInputMiddleware } from "../middlewares/sanitizeInput.js";
+import { authorizeRoles } from "../middlewares/authorizeRoles.js";
+import { validateEmailMiddleware } from "../middlewares/validateEmailMiddleware.js";
 import {
   register,
   login,
@@ -16,16 +19,17 @@ import {
   createDoctorProfile,
   updateDoctorProfile,
   removeUserRole,
+  sendConfirmCodeByForgotPassword,
+  confirmCodeByForgotPassword,
 } from "../controllers/auth.controller.js";
-import { authorizeRoles } from "../middlewares/authorizeRoles.js";
 
 const router = express.Router();
 
 // Đăng ký tài khoản
-router.post("/register", register);
+router.post("/register", validateEmailMiddleware, register);
 
 // Đăng nhập tài khoản
-router.post("/login", login);
+router.post("/login", validateEmailMiddleware, login);
 
 // set role cho tài khoản
 router.post("/set/role", verifyToken, authorizeRoles("admin"), addUserRole);
@@ -41,12 +45,28 @@ router.put(
 // Lấy thông tin tài khoản
 router.get("/profile", verifyToken, profile);
 
+router.post(
+  "/forgot-password/send-code",
+  validateEmailMiddleware,
+  verifyToken,
+  sendConfirmCodeByForgotPassword
+);
+
+// Xác nhận mã xác nhận và đổi mật khẩu
+router.post(
+  "/forgot-password/confirm-code",
+  validateEmailMiddleware,
+  verifyToken,
+  confirmCodeByForgotPassword
+);
+
 // Cập nhật thông tin tài khoản
-router.post("/set/profile", verifyToken, setProfile);
+router.post("/set/profile", sanitizeInputMiddleware, verifyToken, setProfile);
 
 // Cập nhật ảnh đại diện
 router.post(
-  "/upload_avatar",
+  "/upload-avatar",
+  sanitizeInputMiddleware,
   verifyToken,
   upload.single("avatar"),
   uploadAvatar
@@ -65,10 +85,16 @@ router.post("/register/confirm_code", confirmCodeByRegister);
 // Lấy thông tin bác sĩ
 router.get("/doctor", verifyToken, authorizeRoles("doctor"), getDoctorProfile);
 // Tạo thông tin bác sĩ
-router.post("/doctor/create", verifyToken, createDoctorProfile);
+router.post(
+  "/doctor/create",
+  sanitizeInputMiddleware,
+  verifyToken,
+  createDoctorProfile
+);
 // Cập nhật thông tin bác sĩ
 router.put(
   "/doctor/update/:id",
+  sanitizeInputMiddleware,
   verifyToken,
   authorizeRoles("doctor"),
   updateDoctorProfile

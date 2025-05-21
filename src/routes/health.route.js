@@ -1,6 +1,7 @@
 import express from "express";
 import verifyToken from "../middlewares/verifyToken.js";
 import { authorizeRoles } from "../middlewares/authorizeRoles.js";
+import { sanitizeInputMiddleware } from "../middlewares/sanitizeInput.js";
 import {
   getAllHealth,
   getHealthById,
@@ -18,10 +19,10 @@ router.get("/", verifyToken, authorizeRoles("admin"), getAllHealth);
 router.get("/:userId", verifyToken, getHealthById);
 
 // Tạo thông tin sức khỏe mới
-router.post("/", verifyToken, createHealth);
+router.post("/", sanitizeInputMiddleware, verifyToken, createHealth);
 
 // Cập nhật thông tin sức khỏe
-router.put("/:healthId", verifyToken, updateHealth);
+router.put("/:healthId", sanitizeInputMiddleware, verifyToken, updateHealth);
 
 // Xóa thông tin sức khỏe
 router.delete("/:healthId", verifyToken, authorizeRoles("admin"), deleteHealth);

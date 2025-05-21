@@ -17,6 +17,11 @@ import {
   createPregnancyWeekHandle,
   updatePregnancyWeekHandle,
   deletePregnancyWeekHandle,
+  createPregnancyVisitAddressHandle,
+  getAllPregnancyVisitAddressesHandle,
+  getPregnancyVisitAddressByIdHandle,
+  updatePregnancyVisitAddressHandle,
+  deletePregnancyVisitAddressHandle,
 } from "../services/pregnancy.service.js";
 
 import { uploads } from "../utils/uploadImagesToCloud.js";
@@ -366,6 +371,78 @@ export const deletePregnancyWeek = async (req, res) => {
     await deletePregnancyWeekHandle(weekId);
     res.status(200).json({
       message: "Xóa tuần thai kỳ thành công!",
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Tạo một địa chỉ khám thai mới
+export const createPregnancyVisitAddress = async (req, res) => {
+  try {
+    const payload = req.body;
+    const newAddress = await createPregnancyVisitAddressHandle(payload);
+    res.status(201).json({
+      message: "Tạo địa chỉ khám thai thành công!",
+      newAddress,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Lấy danh sách tất cả địa chỉ khám thai
+export const getAllPregnancyVisitAddresses = async (req, res) => {
+  try {
+    const addresses = await getAllPregnancyVisitAddressesHandle();
+    res.status(200).json({
+      message: "Lấy danh sách địa chỉ khám thai thành công!",
+      addresses,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Lấy thông tin địa chỉ khám thai theo ID
+export const getPregnancyVisitAddressById = async (req, res) => {
+  try {
+    const { addressId } = req.params;
+    const address = await getPregnancyVisitAddressByIdHandle(addressId);
+    res.status(200).json({
+      message: "Lấy thông tin địa chỉ khám thai thành công!",
+      address,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Cập nhật thông tin địa chỉ khám thai
+export const updatePregnancyVisitAddress = async (req, res) => {
+  try {
+    const { addressId } = req.params;
+    const payload = req.body;
+    const updatedAddress = await updatePregnancyVisitAddressHandle(
+      addressId,
+      payload
+    );
+    res.status(200).json({
+      message: "Cập nhật địa chỉ khám thai thành công!",
+      updatedAddress,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Xóa một địa chỉ khám thai
+export const deletePregnancyVisitAddress = async (req, res) => {
+  try {
+    const { addressId } = req.params;
+    const result = await deletePregnancyVisitAddressHandle(addressId);
+    res.status(200).json({
+      message: result.message,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

@@ -11,11 +11,14 @@ import {
   setDoctorProfileHandle,
   removeRoles,
   getDoctorProfileHandle,
+  updateDoctorProfileHandle,
+  updateUserPassword,
 } from "../services/auth.service.js";
 import {
-  ConfirmationCodeByRegister,
-  sendConfirmationCode,
+  confirmationCodeHandle,
+  sendConfirmationCodeHandle,
 } from "../services/email.service.js";
+import { createCode } from "../utils/confirnEmail.js";
 
 export const register = async (req, res) => {
   try {
@@ -63,6 +66,47 @@ export const setProfile = async (req, res) => {
   }
 };
 
+export const sendConfirmCodeByForgotPassword = async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ message: "Email không hợp lệ" });
+  }
+  try {
+    const code = createCode();
+    await sendConfirmationCodeHandle(email, code);
+
+    res.status(200).json({ message: "Đã gửi mã xác nhận" });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Không gửi được email", error: err.message });
+  }
+};
+
+export const confirmCodeByForgotPassword = async (req, res) => {
+  const { email, code, password } = req.body;
+
+  if (!email || !code) {
+    return res
+      .status(400)
+      .json({ message: "Email và mã xác nhận không hợp lệ" });
+  }
+  try {
+    const confirm = await confirmationCodeHandle(email, code);
+    if (confirm) {
+      await updateUserPassword(req.user.userId, password);
+      res.status(200).json({ message: "Đổi mật khẩu thành công!" });
+    } else {
+      res.status(400).json({ message: "Mã xác nhận không hợp lệ" });
+    }
+  } catch (err) {
+    res.status(500).json({
+      message: "Có lỗi xảy ra trong quá trình xác nhận mã",
+      error: err.message,
+    });
+  }
+};
+
 export const uploadAvatar = async (req, res) => {
   try {
     const userId = req.user.userId;
@@ -72,13 +116,12 @@ export const uploadAvatar = async (req, res) => {
       return res.status(400).json({ message: "Vui lòng chọn ảnh!" });
     }
 
-    const avatarUrl = await uploads(file, userId, "avatars");
+    const avatar = await uploads(file, userId, "avatars");
 
-    const updatedUser = await updateUserAvatar(userId, avatarUrl);
+    const updatedUser = await updateUserAvatar(userId, avatar);
 
     res.status(200).json({
       message: "Cập nhật avatar thành công",
-      avatarUrl,
       user: updatedUser,
     });
   } catch (error) {
@@ -90,10 +133,10 @@ export const uploadAvatar = async (req, res) => {
 export const sendConfirmCodeByRegister = async (req, res) => {
   const { email } = req.body;
 
-  const code = Math.floor(100000 + Math.random() * 900000);
+  const code = createCode();
 
   try {
-    await sendConfirmationCode(email, code);
+    await sendConfirmationCodeHandle(email, code);
     res.status(200).json({ message: "Đã gửi mã xác nhận" });
   } catch (err) {
     res
@@ -106,7 +149,7 @@ export const confirmCodeByRegister = async (req, res) => {
   const { email, code } = req.body;
 
   try {
-    await ConfirmationCodeByRegister(email, code);
+    await confirmationCodeHandle(email, code);
     res.status(200).json({ message: "Xác nhận thành công!" });
   } catch (err) {
     res
@@ -218,12 +261,12 @@ export const updateDoctorProfile = async (req, res) => {
     res.status(401).json("Vui lòng thêm dữ liệu");
   }
   try {
-    const doctorProfile = await setDoctorProfileHandle(userId, payload);
+    const doctorProfile = await updateDoctorProfileHandle(userId, payload);
     res.status(200).json({
-      message: "Tạo hồ sơ bác sĩ thành công",
+      message: "Cập nhật hồ sơ bác sĩ thành công",
       doctorProfile,
     });
   } catch (error) {
-    res.status(501).json("Tạo hồ sơ bác sĩ thành công");
+    res.status(501).json("Cập nhật hồ sơ bác sĩ thất bại");
   }
 };

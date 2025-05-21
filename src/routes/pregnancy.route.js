@@ -1,6 +1,7 @@
 import express from "express";
 import verifyToken from "../middlewares/verifyToken.js";
 import { authorizeRoles } from "../middlewares/authorizeRoles.js";
+import { sanitizeInputMiddleware } from "../middlewares/sanitizeInput.js";
 import {
   createInfoPregnancy,
   createPregnancyVisit,
@@ -20,32 +21,38 @@ import {
   updatePregnancyVisit,
   updatePregnancyWeek,
   updateVisitType,
+  createPregnancyVisitAddress,
+  getAllPregnancyVisitAddresses,
+  getPregnancyVisitAddressById,
+  updatePregnancyVisitAddress,
+  deletePregnancyVisitAddress,
 } from "../controllers/pregnancy.controller.js";
 import upload from "../middlewares/uploadMiddleware.js";
 
 const router = express.Router();
 
 // lây danh sách tất cả thông tin thai kỳ
-router.get("/get_all_pregnancy", verifyToken, getAllInfoPregnancies);
+router.get("/get-all-pregnancy", verifyToken, getAllInfoPregnancies);
 
 // lây thông tin thai kỳ theo id
-router.get("/get_pregnancy/:id", verifyToken, getInfoPregnancy);
+router.get("/get-pregnancy/:id", verifyToken, getInfoPregnancy);
 
 // tạo thông tin thai kỳ
 router.post("/create", verifyToken, createInfoPregnancy);
 
 // cập nhật thông tin thai kỳ
-router.put("/update_info/:id", verifyToken, updateInfoPregnancy);
+router.put("/update-info/:id", verifyToken, updateInfoPregnancy);
 
 // xóa thông tin thai kỳ
-router.delete("/delete_info/:id", verifyToken, deletePregnancy);
+router.delete("/delete-info/:id", verifyToken, deletePregnancy);
 
 // lấy danh sách các kỳ khám
-router.get("/visit_types", verifyToken, getVisitTypes);
+router.get("/visit-types", verifyToken, getVisitTypes);
 
 // tạo một kỳ khám mới
 router.post(
-  "/visit_type",
+  "/visit-type",
+  sanitizeInputMiddleware,
   verifyToken,
   authorizeRoles("admin"),
   createVisitType
@@ -53,7 +60,8 @@ router.post(
 
 // cập nhật thông tin một kỳ khám
 router.put(
-  "/visit_type/:id",
+  "/visit-type/:id",
+  sanitizeInputMiddleware,
   verifyToken,
   authorizeRoles("admin"),
   updateVisitType
@@ -61,7 +69,7 @@ router.put(
 
 // xóa một kỳ khám
 router.delete(
-  "/visit_type/:id",
+  "/visit-type/:id",
   verifyToken,
   authorizeRoles("admin"),
   deleteVisitType
@@ -73,6 +81,7 @@ router.get("/:pregnancyId/visits", verifyToken, getPregnancyVisits);
 // tạo một kỳ khám mới
 router.post(
   "/:pregnancyId/visits",
+  sanitizeInputMiddleware,
   verifyToken,
   upload.array("imageUrls", 10),
   createPregnancyVisit
@@ -81,7 +90,7 @@ router.post(
 // cập nhật thông tin một kỳ khám
 router.put(
   "/visits/:visitId",
-  verifyToken,
+  sanitizeInputMiddleware,
   verifyToken,
   upload.array("imageUrls", 10),
   updatePregnancyVisit
@@ -120,6 +129,47 @@ router.delete(
   verifyToken,
   authorizeRoles("admin"),
   deletePregnancyWeek
+);
+
+// Tạo một địa chỉ khám thai mới
+router.post(
+  "/visit-address",
+  sanitizeInputMiddleware,
+  verifyToken,
+  authorizeRoles("admin"),
+  createPregnancyVisitAddress
+);
+
+// Lấy danh sách tất cả địa chỉ khám thai
+router.get(
+  "/visit-address",
+  sanitizeInputMiddleware,
+  verifyToken,
+  getAllPregnancyVisitAddresses
+);
+
+// Lấy thông tin địa chỉ khám thai theo ID
+router.get(
+  "/visit-address/:addressId",
+  verifyToken,
+  getPregnancyVisitAddressById
+);
+
+// Cập nhật thông tin địa chỉ khám thai
+router.put(
+  "/visit-address/:addressId",
+  sanitizeInputMiddleware,
+  verifyToken,
+  authorizeRoles("admin"),
+  updatePregnancyVisitAddress
+);
+
+// Xóa một địa chỉ khám thai
+router.delete(
+  "/visit-address/:addressId",
+  verifyToken,
+  authorizeRoles("admin"),
+  deletePregnancyVisitAddress
 );
 
 export default router;

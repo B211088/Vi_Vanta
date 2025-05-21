@@ -1,6 +1,7 @@
 import express from "express";
 import upload from "../middlewares/uploadMiddleware.js";
 import verifyToken from "../middlewares/verifyToken.js";
+import { sanitizeInputMiddleware } from "../middlewares/sanitizeInput.js";
 import {
   createInformationSociety,
   getInformationSociety,
@@ -11,11 +12,12 @@ import {
 const router = express.Router();
 
 // Lấy danh sách tất cả thông tin xã hội
-router.get("/getInfo", verifyToken, getInformationSociety);
+router.get("/", verifyToken, getInformationSociety);
 
 // Tạo thông tin xã hội
 router.post(
-  "/create",
+  "/",
+  sanitizeInputMiddleware,
   verifyToken,
   upload.array("pictureDocuments", 10),
   createInformationSociety
@@ -23,13 +25,14 @@ router.post(
 
 // Cập nhật thông tin xã hội
 router.put(
-  "/update/:id",
+  "/:id",
+  sanitizeInputMiddleware,
   verifyToken,
   upload.array("pictureDocuments", 10),
   updateInformationSociety
 );
 
 // Xóa thông tin xã hội
-router.delete("/delete/:id", verifyToken, removeInformationSociety);
+router.delete("/:id", verifyToken, removeInformationSociety);
 
 export default router;

@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
 const { Schema } = mongoose;
 
-const childInfoSchema = new Schema(
+const childrenSchema = new Schema(
   {
-    parentId: {
+    userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
@@ -35,11 +35,23 @@ const childInfoSchema = new Schema(
     },
     deliveryMethod: {
       type: String,
-      enum: ["vaginal", "cesarean", "other"],
+      enum: ["vaginal", "cesarean", "unknown"],
+      default: "unknown",
     },
   },
   { timestamps: true }
 );
 
-const Children = mongoose.model("children", childInfoSchema);
+// Middleware để xóa các bản ghi liên quan trong ChildVaccinationRecord
+childrenSchema.pre("findOneAndDelete", async function (next) {
+  const childId = this.getQuery()._id; // Lấy ID của đứa trẻ bị xóa
+  try {
+    await mongoose.model("ChildVaccinationRecord").deleteMany({ childId });
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+const Children = mongoose.model("Children", childrenSchema);
 export default Children;

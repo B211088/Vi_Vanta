@@ -7,9 +7,8 @@ import {
   District,
   Doctor,
 } from "../models/index.js";
-import cloudinary from "../config/cloudinaryConfig.js";
 import { JWT_SECRET, JWT_EXPIRATION } from "../config/auth.config.js";
-import fs from "fs";
+import { deleteFromCloudinary } from "../utils/uploadImagesToCloud.js";
 
 export const registerUser = async (payload) => {
   const { email, password } = payload;
@@ -128,11 +127,37 @@ export const setUserProfile = async (payload, userId) => {
   return updatedUser;
 };
 
-export const updateUserAvatar = async (userId, avatarUrl) => {
+export const updateUserPassword = async (userId, newPassword) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new Error("Người dùng không tồn tại!");
+  }
+
+  user.passwordHash = newPassword;
+
+  const updatedUser = await user.save();
+  return updatedUser;
+};
+
+export const updateUserAvatar = async (userId, avatar) => {
   try {
+    const currentUser = await User.findById(userId);
+    if (!currentUser) {
+      throw new Error("Người dùng không tồn tại!");
+    }
+
+    // Xóa ảnh cũ nếu có
+    if (currentUser.avatar.public_id !== "vivanta/149071_ktixms") {
+      const publicId = currentUser.avatar.public_id;
+      const deleteResult = await deleteFromCloudinary(publicId);
+      if (deleteResult.result !== "ok") {
+        throw new Error("Có lỗi xảy ra trong quá trình xóa ảnh cũ");
+      }
+    }
+
     const user = await User.findByIdAndUpdate(
       userId,
-      { avatarUrl },
+      { avatar },
       { new: true }
     );
     return user;
@@ -243,7 +268,6 @@ export const updateDoctorProfileHandle = async (userId, payload) => {
       payload;
 
     const doctorProfile = {
-      userId,
       specialty,
       hospital,
       licenseNumber,
@@ -251,8 +275,8 @@ export const updateDoctorProfileHandle = async (userId, payload) => {
       experienceYears,
     };
 
-    const doctorData = await Doctor.findByIdAndUpdate(
-      userId,
+    const doctorData = await Doctor.findOneAndUpdate(
+      { userId },
       {
         $set: doctorProfile,
       },
@@ -262,6 +286,6 @@ export const updateDoctorProfileHandle = async (userId, payload) => {
     ).select("-__v ");
     return doctorData;
   } catch (error) {
-    throw new Error("Có lỗi trong quá trình tạo hồ sơ bác sĩ");
+    throw new Error("Có lỗi trong quá trình cập nhật hồ sơ bác sĩ");
   }
 };
