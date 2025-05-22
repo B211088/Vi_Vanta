@@ -5,9 +5,6 @@ import path from "path";
 const uploadDir = path.join("uploads");
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
-  console.log("Tạo thư mục uploads thành công!");
-} else {
-  console.log("Thư mục uploads đã tồn tại.");
 }
 
 const storage = multer.diskStorage({

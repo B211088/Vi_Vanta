@@ -43,3 +43,13 @@ const pregnancySchema = new Schema(
 
 const Pregnancy = mongoose.model("Pregnancy", pregnancySchema);
 export default Pregnancy;
+
+pregnancySchema.pre("findOneAndDelete", async function (next) {
+  const pregnancyId = this.getQuery()._id; // Lấy ID của thai kỳ bị xóa
+  try {
+    await mongoose.model("PregnancyVisit").deleteMany({ pregnancyId });
+    next();
+  } catch (error) {
+    next(error);
+  }
+});

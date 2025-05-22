@@ -11,10 +11,16 @@ const informationSocietySchema = Schema(
     documentName: {
       type: String,
     },
-    pictureDocuments: {
-      type: [String],
-      default: [],
-    },
+    pictureDocuments: [
+      {
+        public_id: {
+          type: String,
+        },
+        url: {
+          type: String,
+        },
+      },
+    ],
     notes: {
       type: String,
     },

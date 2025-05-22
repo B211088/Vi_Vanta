@@ -7,46 +7,63 @@ import {
   District,
   Doctor,
 } from "../models/index.js";
-import cloudinary from "../config/cloudinaryConfig.js";
 import { JWT_SECRET, JWT_EXPIRATION } from "../config/auth.config.js";
-import fs from "fs";
+import { deleteFromCloudinary } from "../utils/uploadImagesToCloud.js";
 
 export const registerUser = async (payload) => {
-  const { email, password } = payload;
-  const existingUser = await User.findOne({ email });
-  if (existingUser) {
-    throw new Error("Email đã tồn tại!");
+  try {
+    const { email, password } = payload;
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      throw new Error("Email đã được đăng ký!");
+    }
+
+    const user = new User({
+      email,
+      passwordHash: password,
+    });
+
+    await user.save();
+  } catch (error) {
+    console.error("Lỗi đăng ký", error.message);
+    // Nếu error đã là instance của Error, lấy message
+    throw new Error(error.message || "Lỗi đăng nhập");
   }
-
-  const user = new User({
-    email,
-    passwordHash: password,
-  });
-
-  await user.save();
 };
 
 export const loginUser = async (email, password) => {
-  const user = await User.findOne({ email });
+  try {
+    const user = await User.findOne({ email });
 
-  if (!user) {
-    throw new Error("Người dùng không tồn tại!");
+    if (!user) {
+      throw new Error("Người dùng không tồn tại!");
+    }
+
+    if (!user.active) {
+      const err = new Error("Chưa xác nhận email");
+      err.active = false;
+      throw err;
+    }
+
+    const isValidPassword = await user.isValidPassword(password);
+    if (!isValidPassword) {
+      throw new Error("Mật khẩu sai!");
+    }
+
+    const token = jwt.sign(
+      { userId: user._id, roles: user.roles },
+      JWT_SECRET,
+      {
+        expiresIn: JWT_EXPIRATION,
+      }
+    );
+
+    return token;
+  } catch (error) {
+    console.error("Lỗi đăng nhập", error.message);
+    // Nếu error đã là instance của Error, lấy message
+    throw new Error(error.message || "Lỗi đăng nhập");
   }
-
-  if (!user.active) {
-    throw new Error("Chưa xác nhận email");
-  }
-
-  const isValidPassword = await user.isValidPassword(password);
-  if (!isValidPassword) {
-    throw new Error("Mật khẩu sai!");
-  }
-
-  const token = jwt.sign({ userId: user._id, roles: user.roles }, JWT_SECRET, {
-    expiresIn: JWT_EXPIRATION,
-  });
-
-  return token;
 };
 
 export const setRoles = async (userId, newRoles) => {
@@ -92,7 +109,9 @@ export const removeRoles = async (userId, rolesRemove) => {
 };
 
 export const getUserProfile = async (userId) => {
-  const userProfile = await User.findById(userId).select("-__v -passwordHash");
+  const userProfile = await User.findById(userId).select(
+    "-__v -passwordHash -updatedAt -createdAt"
+  );
   if (!userProfile) {
     throw new Error("Không tìm thấy người dùng!");
   }
@@ -119,7 +138,7 @@ export const setUserProfile = async (payload, userId) => {
     userId,
     { $set: updateData },
     { new: true }
-  );
+  ).select("-__v -updatedAt -createdAt");
 
   if (updatedUser.modifiedCount === 0) {
     throw new Error("Không có thay đổi nào được thực hiện.");
@@ -128,30 +147,37 @@ export const setUserProfile = async (payload, userId) => {
   return updatedUser;
 };
 
-export const uploadAvatarToCloudinary = async (file, userId) => {
-  try {
-    const result = await cloudinary.uploader.upload(file.path, {
-      folder: "avatars",
-      public_id: `avatar_${userId}`,
-      resource_type: "auto",
-    });
-
-    const avatarUrl = result.secure_url;
-
-    fs.unlinkSync(file.path);
-
-    return avatarUrl;
-  } catch (error) {
-    console.error("Error uploading avatar:", error);
-    throw new Error("Có lỗi xảy ra trong quá trình upload ảnh");
+export const updateUserPassword = async (userId, newPassword) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new Error("Người dùng không tồn tại!");
   }
+
+  user.passwordHash = newPassword;
+
+  const updatedUser = await user.save();
+  return updatedUser;
 };
 
-export const updateUserAvatar = async (userId, avatarUrl) => {
+export const updateUserAvatar = async (userId, avatar) => {
   try {
+    const currentUser = await User.findById(userId);
+    if (!currentUser) {
+      throw new Error("Người dùng không tồn tại!");
+    }
+
+    // Xóa ảnh cũ nếu có
+    if (currentUser.avatar.public_id !== "vivanta/149071_ktixms") {
+      const publicId = currentUser.avatar.public_id;
+      const deleteResult = await deleteFromCloudinary(publicId);
+      if (deleteResult.result !== "ok") {
+        throw new Error("Có lỗi xảy ra trong quá trình xóa ảnh cũ");
+      }
+    }
+
     const user = await User.findByIdAndUpdate(
       userId,
-      { avatarUrl },
+      { avatar },
       { new: true }
     );
     return user;
@@ -262,7 +288,6 @@ export const updateDoctorProfileHandle = async (userId, payload) => {
       payload;
 
     const doctorProfile = {
-      userId,
       specialty,
       hospital,
       licenseNumber,
@@ -270,8 +295,8 @@ export const updateDoctorProfileHandle = async (userId, payload) => {
       experienceYears,
     };
 
-    const doctorData = await Doctor.findByIdAndUpdate(
-      userId,
+    const doctorData = await Doctor.findOneAndUpdate(
+      { userId },
       {
         $set: doctorProfile,
       },
@@ -281,6 +306,6 @@ export const updateDoctorProfileHandle = async (userId, payload) => {
     ).select("-__v ");
     return doctorData;
   } catch (error) {
-    throw new Error("Có lỗi trong quá trình tạo hồ sơ bác sĩ");
+    throw new Error("Có lỗi trong quá trình cập nhật hồ sơ bác sĩ");
   }
 };
