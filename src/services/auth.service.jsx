@@ -12,6 +12,8 @@ import {
   logout,
   loadingStart,
   loadingEnd,
+  updateUserProileFailure,
+  updateUserProileSuccess,
 } from "../store/slices/authSlice";
 import { API_URL } from "../config/api.config";
 
@@ -71,6 +73,27 @@ export const logoutUser = () => async (dispatch) => {
     const errorMessage = error.response?.data?.message || "Đăng xuất thất bại";
     console.error(errorMessage);
     throw error;
+  }
+};
+
+export const updateUserProfile = (userData) => async (dispatch) => {
+  try {
+    dispatch(loadingStart());
+    const response = await api.put("/api/v1/user/update/profile", userData);
+
+    dispatch(updateUserProileSuccess({ user: response.data.user }));
+    return {
+      success: true,
+      message: "Cập nhật thông tin thành công",
+      user: response.data.user,
+    };
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message ||
+      error.message ||
+      "Cập nhật thông tin thất bại";
+    dispatch(updateUserProileFailure(errorMessage));
+    throw new Error(errorMessage);
   }
 };
 

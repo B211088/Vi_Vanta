@@ -9,19 +9,17 @@ const Header = () => {
   const { isDarkMode } = useTheme();
   return (
     <Container>
-      <Wrapper bgDark={"dark-100"} bgLight={"light-50"}>
-        <div className="w-full flex justify-between items-center  py-[8px]">
-          <Link className="w-2/12 flex" to="/">
-            <div className="w-[42px] flex items-center">
-              <img className="w-full" src={logo} alt="" />
-              <h1 className="text-lg font-black uppercase text-[#f42d2d]">
-                Vivanta
-              </h1>
-            </div>
-          </Link>
-          <User />
-        </div>
-      </Wrapper>
+      <div className="w-full flex justify-between items-center  py-[8px] px-[20px]">
+        <Link className="w-2/12 flex" to="/">
+          <div className="w-[42px] flex items-center">
+            <img className="w-full" src={logo} alt="" />
+            <h1 className="text-lg font-black uppercase text-[#f42d2d]">
+              Vivanta
+            </h1>
+          </div>
+        </Link>
+        <User />
+      </div>
     </Container>
   );
 };

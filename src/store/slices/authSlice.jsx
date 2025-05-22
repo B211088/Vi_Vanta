@@ -55,6 +55,15 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.error = action.payload;
     },
+    updateUserProileSuccess: (state, action) => {
+      state.loading = false;
+      state.user = action.payload.user;
+      state.isAuthenticated = true;
+    },
+    updateUserProileFailure: (state, action) => {
+      state.loading = false;
+      state.error = action.payload;
+    },
     loadingStart: (state) => {
       state.loading = true;
     },
@@ -82,6 +91,8 @@ export const {
   loginStart,
   loginSuccess,
   loginFailure,
+  updateUserProileSuccess,
+  updateUserProileFailure,
   logout,
   loadingStart,
   loadingEnd,

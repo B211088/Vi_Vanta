@@ -58,13 +58,13 @@ const User = () => {
         <p className="truncate text-sm font-semibold">{user.fullName}</p>
         <div className="w-[38px] h-[38px]  flex items-center justify-center bg-dark-800 rounded-full  overflow-hidden relative cursor-pointer">
           <img
-            className="w-full h-full object-cover "
+            className="w-full h-full object-cover aspect-square rounded-full"
             src={user.avatar.url}
             alt=""
           />
           <div
-            className={`w-[16px] h-[16px] absolute bottom-[2px] right-[2px] text-[0.5rem] ${
-              isDarkMode ? "bg-dark-700" : "bg-dark-500"
+            className={`w-[16px] h-[16px] absolute bottom-[2px] right-[2px] text-[0.5rem] z-2 ${
+              isDarkMode ? "bg-dark-700" : "bg-dark-600"
             } rounded-full flex items-center justify-center`}
           >
             <i className="fa-solid fa-angle-down"></i>
@@ -91,11 +91,8 @@ const User = () => {
           </div>
           <div className="w-full flex flex-col">
             {menus.map((option) => (
-              <div className="w-full flex flex-col">
-                <div
-                  key={option.id}
-                  className="w-full flex items-center justify-between"
-                >
+              <div key={option.id} className="w-full flex flex-col">
+                <div className="w-full flex items-center justify-between">
                   <div className="flex items-center gap-[5px] px-[10px] py-[10px]">
                     <i className={option.icon}></i>
                     <span className="text-sm font-bold">{option.title}</span>
@@ -156,7 +153,7 @@ const menus = [
       {
         id: 1,
         name: "Hồ sơ",
-        path: "/account",
+        path: "/account/profile",
       },
       {
         id: 2,
