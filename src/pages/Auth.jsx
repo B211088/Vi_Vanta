@@ -3,45 +3,64 @@ import logoGoogle from "../assets/images/logo_google.png";
 import banner from "../assets/images/bannerAuth.png";
 import Background from "../components/layout/Background";
 import ButtonToggleTheme from "../components/common/ButtonToggleTheme";
+import { useTheme } from "../hook/useTheme";
 
 const Auth = () => {
   const location = useLocation();
   const isLoginPage = location.pathname.includes("login");
-
+  const { isDarkMode } = useTheme();
   return (
     <Background>
       <ButtonToggleTheme />
       <div className="w-full flex p-[30px] justify-center items-center ">
         <div
           style={{ maxHeight: "calc(100vh - 60px)" }}
-          className="w-10/12 h-full flex items-center justify-center bg-white  rounded-xl overflow-hidden "
+          className={`w-10/12 h-full flex items-center justify-center ${
+            isDarkMode ? "bg-light-50" : "bg-dark-300"
+          }  rounded-xl overflow-hidden `}
         >
           <div className="w-5/12 h-full flex flex-col justify-center  px-[30px] py-[20px] ">
             <div className="w-full flex flex-col h-full items-center justify-between ">
               <div className="w-full flex flex-col items-center">
-                <div className="w-full flex gap-[5px] bg-dark-800 px-[5px] py-[6px] rounded-sm my-[20px] relative">
+                <div
+                  className={`w-full flex gap-[5px] ${
+                    isDarkMode ? "bg-dark-800" : "bg-dark-600"
+                  } px-[5px] py-[6px] rounded-sm my-[20px] relative`}
+                >
                   <div
-                    className={`absolute w-6/12 h-[calc(100%-10px)] top-[5px]  bg-light-50 rounded-sm transition-all duration-300 ease-in-out ${
+                    className={`absolute w-6/12 h-[calc(100%-10px)] top-[5px]  ${
+                      isDarkMode ? "bg-light-50" : " bg-dark-400 "
+                    } rounded-sm transition-all duration-300 ease-in-out ${
                       isLoginPage ? "left-[5px]" : "left-[calc(50%+-5px)]"
                     }`}
                   />
                   <Link
                     to="login"
-                    className={`w-6/12 flex items-center justify-center px-[10px] py-[5px] rounded-sm text-sm  cursor-pointer relative z-10 transition-colors duration-300 ${
-                      isLoginPage
-                        ? "text-dark-50 font-bold"
-                        : "text-dark-200 font-normal"
-                    }`}
+                    className={`w-6/12 flex items-center justify-center px-[10px] py-[5px] rounded-sm text-sm cursor-pointer relative z-10 transition-colors duration-300
+                      ${
+                        isLoginPage
+                          ? isDarkMode
+                            ? "text-dark-50 font-bold"
+                            : "text-light-50 font-bold"
+                          : isDarkMode
+                          ? "text-dark-50 font-normal"
+                          : "text-light-50 font-normal"
+                      }`}
                   >
                     <span>Đăng nhập</span>
                   </Link>
                   <Link
                     to="register"
-                    className={`w-6/12 flex items-center justify-center px-[10px] py-[5px] rounded-sm text-sm  cursor-pointer relative z-10 transition-colors duration-300 ${
-                      !isLoginPage
-                        ? "text-dark-50 font-bold"
-                        : "text-dark-200 font-normal"
-                    }`}
+                    className={`w-6/12 flex items-center justify-center px-[10px] py-[5px] rounded-sm text-sm cursor-pointer relative z-10 transition-colors duration-300
+                      ${
+                        !isLoginPage
+                          ? isDarkMode
+                            ? "text-dark-50 font-bold"
+                            : "text-light-50 font-bold"
+                          : isDarkMode
+                          ? "text-dark-50 font-normal"
+                          : "text-light-50 font-normal"
+                      }`}
                   >
                     <span>Đăng ký</span>
                   </Link>

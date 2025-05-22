@@ -3,11 +3,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNotify } from "../../hook/useNotify";
 import { useLocation, useNavigate } from "react-router-dom";
 import { confirmCode } from "../../services/auth.service";
+import { useTheme } from "../../hook/useTheme";
 
 const ConfirmCodeForm = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const location = useLocation();
+  const { isDarkMode } = useTheme();
   const data = location.state;
   const { loading, error } = useSelector((state) => state.auth);
   const [code, setCode] = useState(["", "", "", "", "", ""]);
@@ -79,11 +81,20 @@ const ConfirmCodeForm = () => {
     <div className="h-full flex flex-col items-center justify-center">
       <div className="w-full flex flex-col items-center justify-center gap-[5px]">
         <h1 className="font-black text-2xl">Nhập mã xác nhận</h1>
-        <p className="text-sm  text-dark-300">
+        <p
+          className={`text-sm  ${
+            isDarkMode ? " text-dark-300" : "text-light-200"
+          }`}
+        >
           Chúng tôi đã gửi mã xác nhận đến email của bạn
         </p>
       </div>
-      <div className="min-w-[500px] flex flex-col items-center justify-center gap-[5px] px-[12px] my-[20px] pt-[30px] pb-[20px] rounded-md border-[1px] border-dark-800 shadow-sm">
+      <div
+        className={`min-w-[500px] flex flex-col items-center justify-center gap-[5px] px-[12px] my-[20px] pt-[30px] pb-[20px] rounded-md border-[1px] ${
+          isDarkMode ? "border-dark-800" : "border-transparent bg-dark-200"
+        } shadow-sm`}
+      >
+        <h1 className="py-[10px] text-sm">Mã mã gửi đến email: {data.email}</h1>
         <form
           onSubmit={handleSubmit}
           className="w-full flex flex-col gap-[20px]"
@@ -99,9 +110,11 @@ const ConfirmCodeForm = () => {
                 onChange={(e) => handleChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 onPaste={handlePaste}
-                className="w-[40px] h-[40px] text-center text-lg font-bold 
-              border-2 border-dark-300 rounded-md focus:border-primary-500 
-              focus:outline-none transition-colors"
+                className={`w-[40px] h-[40px] text-center text-lg font-bold 
+              ${
+                isDarkMode ? "border-2 border-dark-300" : "bg-dark-100"
+              } rounded-md focus:border-primary-500 
+              focus:outline-none transition-colors`}
               />
             ))}
           </div>

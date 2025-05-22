@@ -3,10 +3,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../../services/auth.service";
 import { useNotify } from "../../hook/useNotify";
+import { useTheme } from "../../hook/useTheme";
 
 const LoginForm = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { isDarkMode } = useTheme();
   const { notifySuccess, notifyWarning, notifyError } = useNotify();
   const { loading, error } = useSelector((state) => state.auth);
   const [showPassword, setShowPassword] = useState(false);
@@ -74,7 +76,8 @@ const LoginForm = () => {
     } catch (err) {
       console.error(err.response.data);
       notifyError(err.response.data.message);
-      if (!err.response.data.active) {
+      console.log(err.response.data?.active);
+      if (err.response.data.active === false) {
         navigate("/confirm_account/send_code", {
           state: { email: formData.email },
         });
@@ -110,7 +113,11 @@ const LoginForm = () => {
     <form onSubmit={handleSubmit} className="w-full flex flex-col gap-[16px]">
       <div className="w-full flex flex-col">
         <span className="text-sm font-bold pb-[5px]">Email*</span>
-        <div className="w-full flex items-center border-[1px] border-dark-600  rounded-sm ">
+        <div
+          className={`w-full flex items-center border-[1px] ${
+            isDarkMode ? " border-dark-600 " : "bg-dark-400 border-transparent"
+          }  rounded-sm`}
+        >
           <input
             className="flex-1  text-sm px-[5px] py-[8px] outline-none"
             placeholder="Nhập email của bạn"
@@ -124,7 +131,11 @@ const LoginForm = () => {
       </div>
       <div className="w-full flex flex-col">
         <span className="text-sm font-bold pb-[5px]">Password*</span>
-        <div className="w-full flex items-center border-[1px] border-dark-600  rounded-sm ">
+        <div
+          className={`w-full flex items-center border-[1px] ${
+            isDarkMode ? " border-dark-600 " : "bg-dark-400 border-transparent"
+          }  rounded-sm`}
+        >
           <input
             className="flex-1  text-sm px-[5px] py-[8px] outline-none "
             placeholder="Nhập mật khẩu của bạn"
@@ -150,7 +161,7 @@ const LoginForm = () => {
         <div className="space-y-1">
           <div
             className={`flex items-center gap-2 ${
-              passwordChecks.minLength ? "text-green-500" : "text-dark-50"
+              passwordChecks.minLength ? "text-green-500" : ""
             }`}
           >
             <i
@@ -162,7 +173,7 @@ const LoginForm = () => {
           </div>
           <div
             className={`flex items-center gap-2 ${
-              passwordChecks.hasUpperCase ? "text-green-500" : "text-dark-50"
+              passwordChecks.hasUpperCase ? "text-green-500" : ""
             }`}
           >
             <i
@@ -174,7 +185,7 @@ const LoginForm = () => {
           </div>
           <div
             className={`flex items-center gap-2 ${
-              passwordChecks.hasLowerCase ? "text-green-500" : "text-dark-50"
+              passwordChecks.hasLowerCase ? "text-green-500" : ""
             }`}
           >
             <i
@@ -186,7 +197,7 @@ const LoginForm = () => {
           </div>
           <div
             className={`flex items-center gap-2 ${
-              passwordChecks.hasNumber ? "text-green-500" : "text-dark-50"
+              passwordChecks.hasNumber ? "text-green-500" : ""
             }`}
           >
             <i
@@ -198,7 +209,7 @@ const LoginForm = () => {
           </div>
           <div
             className={`flex items-center gap-2 ${
-              passwordChecks.hasSpecialChar ? "text-green-500" : "text-dark-50"
+              passwordChecks.hasSpecialChar ? "text-green-500" : ""
             }`}
           >
             <i

@@ -9,6 +9,7 @@ import AuthRoute from "./AuthRoute";
 import ConfirmAccount from "../pages/ConfirmAccount";
 import SendCodeForm from "../components/common/SendCodeForm";
 import ConfirmCodeForm from "../components/common/ConfirmCodeForm";
+import Account from "../pages/Account";
 
 const Home = lazy(() => import("../pages/Home"));
 const Auth = lazy(() => import("../pages/Auth"));
@@ -23,6 +24,16 @@ const router = createBrowserRouter([
         </ProtectedRoute>
       </Suspense>
     ),
+    children: [
+      {
+        path: "account",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <Account />
+          </Suspense>
+        ),
+      },
+    ],
     errorElement: <ErrorPage />,
   },
   {
@@ -85,6 +96,15 @@ const router = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
     ],
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/account",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <Account />
+      </Suspense>
+    ),
     errorElement: <ErrorPage />,
   },
 ]);

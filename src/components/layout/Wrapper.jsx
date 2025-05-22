@@ -7,8 +7,8 @@ const Wrapper = ({ children, bgDark, bgLight }) => {
     <div
       className={`w-full px-[20px] font-nunito text-dark-50 ${
         isDarkMode
-          ? `bg-${bgDark} text-light-100`
-          : `bg-${bgLight} border-[1px] border-solid border-[#ccc] text-dark-100`
+          ? `bg-${bgLight}  text-dark-100`
+          : `bg-${bgDark} text-light-100`
       }`}
     >
       {children}
