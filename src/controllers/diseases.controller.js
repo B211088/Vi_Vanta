@@ -5,6 +5,10 @@ import {
   updateDiseaseHandle,
   deleteDiseaseHandle,
   getDiseasesByCategoryHandle,
+  searchDiseasesHandle,
+  getAllDiseasesActiveHandle,
+  toggleDiseaseActiveHandle,
+  searchDiseasesActiveHandle,
 } from "../services/disease.service.js";
 import {
   createPreventionHandle,
@@ -86,6 +90,23 @@ export const getAllDiseases = async (req, res) => {
   }
 };
 
+// Lấy danh sách tất cả các bệnh được public
+export const getAllDiseasesActive = async (req, res) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
+    const result = await getAllDiseasesActiveHandle(
+      Number(page),
+      Number(limit)
+    );
+    res.status(200).json({
+      message: "Lấy danh sách bệnh thành công!",
+      data: result,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // Lấy danh sách bệnh theo danh mục (DiseaseCategory)
 export const getDiseasesByCategory = async (req, res) => {
   try {
@@ -116,6 +137,48 @@ export const getDiseaseById = async (req, res) => {
     res.status(200).json({
       message: "Lấy thông tin bệnh thành công!",
       disease,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// tìm kiếm bệnh theo tên
+export const searchDisease = async (req, res) => {
+  try {
+    const { name = "", page = 1, limit = 10 } = req.query;
+    if (!name) {
+      res.status(400).json({ message: "Không có tên bệnh!" });
+    }
+    const diseases = await searchDiseasesHandle(
+      name,
+      Number(page),
+      Number(limit)
+    );
+    res.status(200).json({
+      message: "Tìm kiếm bệnh thành công!",
+      diseases,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// tìm kiếm bệnh theo tên
+export const searchDiseaseActive = async (req, res) => {
+  try {
+    const { name = "", page = 1, limit = 10 } = req.query;
+    if (!name) {
+      res.status(400).json({ message: "Không có tên bệnh!" });
+    }
+    const diseases = await searchDiseasesActiveHandle(
+      name,
+      Number(page),
+      Number(limit)
+    );
+    res.status(200).json({
+      message: "Tìm kiếm bệnh thành công!",
+      diseases,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -153,6 +216,32 @@ export const updateDisease = async (req, res) => {
     const updatedDisease = await updateDiseaseHandle(diseaseId, payload);
     res.status(200).json({
       message: "Cập nhật bệnh thành công!",
+      disease: updatedDisease,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Public/Unpublic một bệnh (chuyển trạng thái isActive)
+export const toggleDiseaseActive = async (req, res) => {
+  try {
+    const { diseaseId } = req.params;
+    const { isActive } = req.body;
+
+    console.log({ isActive });
+
+    if (typeof isActive !== "boolean") {
+      return res
+        .status(400)
+        .json({ message: "Trường isActive phải là true hoặc false!" });
+    }
+
+    const updatedDisease = await toggleDiseaseActiveHandle(diseaseId, isActive);
+    res.status(200).json({
+      message: `Đã cập nhật trạng thái bệnh thành ${
+        isActive ? "public" : "private"
+      } thành công!`,
       disease: updatedDisease,
     });
   } catch (error) {

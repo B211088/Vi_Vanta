@@ -11,41 +11,59 @@ import { JWT_SECRET, JWT_EXPIRATION } from "../config/auth.config.js";
 import { deleteFromCloudinary } from "../utils/uploadImagesToCloud.js";
 
 export const registerUser = async (payload) => {
-  const { email, password } = payload;
-  const existingUser = await User.findOne({ email });
-  if (existingUser) {
-    throw new Error("Email đã tồn tại!");
+  try {
+    const { email, password } = payload;
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      throw new Error("Email đã được đăng ký!");
+    }
+
+    const user = new User({
+      email,
+      passwordHash: password,
+    });
+
+    await user.save();
+  } catch (error) {
+    console.error("Lỗi đăng ký", error.message);
+    // Nếu error đã là instance của Error, lấy message
+    throw new Error(error.message || "Lỗi đăng nhập");
   }
-
-  const user = new User({
-    email,
-    passwordHash: password,
-  });
-
-  await user.save();
 };
 
 export const loginUser = async (email, password) => {
-  const user = await User.findOne({ email });
+  try {
+    const user = await User.findOne({ email });
 
-  if (!user) {
-    throw new Error("Người dùng không tồn tại!");
+    if (!user) {
+      throw new Error("Người dùng không tồn tại!");
+    }
+
+    if (!user.active) {
+      const err = new Error("Chưa xác nhận email");
+      err.active = false;
+      throw err;
+    }
+
+    const isValidPassword = await user.isValidPassword(password);
+    if (!isValidPassword) {
+      throw new Error("Mật khẩu sai!");
+    }
+
+    const token = jwt.sign(
+      { userId: user._id, roles: user.roles },
+      JWT_SECRET,
+      {
+        expiresIn: JWT_EXPIRATION,
+      }
+    );
+
+    return token;
+  } catch (error) {
+    console.error("Lỗi đăng nhập", error.message);
+    // Nếu error đã là instance của Error, lấy message
+    throw new Error(error.message || "Lỗi đăng nhập");
   }
-
-  if (!user.active) {
-    throw new Error("Chưa xác nhận email");
-  }
-
-  const isValidPassword = await user.isValidPassword(password);
-  if (!isValidPassword) {
-    throw new Error("Mật khẩu sai!");
-  }
-
-  const token = jwt.sign({ userId: user._id, roles: user.roles }, JWT_SECRET, {
-    expiresIn: JWT_EXPIRATION,
-  });
-
-  return token;
 };
 
 export const setRoles = async (userId, newRoles) => {
@@ -91,7 +109,9 @@ export const removeRoles = async (userId, rolesRemove) => {
 };
 
 export const getUserProfile = async (userId) => {
-  const userProfile = await User.findById(userId).select("-__v -passwordHash");
+  const userProfile = await User.findById(userId).select(
+    "-__v -passwordHash -updatedAt -createdAt"
+  );
   if (!userProfile) {
     throw new Error("Không tìm thấy người dùng!");
   }
@@ -118,7 +138,7 @@ export const setUserProfile = async (payload, userId) => {
     userId,
     { $set: updateData },
     { new: true }
-  );
+  ).select("-__v -updatedAt -createdAt");
 
   if (updatedUser.modifiedCount === 0) {
     throw new Error("Không có thay đổi nào được thực hiện.");

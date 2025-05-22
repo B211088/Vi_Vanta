@@ -18,6 +18,7 @@ const diseaseSchema = new Schema(
       type: String,
       trim: true,
       uppercase: true,
+      unique: true,
     },
     description: {
       type: String,
@@ -148,6 +149,24 @@ const diseaseSchema = new Schema(
   }
 );
 
+diseaseSchema.index({
+  name: "text",
+  scientificName: "text",
+  description: "text",
+});
+diseaseSchema.index({ category: 1 });
+diseaseSchema.index({ medications: 1 });
+diseaseSchema.index({ symptoms: 1 });
+diseaseSchema.index({ causes: 1 });
+diseaseSchema.index({ treatments: 1 });
+diseaseSchema.index({ preventions: 1 });
+diseaseSchema.index({ riskFactors: 1 });
+diseaseSchema.index({ complications: 1 });
+diseaseSchema.index({ relatedDiseases: 1 });
+diseaseSchema.index({ references: 1 });
+diseaseSchema.index({ isActive: 1 });
+diseaseSchema.index({ version: 1 });
+diseaseSchema.index({ thumbnail: 1 });
 const Disease = mongoose.model("Disease", diseaseSchema);
 
 export default Disease;

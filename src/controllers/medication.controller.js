@@ -5,6 +5,7 @@ import {
   updateMedicationHandle,
   deleteMedicationHandle,
   getMedicationsByCategoryHandle,
+  searchMedicationHandle,
 } from "../services/medication.service.js";
 import {
   createMedicationCategoryHandle,
@@ -50,7 +51,7 @@ export const createMedication = async (req, res) => {
       medication: newMedication,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 
@@ -64,7 +65,7 @@ export const getAllMedications = async (req, res) => {
       medications,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 
@@ -86,7 +87,24 @@ export const getMedicationsByCategory = async (req, res) => {
       data: result,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
+  }
+};
+
+//tìm kiếm thuốc theo từ khóa
+
+export const searchMedication = async (req, res) => {
+  try {
+    const { name = "", page = 1, limit = 10 } = req.query;
+    if (!name) return res.status(400).json({ message: "Không có tên thuốc!" });
+    const medication = await searchMedicationHandle(
+      name,
+      Number(page),
+      Number(limit)
+    );
+    res.status(200).json({ message: "Tìm kiếm thuốc thành công!", medication });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
 };
 
@@ -100,7 +118,7 @@ export const getMedicationById = async (req, res) => {
       medication,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 
@@ -143,7 +161,7 @@ export const updateMedication = async (req, res) => {
       medication: updatedMedication,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 
@@ -154,7 +172,7 @@ export const deleteMedication = async (req, res) => {
     const result = await deleteMedicationHandle(medicationId);
     res.status(200).json(result);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 
@@ -173,7 +191,7 @@ export const createMedicationCategory = async (req, res) => {
       category: newCategory,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 
@@ -186,7 +204,7 @@ export const getAllMedicationCategories = async (req, res) => {
       categories,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 
@@ -201,7 +219,7 @@ export const getMedicationCategoryById = async (req, res) => {
       category,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 
@@ -224,7 +242,7 @@ export const updateMedicationCategory = async (req, res) => {
       category: updatedCategory,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 
@@ -236,6 +254,6 @@ export const deleteMedicationCategory = async (req, res) => {
     const result = await deleteMedicationCategoryHandle(categoryId);
     res.status(200).json(result);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 };

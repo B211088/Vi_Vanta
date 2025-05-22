@@ -6,6 +6,7 @@ import {
   updateMedication,
   deleteMedication,
   getMedicationsByCategory,
+  searchMedication,
 } from "../controllers/medication.controller.js";
 import upload from "../middlewares/uploadMiddleware.js";
 import verifyToken from "../middlewares/verifyToken.js";
@@ -34,6 +35,9 @@ router.get(
   verifyToken,
   getMedicationsByCategory
 );
+
+//tìm kiếm thuốc theo tên
+router.get("/search-medication", verifyToken, searchMedication);
 
 // Lấy thông tin chi tiết một thuốc
 router.get("/:medicationId", verifyToken, getMedicationById);

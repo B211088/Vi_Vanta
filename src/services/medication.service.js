@@ -1,3 +1,5 @@
+import { searchDisease } from "../controllers/diseases.controller.js";
+import Disease from "../models/disease.model.js";
 import Medication from "../models/medication.model.js";
 import { deleteFromCloudinary } from "../utils/uploadImagesToCloud.js";
 
@@ -57,6 +59,38 @@ export const getMedicationByIdHandle = async (medicationId) => {
   } catch (error) {
     console.error("Lỗi khi lấy thông tin thuốc:", error.message);
     throw new Error("Lỗi khi lấy thông tin thuốc");
+  }
+};
+
+export const searchMedicationHandle = async (query, page = 1, limit = 10) => {
+  try {
+    const skip = (page - 1) * limit;
+    const searchQuery = query
+      ? {
+          $and: [{ isActive: true }, { $text: { $search: query } }],
+        }
+      : { isActive: true };
+
+    const [medication, total] = await Promise.all([
+      Medication.find(searchQuery)
+        .populate("_id name scientificName thumbnail description")
+        .skip(skip)
+        .limit(limit),
+      Medication.countDocuments(searchQuery),
+    ]);
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      medication,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalMedications: total,
+      },
+    };
+  } catch (error) {
+    console.error("Lỗi khi tìm kiếm bệnh:", error.message);
+    throw new Error("Lỗi khi tìm kiếm bệnh");
   }
 };
 

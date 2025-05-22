@@ -34,7 +34,9 @@ export const createDiseaseHandle = async (payload) => {
     const relatedDiseaseIds = await Disease.find({
       _id: { $in: relatedDiseases },
     }).select("_id");
-    const categoryId = await DiseaseCategory.findById(category).select("_id");
+    const categoryId = await DiseaseCategory.findById({
+      _id: { $in: category },
+    }).select("_id");
 
     // Tạo bệnh mới
     const newDisease = new Disease({
@@ -44,7 +46,7 @@ export const createDiseaseHandle = async (payload) => {
       symptoms: symptomIds.map((symptom) => symptom._id),
       prevention: preventionIds.map((prevention) => prevention._id),
       relatedDiseases: relatedDiseaseIds.map((disease) => disease._id),
-      category: categoryId ? categoryId._id : null,
+      category: categoryId.map((cat) => cat._id),
     });
 
     await newDisease.save();
@@ -63,8 +65,37 @@ export const getAllDiseasesHandle = async (page, limit) => {
 
     // Lấy danh sách bệnh với phân trang và chỉ lấy các trường cần thiết
     const diseases = await Disease.find()
+      .select("name scientificName thumbnail description category isActive")
+      .skip(skip)
+      .limit(limit);
+
+    // Đếm tổng số bệnh để trả về tổng số trang
+    const totalDiseases = await Disease.countDocuments();
+    const totalPages = Math.ceil(totalDiseases / limit);
+
+    return {
+      diseases,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalDiseases,
+      },
+    };
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách bệnh:", error.message);
+    throw new Error("Lỗi khi lấy danh sách bệnh");
+  }
+};
+
+// Lấy danh sách tất cả các bệnh
+export const getAllDiseasesActiveHandle = async (page, limit) => {
+  try {
+    // Tính toán skip và limit cho phân trang
+    const skip = (page - 1) * limit;
+
+    // Lấy danh sách bệnh với phân trang và chỉ lấy các trường cần thiết
+    const diseases = await Disease.find({ isActive: true })
       .select("name scientificName thumbnail description category ") // Chỉ lấy các trường cần thiết
-      .populate("category", "name description") // Lấy thông tin danh mục
       .skip(skip)
       .limit(limit);
 
@@ -146,7 +177,6 @@ export const getDiseaseByIdHandle = async (diseaseId) => {
 };
 
 // Cập nhật thông tin bệnh
-
 export const updateDiseaseHandle = async (diseaseId, payload) => {
   try {
     const {
@@ -178,10 +208,9 @@ export const updateDiseaseHandle = async (diseaseId, payload) => {
       ? await Disease.find({ _id: { $in: relatedDiseases } }).select("_id")
       : [];
     const categoryId = category
-      ? await DiseaseCategory.findById(category).select("_id")
-      : null;
+      ? await DiseaseCategory.find({ _id: { $in: category } }).select("_id")
+      : [];
 
-    // Lấy thông tin bệnh hiện tại
     const existingDisease = await Disease.findById(diseaseId);
     if (!existingDisease) {
       throw new Error("Không tìm thấy bệnh để cập nhật");
@@ -272,6 +301,30 @@ export const updateDiseaseHandle = async (diseaseId, payload) => {
     throw new Error("Lỗi khi cập nhật bệnh");
   }
 };
+
+//chuyển trạng thái của bênh
+export const toggleDiseaseActiveHandle = async (diseaseId, isActive) => {
+  try {
+    if (typeof isActive !== "boolean") {
+      throw new Error("Giá trị isActive phải là true hoặc false");
+    }
+
+    const disease = await Disease.findByIdAndUpdate(
+      diseaseId,
+      { isActive },
+      { new: true }
+    );
+
+    if (!disease) {
+      throw new Error("Không tìm thấy bệnh để cập nhật trạng thái");
+    }
+
+    return disease;
+  } catch (error) {
+    console.error("Lỗi khi cập nhật trạng thái bệnh:", error.message);
+    throw new Error("Lỗi khi cập nhật trạng thái bệnh");
+  }
+};
 // Xóa một bệnh
 export const deleteDiseaseHandle = async (diseaseId) => {
   try {
@@ -331,5 +384,83 @@ export const deleteDiseaseHandle = async (diseaseId) => {
   } catch (error) {
     console.error("Lỗi khi xóa bệnh:", error.message);
     throw new Error("Lỗi khi xóa bệnh");
+  }
+};
+
+// Tìm kiếm bệnh theo tên, tên khoa học, mã ICD hoặc mô tả
+export const searchDiseasesHandle = async (query, page = 1, limit = 10) => {
+  try {
+    const skip = (page - 1) * limit;
+
+    // Sử dụng text index để tìm kiếm toàn văn
+    const searchQuery = query
+      ? {
+          $text: { $search: query },
+        }
+      : {};
+
+    const [diseases, total] = await Promise.all([
+      Disease.find(searchQuery)
+        .select(
+          "_id name scientificName icd10Code thumbnail riskLevel isActive"
+        )
+        .skip(skip)
+        .limit(limit),
+      Disease.countDocuments(searchQuery),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      diseases,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalDiseases: total,
+      },
+    };
+  } catch (error) {
+    console.error("Lỗi khi tìm kiếm bệnh:", error.message);
+    throw new Error("Lỗi khi tìm kiếm bệnh");
+  }
+};
+
+// Tìm kiếm bệnh theo tên, tên khoa học, mã ICD hoặc mô tả
+export const searchDiseasesActiveHandle = async (
+  query,
+  page = 1,
+  limit = 10
+) => {
+  try {
+    const skip = (page - 1) * limit;
+
+    // Sử dụng text index để tìm kiếm toàn văn
+    const searchQuery = query
+      ? {
+          $and: [{ isActive: true }, { $text: { $search: query } }],
+        }
+      : { isActive: true };
+
+    const [diseases, total] = await Promise.all([
+      Disease.find(searchQuery)
+        .select("_id name scientificName icd10Code thumbnail riskLevel ")
+        .skip(skip)
+        .limit(limit),
+      Disease.countDocuments(searchQuery),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      diseases,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalDiseases: total,
+      },
+    };
+  } catch (error) {
+    console.error("Lỗi khi tìm kiếm bệnh:", error.message);
+    throw new Error("Lỗi khi tìm kiếm bệnh");
   }
 };

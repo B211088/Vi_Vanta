@@ -26,6 +26,10 @@ import {
   updateCause,
   deleteCause,
   getDiseasesByCategory,
+  searchDisease,
+  getAllDiseasesActive,
+  toggleDiseaseActive,
+  searchDiseaseActive,
 } from "../controllers/diseases.controller.js";
 import upload from "../middlewares/uploadMiddleware.js";
 import verifyToken from "../middlewares/verifyToken.js";
@@ -43,14 +47,34 @@ router.post(
     { name: "images", maxCount: 5 },
     { name: "thumbnail", maxCount: 1 },
   ]),
+
   createDisease
 );
 
 // Lấy danh sách tất cả các bệnh
 router.get("/get-all-diseases", verifyToken, getAllDiseases);
 
+// Lấy danh sách tất cả các bệnh được active
+router.get(
+  "/get-all-diseases/active",
+  verifyToken,
+  authorizeRoles("admin"),
+  getAllDiseasesActive
+);
+
 // Lấy thông tin chi tiết một bệnh
 router.get("/get-disease/:diseaseId", verifyToken, getDiseaseById);
+
+// Tìm kiếm bệnh theo tên
+router.get(
+  "/search-disease",
+  verifyToken,
+  authorizeRoles("admin"),
+  searchDisease
+);
+
+// Tìm kiếm bệnh theo tên
+router.get("/search-disease/active", verifyToken, searchDiseaseActive);
 
 // Lấy danh sách bệnh theo danh mục
 router.get("/disease-category/:categoryId", verifyToken, getDiseasesByCategory);
@@ -65,6 +89,14 @@ router.put(
     { name: "thumbnail", maxCount: 1 },
   ]),
   updateDisease
+);
+
+//chuyển trạng thái bệnh
+router.patch(
+  "/:diseaseId/toggle-active",
+  verifyToken,
+  authorizeRoles("admin"),
+  toggleDiseaseActive
 );
 
 // Xóa một bệnh

@@ -81,6 +81,7 @@ const medicationSchema = new Schema(
   }
 );
 
+medicationSchema.index({ name: "text", scientificName: "text" });
 const Medication = mongoose.model("Medication", medicationSchema);
 
 export default Medication;

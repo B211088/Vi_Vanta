@@ -2,7 +2,7 @@ import { Code, User } from "../models/index.js";
 import { transporter } from "../utils/mailer.js";
 
 export const sendConfirmationCodeHandle = async (toEmail, code) => {
-  const expirationTime = 2 * 60 * 1000;
+  const expirationTime = 5 * 60 * 1000;
   const expiresAt = new Date(Date.now() + expirationTime);
 
   try {

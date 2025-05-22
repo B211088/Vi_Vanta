@@ -23,9 +23,11 @@ import { createCode } from "../utils/confirnEmail.js";
 export const register = async (req, res) => {
   try {
     const user = await registerUser(req.body);
-    res.status(201).json({ message: "Đăng ký thành công!", user });
+    res
+      .status(201)
+      .json({ success: true, message: "Đăng ký thành công!", user });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ success: false, message: error.message });
   }
 };
 
@@ -39,18 +41,44 @@ export const login = async (req, res) => {
       sameSite: "Lax",
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
-    res.status(200).json({ message: "Đăng nhập thành công!" });
+    res.status(200).json({ success: true, message: "Đăng nhập thành công!" });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    if (error.message === "Chưa xác nhận email") {
+      return res.status(400).json({
+        success: false,
+        active: false,
+        message: error.message,
+      });
+    }
+    // Các lỗi khác
+    res.status(400).json({
+      success: false,
+      message: error.message || "Đăng nhập thất bại",
+    });
+  }
+};
+
+export const logout = async (req, res) => {
+  try {
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Lax",
+    });
+    res.status(200).json({ success: true, message: "Đăng xuất thành công" });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
   }
 };
 
 export const profile = async (req, res) => {
   try {
     const user = await getUserProfile(req.user.userId);
-    res.status(200).json({ message: "Thông tin người dùng", user });
+    res
+      .status(200)
+      .json({ success: true, message: "Thông tin người dùng", user });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ success: false, message: error.message });
   }
 };
 
@@ -60,9 +88,11 @@ export const setProfile = async (req, res) => {
       return res.status(400).json({ message: "Dữ liệu không hợp lệ!" });
     }
     const user = await setUserProfile(req.body, req.user.userId);
-    res.status(200).json({ message: "Thông tin người dùng", user });
+    res
+      .status(200)
+      .json({ success: true, message: "Thông tin người dùng", user });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ success: false, message: error.message });
   }
 };
 
@@ -75,11 +105,13 @@ export const sendConfirmCodeByForgotPassword = async (req, res) => {
     const code = createCode();
     await sendConfirmationCodeHandle(email, code);
 
-    res.status(200).json({ message: "Đã gửi mã xác nhận" });
+    res.status(200).json({ success: true, message: "Đã gửi mã xác nhận" });
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Không gửi được email", error: err.message });
+    res.status(400).json({
+      success: false,
+      message: "Không gửi được email",
+      error: err.message,
+    });
   }
 };
 
@@ -95,12 +127,16 @@ export const confirmCodeByForgotPassword = async (req, res) => {
     const confirm = await confirmationCodeHandle(email, code);
     if (confirm) {
       await updateUserPassword(req.user.userId, password);
-      res.status(200).json({ message: "Đổi mật khẩu thành công!" });
+      res
+        .status(200)
+        .json({ success: true, message: "Đổi mật khẩu thành công!" });
     } else {
-      res.status(400).json({ message: "Mã xác nhận không hợp lệ" });
+      res
+        .status(400)
+        .json({ success: false, message: "Mã xác nhận không hợp lệ" });
     }
   } catch (err) {
-    res.status(500).json({
+    res.status(400).json({
       message: "Có lỗi xảy ra trong quá trình xác nhận mã",
       error: err.message,
     });
@@ -121,12 +157,13 @@ export const uploadAvatar = async (req, res) => {
     const updatedUser = await updateUserAvatar(userId, avatar);
 
     res.status(200).json({
+      success: true,
       message: "Cập nhật avatar thành công",
       user: updatedUser,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ success: false, message: error.message });
   }
 };
 
@@ -137,24 +174,29 @@ export const sendConfirmCodeByRegister = async (req, res) => {
 
   try {
     await sendConfirmationCodeHandle(email, code);
-    res.status(200).json({ message: "Đã gửi mã xác nhận" });
+    res.status(200).json({ success: true, message: "Đã gửi mã xác nhận" });
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Không gửi được email", error: err.message });
+    res.status(400).json({
+      success: false,
+      message: "Không gửi được email",
+      error: err.message,
+    });
   }
 };
 
 export const confirmCodeByRegister = async (req, res) => {
   const { email, code } = req.body;
-
+  console.log({ email });
+  console.log({ code });
   try {
     await confirmationCodeHandle(email, code);
-    res.status(200).json({ message: "Xác nhận thành công!" });
+    res.status(200).json({ success: true, message: "Xác nhận thành công!" });
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Không xác nhận được mail", error: err.message });
+    res.status(400).json({
+      success: false,
+      message: "Không xác nhận được mail",
+      error: err.message,
+    });
   }
 };
 
@@ -163,7 +205,7 @@ export const getUserAddress = async (req, res) => {
     const userAddress = await handleGetUserAddressByUserId(req.user.userId);
     res.status(200).json({ userAddress });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 
@@ -175,7 +217,7 @@ export const updateUserAddress = async (req, res) => {
     );
     res.status(200).json({ userAddress });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 
@@ -191,7 +233,7 @@ export const addUserRole = async (req, res) => {
     const userRole = await setRoles(req.user.userId, roles);
     res.status(200).json({ userRole });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 
@@ -210,7 +252,7 @@ export const removeUserRole = async (req, res) => {
       .status(200)
       .json({ message: "Xóa vai trò thành công", user: updatedUser });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 

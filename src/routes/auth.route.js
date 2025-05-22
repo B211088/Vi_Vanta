@@ -21,6 +21,7 @@ import {
   removeUserRole,
   sendConfirmCodeByForgotPassword,
   confirmCodeByForgotPassword,
+  logout,
 } from "../controllers/auth.controller.js";
 
 const router = express.Router();
@@ -30,6 +31,8 @@ router.post("/register", validateEmailMiddleware, register);
 
 // Đăng nhập tài khoản
 router.post("/login", validateEmailMiddleware, login);
+
+router.post("/logout", verifyToken, logout);
 
 // set role cho tài khoản
 router.post("/set/role", verifyToken, authorizeRoles("admin"), addUserRole);
@@ -46,7 +49,7 @@ router.put(
 router.get("/profile", verifyToken, profile);
 
 router.post(
-  "/forgot-password/send-code",
+  "/forgot-password/send_code",
   validateEmailMiddleware,
   verifyToken,
   sendConfirmCodeByForgotPassword
@@ -54,14 +57,14 @@ router.post(
 
 // Xác nhận mã xác nhận và đổi mật khẩu
 router.post(
-  "/forgot-password/confirm-code",
+  "/forgot-password/confirm_code",
   validateEmailMiddleware,
   verifyToken,
   confirmCodeByForgotPassword
 );
 
 // Cập nhật thông tin tài khoản
-router.post("/set/profile", sanitizeInputMiddleware, verifyToken, setProfile);
+router.put("/update/profile", sanitizeInputMiddleware, verifyToken, setProfile);
 
 // Cập nhật ảnh đại diện
 router.post(
