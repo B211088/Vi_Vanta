@@ -43,6 +43,15 @@ const router = createBrowserRouter([
             ),
             errorElement: <ErrorPage />,
           },
+          {
+            path: "social_info",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <Profile />
+              </Suspense>
+            ),
+            errorElement: <ErrorPage />,
+          },
         ],
         errorElement: <ErrorPage />,
       },

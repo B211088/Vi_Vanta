@@ -9,7 +9,7 @@ const Modal = ({ children, closeModal }) => {
       role="dialog"
       aria-modal="true"
       tabIndex="-1"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[#0000000e] cursor-pointer"
+      className="fixed inset-0 z-50 flex items-center font-nunito justify-center bg-[#0000000e] cursor-pointer"
       onClick={closeModal}
     >
       <div

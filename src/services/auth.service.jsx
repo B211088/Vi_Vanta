@@ -14,6 +14,12 @@ import {
   loadingEnd,
   updateUserProileFailure,
   updateUserProileSuccess,
+  uploadUserAvatarSuccess,
+  uploadUserAvatarFailure,
+  getUserAddressSuccess,
+  getUserAddressFailure,
+  updateUserAddressSuccess,
+  updateUserAddressFailure,
 } from "../store/slices/authSlice";
 import { API_URL } from "../config/api.config";
 
@@ -28,6 +34,7 @@ export const loadUser = () => async (dispatch) => {
     dispatch(loadUserStart());
     const response = await api.get("/api/v1/user/profile");
     dispatch(loadUserSuccess(response.data.user));
+    await dispatch(getUserAddress());
     return response.data;
   } catch (error) {
     const errorMessage =
@@ -56,6 +63,7 @@ export const loginUser = (credentials) => async (dispatch) => {
     const response = await api.post("/api/v1/user/login", credentials);
     dispatch(loginSuccess(response.data));
     await dispatch(loadUser());
+    await dispatch(getUserAddress());
     return response.data;
   } catch (error) {
     const errorMessage = error.response?.data?.message || "Đăng nhập thất bại";
@@ -93,6 +101,24 @@ export const updateUserProfile = (userData) => async (dispatch) => {
       error.message ||
       "Cập nhật thông tin thất bại";
     dispatch(updateUserProileFailure(errorMessage));
+    throw new Error(errorMessage);
+  }
+};
+
+export const uploadUserAvatar = (avatarFile) => async (dispatch) => {
+  try {
+    dispatch(loadingStart());
+    const formData = new FormData();
+    formData.append("avatar", avatarFile);
+    const response = await api.put("/api/v1/user/upload_avatar", formData);
+    dispatch(uploadUserAvatarSuccess({ user: response.data.user }));
+    return { success: true, message: "Cập nhật avatar thành công!" };
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message ||
+      error.message ||
+      "Cập nhật ảnh đại diện thất bại";
+    dispatch(uploadUserAvatarFailure(errorMessage));
     throw new Error(errorMessage);
   }
 };
@@ -147,6 +173,38 @@ export const confirmCode = (email, code) => async (dispatch) => {
     throw new Error(errorMessage);
   }
 };
+
+export const getUserAddress = () => async (dispatch) => {
+  try {
+    dispatch(loadingStart());
+    const response = await api.get("/api/v1/user/address");
+    dispatch(getUserAddressSuccess(response.data.userAddress));
+    return { success: true };
+  } catch (error) {
+    const errorMessage =
+      error.response?.data.message || "Không thể địa chỉ của bạn";
+    dispatch(getUserAddressFailure(errorMessage));
+    throw error;
+  }
+};
+
+export const updateUserAddress =
+  (updateUserAddressData) => async (dispatch) => {
+    try {
+      dispatch(loadingStart());
+      const response = await api.put(
+        "/api/v1/user/update/address",
+        updateUserAddressData
+      );
+      dispatch(updateUserAddressSuccess(response.data.userAddress));
+      return { success: true };
+    } catch (error) {
+      const errorMessage =
+        error.response?.data.message || "Không thể địa chỉ của bạn";
+      dispatch(updateUserAddressFailure(errorMessage));
+      throw error;
+    }
+  };
 
 // Add interceptors for token management
 api.interceptors.request.use(

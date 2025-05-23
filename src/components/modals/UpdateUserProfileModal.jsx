@@ -61,15 +61,16 @@ const UpdateUserProfileModal = ({ closeModal, currentData }) => {
 
     try {
       const userData = {
-        fullName: formData.fullName,
-        phone: formData.phone,
-        dateOfBirth: formData.dateOfBirth,
-        gender: formData.gender,
+        fullName: formData.fullName.trim(),
+        phone: formData.phone.trim(),
+        dateOfBirth: formData.dateOfBirth.trim(),
+        gender: formData.gender.trim(),
       };
 
       const result = await dispatch(updateUserProfile(userData));
       if (result.success) {
         notifySuccess(result.message);
+        closeModal();
       }
     } catch (error) {
       notifyError(error.message);
@@ -79,7 +80,7 @@ const UpdateUserProfileModal = ({ closeModal, currentData }) => {
   return (
     <Modal closeModal={closeModal}>
       <div
-        className="w-[500px] flex flex-col bg-light-50 p-[26px] rounded-lg"
+        className="w-4/12 max-w-[600px] flex flex-col bg-light-50 p-[26px] rounded-lg"
         onClick={(e) => e.stopPropagation()}
       >
         <h1 className="font-bold text-2xl pb-[20px]">

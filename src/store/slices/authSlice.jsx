@@ -6,6 +6,7 @@ const initialState = {
   user: null,
   loading: false,
   error: null,
+  address: null,
 };
 
 const authSlice = createSlice({
@@ -58,10 +59,35 @@ const authSlice = createSlice({
     updateUserProileSuccess: (state, action) => {
       state.loading = false;
       state.user = action.payload.user;
-      state.isAuthenticated = true;
     },
     updateUserProileFailure: (state, action) => {
       state.loading = false;
+      state.error = action.payload;
+    },
+    uploadUserAvatarSuccess: (state, action) => {
+      state.loading = false;
+      state.user = action.payload.user;
+    },
+    uploadUserAvatarFailure: (state, action) => {
+      state.loading = false;
+      state.error = action.payload;
+    },
+    getUserAddressSuccess: (state, action) => {
+      state.loading = false;
+      state.address = action.payload;
+    },
+    getUserAddressFailure: (state, action) => {
+      state.loading = false;
+      state.address = null;
+      state.error = action.payload;
+    },
+    updateUserAddressSuccess: (state, action) => {
+      state.loading = false;
+      state.address = action.payload.userAddress;
+    },
+    updateUserAddressFailure: (state, action) => {
+      state.loading = false;
+      state.address = null;
       state.error = action.payload;
     },
     loadingStart: (state) => {
@@ -83,6 +109,8 @@ const authSlice = createSlice({
 export const {
   loadUserStart,
   loadUserSuccess,
+  getUserAddressSuccess,
+  getUserAddressFailure,
   loadUserFailure,
   registerStart,
   registerSuccess,
@@ -93,8 +121,13 @@ export const {
   loginFailure,
   updateUserProileSuccess,
   updateUserProileFailure,
+  updateUserAddressSuccess,
+  updateUserAddressFailure,
+  uploadUserAvatarSuccess,
+  uploadUserAvatarFailure,
   logout,
   loadingStart,
   loadingEnd,
 } = authSlice.actions;
+
 export default authSlice.reducer;
