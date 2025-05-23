@@ -179,7 +179,7 @@ export const updateUserAvatar = async (userId, avatar) => {
       userId,
       { avatar },
       { new: true }
-    );
+    ).select("-__v -createdAt -updatedAt");
     return user;
   } catch (error) {
     console.error("Error updating user avatar:", error);
@@ -200,10 +200,10 @@ export const handleGetUserAddressByUserId = async (userId) => {
       "-__v -createdAt -updatedAt"
     );
     const userDistrict = await District.findById(userAddress.districtId).select(
-      "-__v -createdAt -updatedAt"
+      "-__v -createdAt -updatedAt -provinceId"
     );
     const userWard = await Ward.findById(userAddress.wardId).select(
-      "-__v -createdAt -updatedAt"
+      "-__v -createdAt -updatedAt -districtId"
     );
 
     return {
@@ -221,25 +221,27 @@ export const handleGetUserAddressByUserId = async (userId) => {
 
 export const hanldeUpdateUserAddress = async (userId, payload) => {
   try {
-    const { provinceId, districtId, wardId, specificAddress } = payload;
+    const updatedAddress = await Address.findOneAndUpdate({ userId }, payload, {
+      new: true,
+      upsert: true,
+    })
+      .populate("provinceId", "name")
+      .populate("districtId", "name")
+      .populate("wardId", "name")
+      .select("-__v -createdAt -updatedAt");
 
-    const updatedAddress = await Address.findOneAndUpdate(
-      { userId },
-      {
-        $set: {
-          provinceId,
-          districtId,
-          wardId,
-          specificAddress,
-        },
+    if (!updatedAddress) {
+      throw new Error("Không tìm thấy hoặc không thể cập nhật địa chỉ.");
+    }
+
+    return {
+      userAddress: {
+        province: updatedAddress.provinceId,
+        district: updatedAddress.districtId,
+        ward: updatedAddress.wardId,
+        specificAddress: updatedAddress.specificAddress,
       },
-      {
-        new: true,
-        upsert: true,
-      }
-    ).select("-__v -createdAt -updatedAt");
-
-    return updatedAddress;
+    };
   } catch (error) {
     throw new Error(
       "Có lỗi xảy ra trong quá trình cập nhật/thêm địa chỉ người dùng"

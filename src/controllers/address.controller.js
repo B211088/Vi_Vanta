@@ -20,8 +20,9 @@ export const provinces = async (req, res) => {
 };
 
 export const districts = async (req, res) => {
+  const { provinceId } = req.params;
   try {
-    const districts = await getDistricts(req.body.provinceId);
+    const districts = await getDistricts(provinceId);
     res.status(200).json({ districts });
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -29,8 +30,9 @@ export const districts = async (req, res) => {
 };
 
 export const wards = async (req, res) => {
+  const { districtId } = req.params;
   try {
-    const wards = await getWards(req.body.districtId);
+    const wards = await getWards(districtId);
     res.status(200).json({ wards });
   } catch (error) {
     res.status(400).json({ message: error.message });

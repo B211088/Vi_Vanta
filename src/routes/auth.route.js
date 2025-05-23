@@ -67,8 +67,8 @@ router.post(
 router.put("/update/profile", sanitizeInputMiddleware, verifyToken, setProfile);
 
 // Cập nhật ảnh đại diện
-router.post(
-  "/upload-avatar",
+router.put(
+  "/upload_avatar",
   sanitizeInputMiddleware,
   verifyToken,
   upload.single("avatar"),

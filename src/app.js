@@ -31,7 +31,7 @@ const app = express();
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 1000,
   message: "Quá nhiều yêu cầu từ IP này, hãy thử lại sau 15 phút.",
   standardHeaders: true,
   legacyHeaders: false,

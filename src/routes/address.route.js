@@ -14,9 +14,9 @@ const router = express.Router();
 // Lấy danh sách tất cả tỉnh thành
 router.get("/provinces", provinces);
 // Lấy danh sách tất cả quận huyện
-router.get("/districts", districts);
+router.get("/:provinceId/districts", districts);
 // Lấy danh sách tất cả phường xã
-router.get("/wards", wards);
+router.get("/:districtId/wards", wards);
 
 // Tạo tỉnh thành
 router.post(
