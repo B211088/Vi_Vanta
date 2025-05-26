@@ -1,19 +1,29 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate, useLocation } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import Loading from "../pages/Loading";
 import ErrorPage from "../pages/errorPage";
-import LoginForm from "../components/common/LoginForm";
-import RegisterForm from "../components/common/RegisterForm";
+
 import ProtectedRoute from "./ProtectedRoute";
 import AuthRoute from "./AuthRoute";
-import ConfirmAccount from "../pages/ConfirmAccount";
-import SendCodeForm from "../components/common/SendCodeForm";
-import ConfirmCodeForm from "../components/common/ConfirmCodeForm";
-import Account from "../pages/Account";
-import Profile from "../components/layout/Profile";
+import BodyIndex from "../components/layout/user/BodyIndex";
+import Tools from "../pages/user/Tools";
+import Dashboard from "../pages/user/Dashboard";
 
-const Home = lazy(() => import("../pages/Home"));
-const Auth = lazy(() => import("../pages/Auth"));
+const Home = lazy(() => import("../pages/user/Home"));
+const Auth = lazy(() => import("../pages/auth/Auth"));
+const Profile = lazy(() => import("../components/layout/user/Profile"));
+const Account = lazy(() => import("../pages/user/Account"));
+const ConfirmAccount = lazy(() => import("../pages/auth/ConfirmAccount"));
+const ConfirmCodeForm = lazy(() =>
+  import("../components/common/forms/ConfirmCodeForm")
+);
+const SendCodeForm = lazy(() =>
+  import("../components/common/forms/SendCodeForm")
+);
+const RegisterForm = lazy(() =>
+  import("../components/common/forms/RegisterForm")
+);
+const LoginForm = lazy(() => import("../components/common/forms/LoginForm"));
 
 const router = createBrowserRouter([
   {
@@ -26,6 +36,19 @@ const router = createBrowserRouter([
       </Suspense>
     ),
     children: [
+      {
+        index: true,
+        element: <Navigate to="dashboard" replace />,
+      },
+      {
+        path: "dashboard",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <Dashboard />
+          </Suspense>
+        ),
+        errorElement: <ErrorPage />,
+      },
       {
         path: "account",
         element: (
@@ -48,6 +71,30 @@ const router = createBrowserRouter([
             element: (
               <Suspense fallback={<Loading />}>
                 <Profile />
+              </Suspense>
+            ),
+            errorElement: <ErrorPage />,
+          },
+        ],
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "tools",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <Tools />
+          </Suspense>
+        ),
+        children: [
+          {
+            index: true, // 👉 khi người dùng truy cập /tools
+            element: <Navigate to="body-index" replace />,
+          },
+          {
+            path: "body-index",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <BodyIndex />
               </Suspense>
             ),
             errorElement: <ErrorPage />,

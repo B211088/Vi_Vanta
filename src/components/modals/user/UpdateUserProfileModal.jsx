@@ -1,10 +1,12 @@
-import Modal from "../layout/Modal";
-import { useTheme } from "../../hook/useTheme";
+import Modal from "../../layout/Modal";
+import { useTheme } from "../../../hook/useTheme";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
-import { useNotify } from "../../hook/useNotify";
-import { updateUserProfile } from "../../services/auth.service";
-import { formatDateYYYYMMDD } from "../../utils/formatDate";
+import { useNotify } from "../../../hook/useNotify";
+import { updateUserProfile } from "../../../services/auth.service";
+import { formatDateYYYYMMDD } from "../../../utils/formatDate";
+import SubmitButton from "../../common/buttons/SubmitButton";
+import CancelButton from "../../common/buttons/CancelButton";
 
 const UpdateUserProfileModal = ({ closeModal, currentData }) => {
   const dispatch = useDispatch();
@@ -80,7 +82,7 @@ const UpdateUserProfileModal = ({ closeModal, currentData }) => {
   return (
     <Modal closeModal={closeModal}>
       <div
-        className="w-4/12 max-w-[600px] flex flex-col bg-light-50 p-[26px] rounded-lg"
+        className="w-6/12 max-w-[600px] flex flex-col bg-light-50 p-[26px] rounded-lg"
         onClick={(e) => e.stopPropagation()}
       >
         <h1 className="font-bold text-2xl pb-[20px]">
@@ -172,23 +174,8 @@ const UpdateUserProfileModal = ({ closeModal, currentData }) => {
             </div>
           </div>
           <div className="w-full flex flex-col gap-[15px]">
-            {" "}
-            <button
-              type="submit"
-              disabled={loading}
-              className={`w-full flex justify-center items-center rounded-sm py-[8px] text-sm text-light-50 font-bold 
-          ${loading ? "bg-gray-400" : "bg-green-500 hover:bg-dark-600"} 
-          transition-colors cursor-pointer`}
-            >
-              <span>{loading ? "Đang xử lý..." : "Xác nhận"}</span>
-            </button>
-            <button
-              disabled={loading}
-              onClick={closeModal}
-              className={`w-full flex justify-center items-center rounded-sm py-[8px] text-sm border-[1px] border-dark-600 font-bold cursor-pointer `}
-            >
-              <span>Quay lại</span>
-            </button>
+            <SubmitButton loading={loading} />
+            <CancelButton loading={loading} closeModal={closeModal} />
           </div>
         </form>
       </div>

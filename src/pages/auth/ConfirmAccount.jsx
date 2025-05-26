@@ -1,7 +1,7 @@
-import Background from "../components/layout/Background";
+import Background from "../../components/layout/Background";
 import { Outlet, useNavigate } from "react-router-dom";
-import { useTheme } from "../hook/useTheme";
-import ButtonToggleTheme from "../components/common/ButtonToggleTheme";
+import { useTheme } from "../../hook/useTheme";
+import ButtonToggleTheme from "../../components/common/ButtonToggleTheme";
 
 const ConfirmAccount = () => {
   const { isDarkMode } = useTheme();

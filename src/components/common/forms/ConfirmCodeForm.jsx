@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNotify } from "../../hook/useNotify";
 import { useLocation, useNavigate } from "react-router-dom";
-import { confirmCode } from "../../services/auth.service";
-import { useTheme } from "../../hook/useTheme";
+import { useTheme } from "../../../hook/useTheme";
+import { useNotify } from "../../../hook/useNotify";
+import { confirmCode } from "../../../services/auth.service";
 
 const ConfirmCodeForm = () => {
   const navigate = useNavigate();
@@ -15,6 +15,12 @@ const ConfirmCodeForm = () => {
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const inputRefs = useRef([]);
   const { notifyError, notifySuccess, notifyWarning } = useNotify();
+
+  useEffect(() => {
+    if (!data?.email) {
+      navigate("/auth/register");
+    }
+  }, []);
 
   // Initialize refs for each input
   useEffect(() => {
@@ -71,7 +77,7 @@ const ConfirmCodeForm = () => {
     try {
       await dispatch(confirmCode(data.email, confirmationCode));
       notifySuccess("Xác nhận thành công!");
-      navigate("/");
+      navigate("/auth/login", { state: null });
     } catch (error) {
       notifyError(error.message || "Xác nhận thất bại");
     }
@@ -94,7 +100,9 @@ const ConfirmCodeForm = () => {
           isDarkMode ? "border-dark-800" : "border-transparent bg-dark-200"
         } shadow-sm`}
       >
-        <h1 className="py-[10px] text-sm">Mã mã gửi đến email: {data.email}</h1>
+        <h1 className="py-[10px] text-sm">
+          Mã mã gửi đến email: {data?.email}
+        </h1>
         <form
           onSubmit={handleSubmit}
           className="w-full flex flex-col gap-[20px]"

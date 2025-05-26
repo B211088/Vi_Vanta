@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { registerUser } from "../../services/auth.service";
-import { clearError } from "../../store/slices/authSlice";
-import { useNotify } from "../../hook/useNotify";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "../../hook/useTheme";
+import { useTheme } from "../../../hook/useTheme";
+import { useNotify } from "../../../hook/useNotify";
+import { registerUser } from "../../../services/auth.service";
+import { clearError } from "../../../store/slices/authSlice";
 
 const RegisterForm = () => {
   const dispatch = useDispatch();

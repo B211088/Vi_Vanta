@@ -1,9 +1,9 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
-import logoGoogle from "../assets/images/logo_google.png";
-import banner from "../assets/images/bannerAuth.png";
-import Background from "../components/layout/Background";
-import ButtonToggleTheme from "../components/common/ButtonToggleTheme";
-import { useTheme } from "../hook/useTheme";
+import logoGoogle from "../../assets/images/logo_google.png";
+import banner from "../../assets/images/bannerAuth.png";
+import Background from "../../components/layout/Background";
+import ButtonToggleTheme from "../../components/common/ButtonToggleTheme";
+import { useTheme } from "../../hook/useTheme";
 
 const Auth = () => {
   const location = useLocation();

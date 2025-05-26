@@ -1,16 +1,15 @@
 import { useSelector } from "react-redux";
-import { formatDateDDMMYY } from "../../utils/formatDate";
-import UpdateUserProfileModal from "../modals/UpdateUserProfileModal";
 import { useState } from "react";
-import UploadUserAvatarModal from "../modals/UploadUserAvatarModal";
-import UpdateUserAddress from "../modals/UpdateUserAddress";
-
+import UpdateUserAddress from "../../modals/user/UpdateUserAddress";
+import UploadUserAvatarModal from "../../modals/user/UploadUserAvatarModal";
+import UpdateUserProfileModal from "../../modals/user/UpdateUserProfileModal";
+import { formatDateDDMMYY } from "../../../utils/formatDate";
 const Profile = () => {
   const { user, address } = useSelector((state) => state.auth);
   const [updateUserProfileModal, setUpdateUserProfileModal] = useState(false);
   const [uploadUserAvatarModal, setUploadUserAvatarModal] = useState(false);
   const [updataUserAddressModal, setUpdataUserAddressModa] = useState(false);
-  console.log({ address });
+
   return (
     <div className="flex-1 flex flex-col gap-[20px] pl-[20px] overflow-hidden">
       {updateUserProfileModal && (

@@ -1,12 +1,11 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import banner from "../../assets/images/bannerAuth.png";
-
+import banner from "../../../assets/images/bannerAuth.png";
 import { useDispatch, useSelector } from "react-redux";
-import { sendCodeVerifyMail } from "../../services/auth.service";
 import { useEffect, useState } from "react";
-import { useNotify } from "../../hook/useNotify";
-import { loadingEnd } from "../../store/slices/authSlice";
-import { useTheme } from "../../hook/useTheme";
+import { useNotify } from "../../../hook/useNotify";
+import { useTheme } from "../../../hook/useTheme";
+import { sendCodeVerifyMail } from "../../../services/auth.service";
+import { loadingEnd } from "../../../store/slices/authSlice";
 
 const SendCodeForm = () => {
   const dispatch = useDispatch();
@@ -20,7 +19,9 @@ const SendCodeForm = () => {
   const [email, setEmail] = useState("");
 
   useEffect(() => {
-    setEmail(data.email);
+    if (!data?.email) {
+      navigate("/auth/register");
+    } else setEmail(data?.email);
   }, []);
 
   console.log({ email });
@@ -89,8 +90,8 @@ const SendCodeForm = () => {
               type="email"
               required
               name="email"
-              value={data.email}
-              onChange={(e) => setEmail({ email: e.target.value })}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
           </div>
         </div>

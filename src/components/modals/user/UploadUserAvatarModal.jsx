@@ -1,10 +1,12 @@
 import React, { useCallback, useState } from "react";
-import Modal from "../layout/Modal";
+import Modal from "../../layout/Modal";
 import { useDispatch, useSelector } from "react-redux";
 import Cropper from "react-easy-crop";
-import { createImage } from "../../utils/createImage";
-import { uploadUserAvatar } from "../../services/auth.service";
-import { useNotify } from "../../hook/useNotify";
+import { createImage } from "../../../utils/createImage";
+import { uploadUserAvatar } from "../../../services/auth.service";
+import { useNotify } from "../../../hook/useNotify";
+import SubmitButton from "../../common/buttons/SubmitButton";
+import CancelButton from "../../common/buttons/CancelButton";
 
 const UploadUserAvatarModal = ({ closeModal }) => {
   const dispatch = useDispatch();
@@ -60,7 +62,9 @@ const UploadUserAvatarModal = ({ closeModal }) => {
     [avatarPreview]
   );
 
-  const handleUploadAvatar = async () => {
+  const handleUploadAvatar = async (e) => {
+    e.preventDefault();
+
     if (!avatarPreview) {
       notifyWarning("Vui lòng chọn ảnh");
       return;
@@ -78,7 +82,8 @@ const UploadUserAvatarModal = ({ closeModal }) => {
 
   return (
     <Modal closeModal={loading ? null : closeModal}>
-      <div
+      <form
+        onSubmit={handleUploadAvatar}
         className="w-6/12 flex flex-col  bg-light-50 p-[26px] rounded-lg"
         onClick={(e) => e.stopPropagation()}
       >
@@ -117,24 +122,10 @@ const UploadUserAvatarModal = ({ closeModal }) => {
         )}
 
         <div className="w-full flex flex-col gap-[15px] mt-[20px]">
-          <button
-            disabled={loading}
-            onClick={handleUploadAvatar}
-            className={`w-full flex justify-center items-center rounded-sm py-[8px] text-sm text-light-50 font-bold 
-          ${loading ? "bg-gray-400" : "bg-green-500 hover:bg-dark-600"} 
-          transition-colors cursor-pointer`}
-          >
-            <span>{loading ? "Đang xử lý..." : "Xác nhận"}</span>
-          </button>
-          <button
-            disabled={loading}
-            onClick={closeModal}
-            className={`w-full flex justify-center items-center rounded-sm py-[8px] text-sm border-[1px] border-dark-600 font-bold cursor-pointer `}
-          >
-            <span>Quay lại</span>
-          </button>
+          <SubmitButton loading={loading} />
+          <CancelButton loading={loading} closeModal={closeModal} />
         </div>
-      </div>
+      </form>
     </Modal>
   );
 };

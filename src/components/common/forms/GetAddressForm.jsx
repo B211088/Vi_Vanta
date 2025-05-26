@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
-import { useTheme } from "../../hook/useTheme";
 import { useDispatch, useSelector } from "react-redux";
+import { useTheme } from "../../../hook/useTheme";
+import { useEffect, useState } from "react";
 import {
   getDistricts,
   getProvinces,
   getWards,
-} from "../../services/address.service";
+} from "../../../services/address.service";
 
 const GetAddressForm = ({ onChangeAddress }) => {
   const dispatch = useDispatch();

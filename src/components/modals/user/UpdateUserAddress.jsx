@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import Modal from "../layout/Modal";
-import GetAddressForm from "../common/GetAddressForm";
-import { useTheme } from "../../hook/useTheme";
+import Modal from "../../layout/Modal";
+import GetAddressForm from "../../common/forms/GetAddressForm";
+import { useTheme } from "../../../hook/useTheme";
 import { useDispatch, useSelector } from "react-redux";
-import { useNotify } from "../../hook/useNotify";
-import { updateUserAddress } from "../../services/auth.service";
+import { useNotify } from "../../../hook/useNotify";
+import { updateUserAddress } from "../../../services/auth.service";
+import SubmitButton from "../../common/buttons/SubmitButton";
+import CancelButton from "../../common/buttons/CancelButton";
 
 const UpdateUserAddress = ({ closeModal }) => {
   const dispatch = useDispatch();
@@ -14,9 +16,9 @@ const UpdateUserAddress = ({ closeModal }) => {
   const [selectedAddress, setSelectedAddress] = useState(null);
   const { loading, error } = useSelector((state) => state.address);
   const [formData, setFormData] = useState({
-    provinceId: address.province ? address.province._id : "",
-    districtId: address.district ? address.district._id : "",
-    wardId: address.ward ? address.ward._id : "",
+    provinceId: address?.province ? address.province._id : "",
+    districtId: address?.district ? address.district._id : "",
+    wardId: address?.ward ? address.ward._id : "",
     specificAddress: address?.specificAddress || "",
   });
 
@@ -101,23 +103,8 @@ const UpdateUserAddress = ({ closeModal }) => {
             </div>{" "}
           </div>{" "}
           <div className="w-full flex flex-col gap-[15px]">
-            <button
-              type="submit"
-              disabled={loading}
-              className={`w-full flex justify-center items-center rounded-sm py-[8px] text-sm text-light-50 font-bold 
-             ${loading ? "bg-gray-400" : "bg-green-500 hover:bg-dark-600"} 
-             transition-colors cursor-pointer`}
-            >
-              <span>{loading ? "Đang xử lý..." : "Xác nhận"}</span>
-            </button>
-            <button
-              type="button"
-              disabled={loading}
-              onClick={closeModal}
-              className={`w-full flex justify-center items-center rounded-sm py-[8px] text-sm border-[1px] border-dark-600 font-bold cursor-pointer `}
-            >
-              <span>Quay lại</span>
-            </button>
+            <SubmitButton loading={loading} />
+            <CancelButton loading={loading} closeModal={closeModal} />
           </div>
         </form>
       </div>

@@ -3,7 +3,7 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 
 const Account = () => {
   const location = useLocation();
-  console.log({ location });
+
   return (
     <div className="w-full    font-nunito">
       <div className="w-full flex flex-col pb-[20px]">

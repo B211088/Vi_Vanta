@@ -34,7 +34,6 @@ export const loadUser = () => async (dispatch) => {
     dispatch(loadUserStart());
     const response = await api.get("/api/v1/user/profile");
     dispatch(loadUserSuccess(response.data.user));
-    await dispatch(getUserAddress());
     return response.data;
   } catch (error) {
     const errorMessage =

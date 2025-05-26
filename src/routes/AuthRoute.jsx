@@ -5,7 +5,7 @@ import Loading from "../pages/Loading";
 const AuthRoute = ({ children }) => {
   const location = useLocation();
   const { isAuthenticated, loading } = useSelector((state) => state.auth);
-  const from = location.state?.from?.pathname || "/";
+  const from = location.state?.from?.pathname || "/dashboard";
 
   if (loading) {
     return <Loading />;

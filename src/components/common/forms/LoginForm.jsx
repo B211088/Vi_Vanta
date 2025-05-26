@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { loginUser } from "../../services/auth.service";
-import { useNotify } from "../../hook/useNotify";
-import { useTheme } from "../../hook/useTheme";
+import { useTheme } from "../../../hook/useTheme";
+import { useNotify } from "../../../hook/useNotify";
+import { loginUser } from "../../../services/auth.service";
 
 const LoginForm = () => {
   const dispatch = useDispatch();
@@ -72,7 +72,6 @@ const LoginForm = () => {
 
     try {
       await dispatch(loginUser(formData));
-      navigate("/");
     } catch (err) {
       console.error(err.response.data);
       notifyError(err.response.data.message);
