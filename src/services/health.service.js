@@ -13,7 +13,7 @@ export const getAllHealthInfoHandle = async () => {
 };
 
 // Lấy thông tin sức khỏe theo ID
-export const getHealthInfoByIdHandle = async (userId) => {
+export const getUserHealthInfoByIdHandle = async (userId) => {
   try {
     const healthInfo = await Health.findOne({ userId }).select(
       "-__v -createdAt -updatedAt"
@@ -41,13 +41,15 @@ export const createHealthInfoHandle = async (payload) => {
 };
 
 // Cập nhật thông tin sức khỏe
-export const updateHealthInfoHandle = async (healthId, payload) => {
+export const updateHealthInfoHandle = async (userId, payload) => {
   try {
-    const updatedHealthInfo = await Health.findByIdAndUpdate(
-      healthId,
+    const updatedHealthInfo = await Health.findOneAndUpdate(
+      { userId },
       { $set: payload },
       { new: true }
     ).select("-__v -createdAt -updatedAt");
+
+    console.log("Cập nhật thông tin sức khỏe:", updatedHealthInfo);
 
     if (!updatedHealthInfo) {
       throw new Error("Không tìm thấy thông tin sức khỏe để cập nhật");

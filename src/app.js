@@ -26,6 +26,7 @@ import childrenRouter from "./routes/children.route.js";
 import vaccinCategoryRouter from "./routes/vaccinCategory.route.js";
 import vaccineRouter from "./routes/vaccine.route.js";
 import clinicRouter from "./routes/clinic.route.js";
+import bodyIndexRouter from "./routes/bodyIndex.route.js";
 
 const app = express();
 
@@ -87,6 +88,7 @@ app.use("/api/v1/children", childrenRouter);
 app.use("/api/v1/vaccines", vaccineRouter);
 app.use("/api/v1/vaccin-categories", vaccinCategoryRouter);
 app.use("/api/v1/clinics", clinicRouter);
+app.use("/api/v1/body-index", bodyIndexRouter);
 
 app.get("/api/v1/csrf-token", (req, res) => {
   res.json({ csrfToken: req.csrfToken() });

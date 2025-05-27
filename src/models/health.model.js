@@ -11,14 +11,19 @@ const healthSchema = new Schema(
     },
     height: {
       type: Number,
-      min: 30,
-      max: 400,
+      default: 0,
+      min: 0,
+      max: 200,
     },
     weight: {
       type: Number,
-      min: 1,
-      max: 1000,
+      default: 0,
+      min: 0,
+      max: 200,
     },
+    waist: { type: Number, default: 0, min: 0, max: 200 },
+    hip: { type: Number, default: 0, min: 0, max: 200 },
+    neck: { type: Number, default: 0, min: 0, max: 200 },
     bloodType: {
       type: String,
       enum: ["A", "B", "AB", "O", "unknown"],

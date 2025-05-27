@@ -1,9 +1,9 @@
 import {
   getAllHealthInfoHandle,
-  getHealthInfoByIdHandle,
   createHealthInfoHandle,
   updateHealthInfoHandle,
   deleteHealthInfoHandle,
+  getUserHealthInfoByIdHandle,
 } from "../services/health.service.js";
 import { caculateBMI, classifyBMI } from "../utils/health.utils.js";
 
@@ -21,17 +21,21 @@ export const getAllHealth = async (req, res) => {
 };
 
 // Lấy thông tin sức khỏe theo ID
-export const getHealthById = async (req, res) => {
-  const { userId } = req.params;
+export const getUserHealthInfoById = async (req, res) => {
+  const userId = req.user.userId;
 
   if (!userId) {
-    return res
-      .status(400)
-      .json({ message: "Không xác định được ID sức khỏe!" });
+    return res.status(400).json({ message: "Không xác định được đối tượng!" });
   }
 
   try {
-    const healthInfo = await getHealthInfoByIdHandle(userId);
+    const healthInfo = await getUserHealthInfoByIdHandle(userId);
+    let bmi;
+    let bmiCategory;
+    if (healthInfo.weight && healthInfo.height) {
+      bmi = caculateBMI(healthInfo.weight, healthInfo.height);
+      bmiCategory = classifyBMI(bmi);
+    }
 
     if (!healthInfo) {
       return res
@@ -39,24 +43,11 @@ export const getHealthById = async (req, res) => {
         .json({ message: "Không tìm thấy thông tin sức khỏe!" });
     }
 
-    let bmi = null;
-    let bmiStatus = null;
-
-    if (
-      typeof healthInfo.weight === "number" &&
-      typeof healthInfo.height === "number" &&
-      healthInfo.weight > 0 &&
-      healthInfo.height > 0
-    ) {
-      bmi = caculateBMI(healthInfo.weight, healthInfo.height);
-      bmiStatus = classifyBMI(bmi);
-    }
-
     res.status(200).json({
       message: "Lấy thông tin sức khỏe thành công!",
       healthInfo,
-      bmi,
-      bmiStatus,
+      bmi: bmi || null,
+      bmiCategory: bmiCategory || null,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -74,22 +65,6 @@ export const createHealth = async (req, res) => {
 
   try {
     payload.userId = userId;
-
-    // Kiểm tra dữ liệu đầu vào
-    if (
-      payload.weight &&
-      (typeof payload.weight !== "number" || payload.weight <= 0)
-    ) {
-      return res.status(400).json({ message: "Cân nặng không hợp lệ!" });
-    }
-
-    if (
-      payload.height &&
-      (typeof payload.height !== "number" || payload.height <= 0)
-    ) {
-      return res.status(400).json({ message: "Chiều cao không hợp lệ!" });
-    }
-
     const newHealthInfo = await createHealthInfoHandle(payload);
 
     res.status(201).json({
@@ -102,14 +77,12 @@ export const createHealth = async (req, res) => {
 };
 
 // Cập nhật thông tin sức khỏe
-export const updateHealth = async (req, res) => {
-  const { healthId } = req.params;
+export const updateUserHealth = async (req, res) => {
+  const userId = req.user.userId;
   const payload = req.body;
 
-  if (!healthId) {
-    return res
-      .status(400)
-      .json({ message: "Không xác định được ID sức khỏe!" });
+  if (!userId) {
+    return res.status(400).json({ message: "Không xác định được đối tượng!" });
   }
 
   if (!payload) {
@@ -132,21 +105,25 @@ export const updateHealth = async (req, res) => {
       return res.status(400).json({ message: "Chiều cao không hợp lệ!" });
     }
 
-    const updatedHealthInfo = await updateHealthInfoHandle(healthId, payload);
+    const updatedHealthInfo = await updateHealthInfoHandle(userId, payload);
 
-    if (!updatedHealthInfo) {
-      return res.status(404).json({ message: "Không tìm thấy thông tin sức khỏe để cập nhật!" });
+    let bmi;
+    let bmiCategory;
+    if (updatedHealthInfo.weight && updatedHealthInfo.height) {
+      bmi = caculateBMI(updatedHealthInfo.weight, updatedHealthInfo.height);
+      bmiCategory = classifyBMI(bmi);
     }
 
     res.status(200).json({
       message: "Cập nhật thông tin sức khỏe thành công!",
       updatedHealthInfo,
+      bmi: bmi || null,
+      bmiCategory: bmiCategory || null,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 // Xóa thông tin sức khỏe
 export const deleteHealth = async (req, res) => {
@@ -162,7 +139,9 @@ export const deleteHealth = async (req, res) => {
     const result = await deleteHealthInfoHandle(healthId);
 
     if (!result) {
-      return res.status(404).json({ message: "Không tìm thấy thông tin sức khỏe để xóa!" });
+      return res
+        .status(404)
+        .json({ message: "Không tìm thấy thông tin sức khỏe để xóa!" });
     }
 
     res.status(200).json({

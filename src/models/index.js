@@ -34,6 +34,7 @@ import Notification from "./notification.model.js";
 import ChildVaccinationRecord from "./childVaccinationRecord.model.js";
 import Vaccine from "./vaccine.model.js";
 import VaccinCategory from "./vaccinCategory.model.js";
+import BodyIndex from "./bodyIndex.model.js";
 
 export {
   User,
@@ -70,4 +71,5 @@ export {
   ChildVaccinationRecord,
   Vaccine,
   VaccinCategory,
+  BodyIndex,
 };
