@@ -12,6 +12,12 @@ import {
   setWHRRecord,
   deleteBMIRecord,
   setNewBMIRecord,
+  setNewEMMRecord,
+  deleteEMMRecord,
+  setNewBodyFatRecord,
+  setNewWHRRecord,
+  deleteBodyFatRecord,
+  deleteWHRRecord,
 } from "../store/slices/bodyIndex.slice";
 import { API_URL } from "../config/api.config";
 
@@ -91,7 +97,8 @@ export const createEMM = (data) => async (dispatch) => {
   try {
     dispatch(fetchStart());
     const res = await api.post("/api/v1/body-index/emm", data);
-    dispatch(setEMMRecord(res.data.bodyIndex));
+    dispatch(setEMMRecord(res.data.emmRecord));
+    dispatch(setNewEMMRecord(res.data.emmRecord));
     return res.data;
   } catch (error) {
     dispatch(fetchFailure(error.response?.data?.message || "Lỗi tạo EMM"));
@@ -103,6 +110,7 @@ export const deleteEMM = (id) => async (dispatch) => {
   try {
     dispatch(fetchStart());
     await api.delete(`/api/v1/body-index/emm/${id}`);
+    dispatch(deleteEMMRecord(id));
   } catch (error) {
     dispatch(fetchFailure(error.response?.data?.message || "Lỗi xóa EMM"));
   }
@@ -134,6 +142,8 @@ export const createBodyFat = (data) => async (dispatch) => {
     dispatch(fetchStart());
     const res = await api.post("/api/v1/body-index/body-fat", data);
     dispatch(setBodyFatRecord(res.data.bodyFat));
+    dispatch(setNewBodyFatRecord(res.data.bodyFat));
+    await dispatch(fetchBodyFatRecords());
     return res.data;
   } catch (error) {
     dispatch(fetchFailure(error.response?.data?.message || "Lỗi tạo Body Fat"));
@@ -145,6 +155,7 @@ export const deleteBodyFat = (id) => async (dispatch) => {
   try {
     dispatch(fetchStart());
     await api.delete(`/api/v1/body-index/body-fat/${id}`);
+    dispatch(deleteBodyFatRecord(id));
   } catch (error) {
     dispatch(fetchFailure(error.response?.data?.message || "Lỗi xóa Body Fat"));
   }
@@ -176,6 +187,8 @@ export const createWHR = (data) => async (dispatch) => {
     dispatch(fetchStart());
     const res = await api.post("/api/v1/body-index/whr", data);
     dispatch(setWHRRecord(res.data.whr));
+    dispatch(setNewWHRRecord(res.data.whr));
+    await dispatch(fetchWHRRecords());
     return res.data;
   } catch (error) {
     dispatch(fetchFailure(error.response?.data?.message || "Lỗi tạo WHR"));
@@ -187,6 +200,7 @@ export const deleteWHR = (id) => async (dispatch) => {
   try {
     dispatch(fetchStart());
     await api.delete(`/api/v1/body-index/whr/${id}`);
+    dispatch(deleteWHRRecord(id));
   } catch (error) {
     dispatch(fetchFailure(error.response?.data?.message || "Lỗi xóa WHR"));
   }

@@ -20,12 +20,24 @@ const BodyIndex = () => {
         >
           <i className="fa-solid fa-gauge"></i>
         </Link>
-        <div className="aspect-square flex items-center justify-center rounded-lg border-1 border-dark-800 text-xl cursor-pointer">
+        <Link
+          to="calculate-emm"
+          className="aspect-square flex items-center justify-center rounded-lg border-1 border-dark-800 text-xl cursor-pointer"
+        >
           <i className="fa-solid fa-weight-scale"></i>
-        </div>
-        <div className="aspect-square flex items-center justify-center rounded-lg border-1 border-dark-800 text-xl cursor-pointer">
+        </Link>
+        <Link
+          to="calculate-body-fat"
+          className="aspect-square flex items-center justify-center rounded-lg border-1 border-dark-800 text-xl cursor-pointer"
+        >
           <i className="fa-solid fa-gauge-simple-high"></i>
-        </div>
+        </Link>{" "}
+        <Link
+          to="calculate-whr"
+          className="aspect-square flex items-center justify-center rounded-lg border-1 border-dark-800 text-xl cursor-pointer"
+        >
+          <i className="fa-solid fa-gauge-simple-high"></i>
+        </Link>
       </div>
       <Outlet />
     </div>

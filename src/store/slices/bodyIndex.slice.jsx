@@ -45,12 +45,20 @@ const bodyIndexSlice = createSlice({
       state.emmRecord = action.payload;
       state.loading = false;
     },
+    setNewEMMRecord: (state, action) => {
+      state.emmRecords = [...state.emmRecords, action.payload];
+      state.loading = false;
+    },
     setBodyFatRecords: (state, action) => {
       state.bodyFatRecords = action.payload;
       state.loading = false;
     },
     setBodyFatRecord: (state, action) => {
       state.bodyFatRecord = action.payload;
+      state.loading = false;
+    },
+    setNewBodyFatRecord: (state, action) => {
+      state.bodyFatRecords = [...state.bodyFatRecords, action.payload];
       state.loading = false;
     },
     setWHRRecords: (state, action) => {
@@ -61,8 +69,27 @@ const bodyIndexSlice = createSlice({
       state.whrRecord = action.payload;
       state.loading = false;
     },
+    setNewWHRRecord: (state, action) => {
+      state.whrRecords = [...state.whrRecords, action.payload];
+      state.loading = false;
+    },
     deleteBMIRecord: (state, action) => {
       state.bmiRecords = state.bmiRecords.filter(
+        (r) => r._id !== action.payload
+      );
+    },
+    deleteEMMRecord: (state, action) => {
+      state.emmRecords = state.emmRecords.filter(
+        (r) => r._id !== action.payload
+      );
+    },
+    deleteBodyFatRecord: (state, action) => {
+      state.bodyFatRecords = state.bodyFatRecords.filter(
+        (r) => r._id !== action.payload
+      );
+    },
+    deleteWHRRecord: (state, action) => {
+      state.whrRecords = state.whrRecords.filter(
         (r) => r._id !== action.payload
       );
     },
@@ -80,11 +107,17 @@ export const {
   setNewBMIRecord,
   setEMMRecords,
   setEMMRecord,
+  setNewEMMRecord,
   setBodyFatRecords,
   setBodyFatRecord,
+  setNewBodyFatRecord,
   setWHRRecords,
   setWHRRecord,
+  setNewWHRRecord,
   deleteBMIRecord,
+  deleteEMMRecord,
+  deleteBodyFatRecord,
+  deleteWHRRecord,
   clearError,
 } = bodyIndexSlice.actions;
 

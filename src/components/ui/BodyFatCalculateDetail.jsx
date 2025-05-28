@@ -1,9 +1,9 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
-import { fetchBMIRecordById } from "../../../services/bodyIndex.service";
+import { fetchBodyFatRecordById } from "../../services/bodyIndex.service";
 
-const getBmiColor = (level) => {
+const getBodyFatColor = (level) => {
   if (!level)
     return {
       border: "border-gray-300",
@@ -16,19 +16,19 @@ const getBmiColor = (level) => {
       text: "text-blue-700",
       icon: "text-blue-400",
     };
-  if (level.includes("Gầy"))
+  if (level.includes("Thấp"))
     return {
       border: "border-yellow-400",
       text: "text-yellow-700",
       icon: "text-yellow-400",
     };
-  if (level.includes("Thừa cân"))
+  if (level.includes("Cao"))
     return {
       border: "border-orange-400",
       text: "text-orange-700",
       icon: "text-orange-400",
     };
-  if (level.includes("Béo phì"))
+  if (level.includes("Rất cao") || level.includes("Nguy hiểm"))
     return {
       border: "border-red-500",
       text: "text-red-700",
@@ -41,33 +41,56 @@ const getBmiColor = (level) => {
   };
 };
 
-const BmiCalculateDetail = () => {
+const BodyFatCalculateDetail = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
-  const { loading, bmiRecord } = useSelector((state) => state.bodyIndex);
+  const { loading, bodyFatRecord } = useSelector((state) => state.bodyIndex);
 
   useEffect(() => {
-    if (id) dispatch(fetchBMIRecordById(id));
-  }, [id]);
-  console.log({ bmiRecord });
+    if (id) dispatch(fetchBodyFatRecordById(id));
+  }, [id, dispatch]);
+
   if (loading)
     return <div className="w-full text-center py-8">Đang tải...</div>;
-  if (!bmiRecord)
+  if (!bodyFatRecord)
     return (
       <div className="w-full text-center py-8 text-gray-500">
         Không có dữ liệu.
       </div>
     );
 
-  const { height, weight, bmi, categoryBMI } = bmiRecord;
-  const color = getBmiColor(categoryBMI?.level);
+  const {
+    gender,
+    waist,
+    neck,
+    hip,
+    height,
+    weight,
+    bodyFatPercent,
+    bodyFatMass,
+    categoryBodyFat,
+  } = bodyFatRecord;
+  const color = getBodyFatColor(categoryBodyFat?.level);
 
   return (
     <div className="w-full flex flex-col gap-4">
       <h2 className="text-lg font-bold text-blue-700 mb-2">
-        Chi tiết chỉ số BMI
+        Chi tiết chỉ số Body Fat
       </h2>
       <div className="flex flex-col gap-2 text-sm">
+        <div>
+          <span className="font-semibold">Giới tính:</span>{" "}
+          {gender === "male" ? "Nam" : "Nữ"}
+        </div>
+        <div>
+          <span className="font-semibold">Vòng eo:</span> {waist} cm
+        </div>
+        <div>
+          <span className="font-semibold">Vòng cổ:</span> {neck} cm
+        </div>
+        <div>
+          <span className="font-semibold">Vòng mông:</span> {hip} cm
+        </div>
         <div>
           <span className="font-semibold">Chiều cao:</span> {height} cm
         </div>
@@ -75,11 +98,17 @@ const BmiCalculateDetail = () => {
           <span className="font-semibold">Cân nặng:</span> {weight} kg
         </div>
         <div>
-          <span className="font-semibold">BMI:</span>{" "}
-          <span className="text-blue-600 font-bold">{bmi}</span>
+          <span className="font-semibold">Phần trăm mỡ cơ thể:</span>{" "}
+          <span className="text-blue-600 font-bold">{bodyFatPercent}%</span>
+        </div>
+        <div>
+          <span className="font-semibold">Khối lượng mỡ:</span>{" "}
+          <span className="text-blue-600 font-bold">
+            {bodyFatMass?.toFixed(2)} kg
+          </span>
         </div>
       </div>
-      {categoryBMI && (
+      {categoryBodyFat && (
         <div
           className={`mt-2 p-3 bg-blue-50 border-l-4 rounded flex gap-2 items-start ${color.border}`}
         >
@@ -88,11 +117,13 @@ const BmiCalculateDetail = () => {
           </span>
           <div>
             <div className={`font-semibold ${color.text}`}>
-              Phân loại: {categoryBMI.level}
+              Phân loại: {categoryBodyFat.level}
             </div>
-            <div className="text-gray-700 mt-1">{categoryBMI.description}</div>
+            <div className="text-gray-700 mt-1">
+              {categoryBodyFat.description}
+            </div>
             <div className="text-green-700 mt-1 font-medium">
-              Lời khuyên: {categoryBMI.advice}
+              Lời khuyên: {categoryBodyFat.advice}
             </div>
           </div>
         </div>
@@ -101,4 +132,4 @@ const BmiCalculateDetail = () => {
   );
 };
 
-export default BmiCalculateDetail;
+export default BodyFatCalculateDetail;

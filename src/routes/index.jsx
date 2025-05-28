@@ -9,7 +9,13 @@ import BodyIndex from "../components/layout/user/BodyIndex";
 import Tools from "../pages/user/Tools";
 import Dashboard from "../pages/user/Dashboard";
 import BmiCalculateForm from "../components/common/forms/BmiCalculateForm";
-import BmiCalculateDetail from "../components/common/forms/BmiCalculateDetail";
+import BmiCalculateDetail from "../components/ui/BmiCalculateDetail";
+import EmmCalculateForm from "../components/common/forms/EmmCalculateForm";
+import EmmCalculateDetail from "../components/ui/EmmCalculateDetail";
+import BodyFatCalculateForm from "../components/common/forms/BodyFatCalculateForm";
+import WhrCalculateForm from "../components/common/forms/WhrCalculateForm";
+import WhrCalculateDetail from "../components/ui/WhrCalculateDetail";
+import BodyFatCalculateDetail from "../components/ui/BodyFatCalculateDetail";
 
 const Home = lazy(() => import("../pages/user/Home"));
 const Auth = lazy(() => import("../pages/auth/Auth"));
@@ -114,7 +120,58 @@ const router = createBrowserRouter([
                 children: [
                   {
                     path: ":id",
-                    element: <BmiCalculateDetail />,
+                    element: (
+                      <Suspense fallback={<Loading />}>
+                        <BmiCalculateDetail />
+                      </Suspense>
+                    ),
+                  },
+                ],
+              },
+              {
+                path: "calculate-emm",
+                element: (
+                  <Suspense fallback={<Loading />}>
+                    <EmmCalculateForm />
+                  </Suspense>
+                ),
+                children: [
+                  { path: ":id", element: <EmmCalculateDetail /> }, // nếu có component chi tiết
+                ],
+              },
+              {
+                path: "calculate-body-fat",
+                element: (
+                  <Suspense fallback={<Loading />}>
+                    <BodyFatCalculateForm />
+                  </Suspense>
+                ),
+                children: [
+                  {
+                    path: ":id",
+                    element: (
+                      <Suspense fallback={<Loading />}>
+                        <BodyFatCalculateDetail />
+                      </Suspense>
+                    ),
+                  },
+                ],
+              },
+              {
+                path: "calculate-whr",
+                element: (
+                  <Suspense fallback={<Loading />}>
+                    <WhrCalculateForm />
+                  </Suspense>
+                ),
+                children: [
+                  {
+                    path: ":id",
+                    element: (
+                      <Suspense fallback={<Loading />}>
+                        <WhrCalculateDetail />
+                      </Suspense>
+                    ),
                   },
                 ],
               },
