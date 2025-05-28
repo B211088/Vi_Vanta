@@ -31,6 +31,9 @@ const bodyIndexSlice = createSlice({
     },
     setBMIRecord: (state, action) => {
       state.bmiRecord = action.payload;
+      state.loading = false;
+    },
+    setNewBMIRecord: (state, action) => {
       state.bmiRecords = [...state.bmiRecords, action.payload];
       state.loading = false;
     },
@@ -58,6 +61,11 @@ const bodyIndexSlice = createSlice({
       state.whrRecord = action.payload;
       state.loading = false;
     },
+    deleteBMIRecord: (state, action) => {
+      state.bmiRecords = state.bmiRecords.filter(
+        (r) => r._id !== action.payload
+      );
+    },
     clearError: (state) => {
       state.error = null;
     },
@@ -69,12 +77,14 @@ export const {
   fetchFailure,
   setBMIRecords,
   setBMIRecord,
+  setNewBMIRecord,
   setEMMRecords,
   setEMMRecord,
   setBodyFatRecords,
   setBodyFatRecord,
   setWHRRecords,
   setWHRRecord,
+  deleteBMIRecord,
   clearError,
 } = bodyIndexSlice.actions;
 

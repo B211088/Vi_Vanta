@@ -10,6 +10,8 @@ import {
   setBodyFatRecord,
   setWHRRecords,
   setWHRRecord,
+  deleteBMIRecord,
+  setNewBMIRecord,
 } from "../store/slices/bodyIndex.slice";
 import { API_URL } from "../config/api.config";
 
@@ -44,7 +46,8 @@ export const createBMI = (data) => async (dispatch) => {
   try {
     dispatch(fetchStart());
     const res = await api.post("/api/v1/body-index/bmi", data);
-    dispatch(setBMIRecord(res.data.bodyIndex));
+    dispatch(setBMIRecord(res.data.bmiRecord));
+    dispatch(setNewBMIRecord(res.data.bmiRecord));
     await dispatch(fetchBMIRecords());
     return res.data;
   } catch (error) {
@@ -57,7 +60,7 @@ export const deleteBMI = (id) => async (dispatch) => {
   try {
     dispatch(fetchStart());
     await api.delete(`/api/v1/body-index/bmi/${id}`);
-    // Có thể fetch lại danh sách nếu cần
+    dispatch(deleteBMIRecord(id));
   } catch (error) {
     dispatch(fetchFailure(error.response?.data?.message || "Lỗi xóa BMI"));
   }

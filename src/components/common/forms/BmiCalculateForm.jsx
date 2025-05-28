@@ -4,9 +4,11 @@ import { useNotify } from "../../../hook/useNotify";
 import { useTheme } from "../../../hook/useTheme";
 import {
   createBMI,
+  deleteBMI,
   fetchBMIRecords,
 } from "../../../services/bodyIndex.service";
 import { formatDateDDMMYY } from "../../../utils/formatDate";
+import { Outlet, Link } from "react-router-dom";
 
 const BmiCalculateForm = () => {
   const dispatch = useDispatch();
@@ -54,98 +56,117 @@ const BmiCalculateForm = () => {
       })
     );
   };
+
+  const handleDeleteBmi = (id) => {
+    dispatch(deleteBMI(id));
+  };
   return (
-    <div className="">
-      <h3 className="text-md font-semibold mb-3 text-blue-600">
-        Tính chỉ số BMI (Body Mass Index – Chỉ số khối cơ thể)
-      </h3>
-      <div className="w-full flex flex-col gap-[20px]">
-        {" "}
-        <form
-          onSubmit={handleBMI}
-          className="w-full flex flex-col gap-[20px] border-1 border-[#efefef] p-[10px] rounded-sm"
-        >
-          <div className="w-full flex gap-[10px]">
-            <div className="w-full flex flex-col">
-              <span className="text-sm font-bold pb-[5px]">Chiều cao*</span>
-              <div
-                className={`w-full flex items-center border-[1px] ${
-                  isDarkMode
-                    ? " border-dark-600 "
-                    : "bg-dark-400 border-transparent"
-                }  rounded-sm`}
-              >
-                <input
-                  className="flex-1  text-sm px-[5px] py-[8px] outline-none"
-                  placeholder="Nhập chiều cao của bạn"
-                  type="number"
-                  required
-                  name="height"
-                  onChange={handleChange}
-                />
+    <div className="flex-1 flex   gap-[10px]  ">
+      <div className="w-7/12 flex flex-col border-1 border-[#efefef] shadow rounded-lg  p-[10px]">
+        <h3 className="text-md font-semibold mb-3 text-blue-600">
+          Tính chỉ số BMI (Body Mass Index – Chỉ số khối cơ thể)
+        </h3>
+        <div className="w-full flex flex-col gap-[20px]">
+          {" "}
+          <form
+            onSubmit={handleBMI}
+            className="w-full flex flex-col gap-[20px] border-1 border-[#efefef] p-[10px] rounded-sm"
+          >
+            <div className="w-full flex gap-[10px]">
+              <div className="w-full flex flex-col">
+                <span className="text-sm font-bold pb-[5px]">Chiều cao*</span>
+                <div
+                  className={`w-full flex items-center border-[1px] ${
+                    isDarkMode
+                      ? " border-dark-600 "
+                      : "bg-dark-400 border-transparent"
+                  }  rounded-sm`}
+                >
+                  <input
+                    className="flex-1  text-sm px-[5px] py-[8px] outline-none"
+                    placeholder="Nhập chiều cao của bạn"
+                    type="number"
+                    required
+                    name="height"
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+              <div className="w-full flex flex-col">
+                <span className="text-sm font-bold pb-[5px]">Cân nặng*</span>
+                <div
+                  className={`w-full flex items-center border-[1px] ${
+                    isDarkMode
+                      ? " border-dark-600 "
+                      : "bg-dark-400 border-transparent"
+                  }  rounded-sm`}
+                >
+                  <input
+                    className="flex-1  text-sm px-[5px] py-[8px] outline-none"
+                    placeholder="Nhập cân nặng của bạn"
+                    type="number"
+                    required
+                    name="weight"
+                    onChange={handleChange}
+                  />
+                </div>
               </div>
             </div>
-            <div className="w-full flex flex-col">
-              <span className="text-sm font-bold pb-[5px]">Cân nặng*</span>
-              <div
-                className={`w-full flex items-center border-[1px] ${
-                  isDarkMode
-                    ? " border-dark-600 "
-                    : "bg-dark-400 border-transparent"
-                }  rounded-sm`}
-              >
-                <input
-                  className="flex-1  text-sm px-[5px] py-[8px] outline-none"
-                  placeholder="Nhập cân nặng của bạn"
-                  type="number"
-                  required
-                  name="weight"
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className={`w-full flex justify-center items-center rounded-sm py-[8px] text-sm text-light-50 font-bold 
+            <button
+              type="submit"
+              disabled={loading}
+              className={`w-full flex justify-center items-center rounded-sm py-[8px] text-sm text-light-50 font-bold 
                 ${loading ? "bg-gray-400" : "bg-green-500 hover:bg-dark-600"} 
                 transition-colors cursor-pointer`}
+            >
+              <span>{loading ? "Đang xử lý..." : "Tính BMI"}</span>
+            </button>
+          </form>
+          <div
+            style={{ maxHeight: "calc(100vh - 400px)" }}
+            className="w-full  flex flex-col overflow-y-auto gap-[10px] border-1 border-[#efefef] rounded-sm"
           >
-            <span>{loading ? "Đang xử lý..." : "Tính BMI"}</span>
-          </button>
-        </form>
-        <div
-          style={{ maxHeight: "calc(100vh - 400px)" }}
-          className="w-full  flex flex-col overflow-y-auto gap-[20px] border-1 border-[#efefef] rounded-sm"
-        >
-          <h1 className="w-full font-bold sticky top-0 bg-light-50  p-[10px]">
-            Lịch sử tính <i class="fa-solid fa-clock-rotate-left"></i>
-          </h1>
-          <div className="w-full p-[10px] flex flex-col gap-[10px]">
-            {bmiRecords.map((bmiRecord) => (
-              <div
-                key={bmiRecord._id}
-                className="w-full flex items-center gap-[10px] text-sm cursor-pointer border-1 border-[#efefef] p-[8px] rounded-sm"
-              >
-                <div className="flex-1 flex items-center gap-[10px] ">
-                  <div className="flex-1 flex items-center gap-[10px]">
-                    <div className="">Chiều cao: {bmiRecord.height}</div>
-                    <div className="">Cân nặng: {bmiRecord.weight}</div>
-                    <div className="">BMI: {bmiRecord.bmi}</div>
-                  </div>
-                  <div className="w-3/12 flex justify-end px-[10px] ">
-                    {formatDateDDMMYY(bmiRecord.createdAt)}
-                  </div>
+            <h1 className="w-full font-bold sticky top-0 bg-light-50  p-[10px]">
+              Lịch sử tính <i class="fa-solid fa-clock-rotate-left"></i>
+            </h1>
+            <div className="w-full p-[10px] flex flex-col gap-[10px]">
+              {bmiRecords.length > 0 ? (
+                bmiRecords.map((bmiRecord) => (
+                  <Link
+                    key={bmiRecord._id}
+                    to={`${bmiRecord._id}`}
+                    className="w-full flex items-center gap-[10px] text-sm cursor-pointer border-1 border-[#efefef] p-[8px] rounded-sm hover:bg-blue-50 transition"
+                    style={{ textDecoration: "none", color: "inherit" }}
+                  >
+                    <div className="flex-1 flex items-center gap-[10px] ">
+                      <div className="flex-1 flex items-center gap-[10px]">
+                        <div className="">Chiều cao: {bmiRecord.height}</div>
+                        <div className="">Cân nặng: {bmiRecord.weight}</div>
+                        <div className="">BMI: {bmiRecord.bmi}</div>
+                      </div>
+                      <div className="w-3/12 flex justify-end px-[10px] ">
+                        {formatDateDDMMYY(bmiRecord.createdAt)}
+                      </div>
+                    </div>
+                    <div
+                      className="aspect-square flex items-center justify-center rounded-sm px-[6px] border-1 border-dark-700 cursor-pointer"
+                      onClick={() => handleDeleteBmi(bmiRecord._id)}
+                    >
+                      <i className="fa-solid fa-trash-can-arrow-up"></i>
+                    </div>
+                  </Link>
+                ))
+              ) : (
+                <div className="w-full flex justify-center items-center text-sm text-dark-500">
+                  Chưa có tính toán
                 </div>
-
-                <div className="aspect-square flex items-center justify-center rounded-sm px-[6px] border-1 border-dark-700 cursor-pointer">
-                  <i className="fa-solid fa-trash-can-arrow-up"></i>
-                </div>
-              </div>
-            ))}
+              )}
+            </div>
           </div>
-        </div>
+        </div>{" "}
+      </div>
+      <div className="w-5/12 flex border-1 border-[#efefef] shadow rounded-lg  p-[10px]">
+        <Outlet />
       </div>
     </div>
   );

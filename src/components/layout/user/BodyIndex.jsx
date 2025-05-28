@@ -27,12 +27,7 @@ const BodyIndex = () => {
           <i className="fa-solid fa-gauge-simple-high"></i>
         </div>
       </div>
-      <div className="flex-1 flex   gap-[10px]  ">
-        <div className="w-7/12 flex flex-col border-1 border-[#efefef] shadow rounded-lg  p-[10px]">
-          <Outlet />
-        </div>
-        <div className="w-5/12 flex border-1 border-[#efefef] shadow rounded-lg  p-[10px]"></div>
-      </div>
+      <Outlet />
     </div>
   );
 };

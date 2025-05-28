@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate, useLocation } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import Loading from "../pages/Loading";
 import ErrorPage from "../pages/errorPage";
@@ -9,6 +9,7 @@ import BodyIndex from "../components/layout/user/BodyIndex";
 import Tools from "../pages/user/Tools";
 import Dashboard from "../pages/user/Dashboard";
 import BmiCalculateForm from "../components/common/forms/BmiCalculateForm";
+import BmiCalculateDetail from "../components/common/forms/BmiCalculateDetail";
 
 const Home = lazy(() => import("../pages/user/Home"));
 const Auth = lazy(() => import("../pages/auth/Auth"));
@@ -110,6 +111,12 @@ const router = createBrowserRouter([
                     <BmiCalculateForm />
                   </Suspense>
                 ),
+                children: [
+                  {
+                    path: ":id",
+                    element: <BmiCalculateDetail />,
+                  },
+                ],
               },
             ],
             errorElement: <ErrorPage />,
