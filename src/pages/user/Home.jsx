@@ -85,7 +85,7 @@ const Home = () => {
                         openDropdowns[option.id] ? "max-h-96 " : "max-h-0 "
                       }`}
                     >
-                      <div className="w-full flex flex-col pl-[15px] pt-[10px]">
+                      <div className="w-full flex flex-col  pl-[15px] pt-[10px]">
                         {option.items.map((item) => (
                           <div
                             key={item.id}
@@ -93,7 +93,7 @@ const Home = () => {
                           >
                             <Link
                               to={`${option.path}/${item.path}`}
-                              className={`w-full flex items-center gap-[5px] py-[10px] text-[0.8rem] ${
+                              className={`w-full flex items-center gap-[5px] mt-[5px] py-[10px] text-[0.8rem] ${
                                 location.pathname.includes(item.path)
                                   ? "bg-dark-800 font-bold text-dark-50"
                                   : "text-gray-600 font-semibold "

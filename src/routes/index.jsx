@@ -8,6 +8,7 @@ import AuthRoute from "./AuthRoute";
 import BodyIndex from "../components/layout/user/BodyIndex";
 import Tools from "../pages/user/Tools";
 import Dashboard from "../pages/user/Dashboard";
+import BmiCalculateForm from "../components/common/forms/BmiCalculateForm";
 
 const Home = lazy(() => import("../pages/user/Home"));
 const Auth = lazy(() => import("../pages/auth/Auth"));
@@ -97,6 +98,20 @@ const router = createBrowserRouter([
                 <BodyIndex />
               </Suspense>
             ),
+            children: [
+              {
+                index: true,
+                element: <Navigate to="calculate-bmi" replace />,
+              },
+              {
+                path: "calculate-bmi",
+                element: (
+                  <Suspense fallback={<Loading />}>
+                    <BmiCalculateForm />
+                  </Suspense>
+                ),
+              },
+            ],
             errorElement: <ErrorPage />,
           },
         ],
