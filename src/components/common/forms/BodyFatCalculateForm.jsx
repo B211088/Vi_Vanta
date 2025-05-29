@@ -96,22 +96,11 @@ const BodyFatCalculateForm = () => {
         <div className="w-full flex flex-col gap-[20px]">
           {" "}
           <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-            <select
-              className={`w-full flex items-center border-[1px] py-[8px] outline-none text-sm ${
-                isDarkMode
-                  ? "border-dark-600"
-                  : "bg-dark-400 border-transparent"
-              } rounded-sm`}
-              name="gender"
-              value={input.gender}
-              onChange={handleChange}
-            >
-              <option value="male">Nam</option>
-              <option value="female">Nữ</option>
-            </select>
             <div className="w-full flex gap-[10px]">
               <div className="w-full flex flex-col">
-                <span className="text-sm font-bold pb-[5px]">Vòng eo*</span>
+                <span className="text-sm font-bold pb-[5px]">
+                  Vòng eo (cm)*
+                </span>
                 <div
                   className={`w-full flex items-center border-[1px] ${
                     isDarkMode
@@ -133,7 +122,9 @@ const BodyFatCalculateForm = () => {
             </div>
             <div className="w-full flex gap-[10px]">
               <div className="w-full flex flex-col">
-                <span className="text-sm font-bold pb-[5px]">Vòng cổ*</span>
+                <span className="text-sm font-bold pb-[5px]">
+                  Vòng cổ (cm)*
+                </span>
                 <div
                   className={`w-full flex items-center border-[1px] ${
                     isDarkMode
@@ -155,7 +146,9 @@ const BodyFatCalculateForm = () => {
             </div>
             <div className="w-full flex gap-[10px]">
               <div className="w-full flex flex-col">
-                <span className="text-sm font-bold pb-[5px]">Vòng mông*</span>
+                <span className="text-sm font-bold pb-[5px]">
+                  Vòng mông (cm)*
+                </span>
                 <div
                   className={`w-full flex items-center border-[1px] ${
                     isDarkMode
@@ -174,9 +167,27 @@ const BodyFatCalculateForm = () => {
                   />
                 </div>
               </div>
-            </div>{" "}
+            </div>
             <div className="w-full flex gap-[10px]">
-              {" "}
+              <div className="w-full flex flex-col">
+                <span className="text-sm font-bold pb-[5px]">Giới tính*</span>
+                <select
+                  className={`w-full flex items-center border-[1px] py-[8px] outline-none text-sm ${
+                    isDarkMode
+                      ? "border-dark-600"
+                      : "bg-dark-400 border-transparent"
+                  } rounded-sm`}
+                  name="gender"
+                  value={input.gender}
+                  onChange={handleChange}
+                >
+                  <option value="male">Nam</option>
+                  <option value="female">Nữ</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="w-full flex gap-[10px]">
               <div className="w-full flex gap-[10px]">
                 <div className="w-full flex flex-col">
                   <span className="text-sm font-bold pb-[5px]">Chiều cao*</span>
@@ -233,7 +244,7 @@ const BodyFatCalculateForm = () => {
             </button>
           </form>
           <div
-            style={{ maxHeight: "calc(100vh - 570px)" }}
+            style={{ maxHeight: "calc(100vh - 660px)" }}
             className="w-full  flex flex-col overflow-y-auto gap-[10px] border-1 border-[#efefef] rounded-sm"
           >
             <h1 className="w-full font-bold sticky top-0 bg-light-50  p-[10px]">

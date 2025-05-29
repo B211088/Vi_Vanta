@@ -79,10 +79,10 @@ const BmiCalculateForm = () => {
               <div className="bg-white rounded-lg p-6 max-w-md shadow-lg relative">
                 <h4 className="font-bold text-lg mb-2">BMI là gì?</h4>
                 <p className="text-justify text-sm">
-                  BMI (Body Mass Index) là chỉ số khối cơ thể, được tính bằng
-                  cân nặng (kg) chia cho bình phương chiều cao (m). Chỉ số này
-                  giúp đánh giá tình trạng gầy, bình thường, thừa cân hay béo
-                  phì của một người.
+                  <strong>BMI</strong> (Body Mass Index) là chỉ số khối cơ thể,
+                  được tính bằng cân nặng (kg) chia cho bình phương chiều cao
+                  (m). Chỉ số này giúp đánh giá tình trạng gầy, bình thường,
+                  thừa cân hay béo phì của một người.
                 </p>
               </div>
             </div>

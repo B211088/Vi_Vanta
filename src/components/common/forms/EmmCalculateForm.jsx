@@ -71,14 +71,14 @@ const EmmCalculateForm = () => {
       <div className="w-7/12 flex flex-col border-1 border-[#efefef] shadow rounded-lg p-[10px]">
         {" "}
         <h3 className="text-md font-semibold mb-3 text-blue-600 flex items-center gap-2">
-          Tính chỉ số EMM (BMR/TDEE)
+          Tính chỉ số (BMR/TDEE)
           <div className="relative group">
             <div className="ml-2 text-blue-500 hover:text-blue-700 relative  cursor-pointer">
               <i className="fa-solid fa-circle-question"></i>
             </div>{" "}
             <div className="group-hover:flex absolute w-[300px] top-[0%] left-[110%]  bg-opacity-30 hidden items-center justify-center z-50">
               <div className=" flex flex-col gap-[10px] bg-white rounded-lg p-6 max-w-md shadow-lg relative">
-                <h4 className="font-bold text-lg mb-2">BMI là gì?</h4>
+                <h4 className="font-bold text-lg mb-2">BMR/TDEE là gì?</h4>
                 <p className="text-justify text-sm">
                   <strong>BMR</strong> là lượng calo tối thiểu mà cơ thể bạn cần
                   để duy trì các chức năng sống cơ bản khi nghỉ ngơi hoàn toàn,
