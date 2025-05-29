@@ -34,8 +34,12 @@ import Notification from "./notification.model.js";
 import ChildVaccinationRecord from "./childVaccinationRecord.model.js";
 import Vaccine from "./vaccine.model.js";
 import VaccinCategory from "./vaccinCategory.model.js";
-import BodyIndex from "./bodyIndex.model.js";
-
+import BMIRecord from "./bmiRecord.model.js";
+import EMMRecord from "./EmmRecord.model.js";
+import BodyFatRecord from "./bodyFatRecord.model.js";
+import WHRRecord from "./whr.model.js";
+import Exercise from "./exercises.model.js";
+import ExerciseCategory from "./exercisesCategory.model.js";
 export {
   User,
   Code,
@@ -71,5 +75,10 @@ export {
   ChildVaccinationRecord,
   Vaccine,
   VaccinCategory,
-  BodyIndex,
+  BMIRecord,
+  EMMRecord,
+  BodyFatRecord,
+  WHRRecord,
+  Exercise,
+  ExerciseCategory,
 };

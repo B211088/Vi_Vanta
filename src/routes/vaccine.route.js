@@ -6,6 +6,11 @@ import {
   updateVaccine,
   deleteVaccine,
   getVaccinesByCategory,
+  createVaccinCategory,
+  getAllVaccinCategories,
+  getVaccinCategoryById,
+  updateVaccinCategory,
+  deleteVaccinCategory,
 } from "../controllers/vaccine.controller.js";
 import verifyToken from "../middlewares/verifyToken.js";
 import { authorizeRoles } from "../middlewares/authorizeRoles.js";
@@ -13,7 +18,29 @@ import upload from "../middlewares/uploadMiddleware.js";
 
 const router = express.Router();
 
-// Tạo một vắc-xin mới
+// ===== ROUTES CHO DANH MỤC VẮC-XIN =====
+router.post(
+  "/categories",
+  verifyToken,
+  authorizeRoles("admin"),
+  createVaccinCategory
+);
+router.get("/categories", verifyToken, getAllVaccinCategories);
+router.get("/categories/:categoryId", verifyToken, getVaccinCategoryById);
+router.put(
+  "/categories/:categoryId",
+  verifyToken,
+  authorizeRoles("admin"),
+  updateVaccinCategory
+);
+router.delete(
+  "/categories/:categoryId",
+  verifyToken,
+  authorizeRoles("admin"),
+  deleteVaccinCategory
+);
+
+// ===== ROUTES CHO VẮC-XIN =====
 router.post(
   "/",
   verifyToken,
@@ -24,14 +51,9 @@ router.post(
   ]),
   createVaccine
 );
-
-// Lấy danh sách tất cả vắc-xin
 router.get("/", verifyToken, getAllVaccines);
-
-// Lấy thông tin chi tiết một vắc-xin
+router.get("/category/:categoryId", verifyToken, getVaccinesByCategory);
 router.get("/:vaccineId", verifyToken, authorizeRoles("admin"), getVaccineById);
-
-// Cập nhật thông tin vắc-xin
 router.put(
   "/:vaccineId",
   verifyToken,
@@ -42,16 +64,11 @@ router.put(
   ]),
   updateVaccine
 );
-
-// Xóa một vắc-xin
 router.delete(
   "/:vaccineId",
   verifyToken,
   authorizeRoles("admin"),
   deleteVaccine
 );
-
-// Lấy danh sách vắc-xin theo loại
-router.get("/category/:categoryId", verifyToken, getVaccinesByCategory);
 
 export default router;

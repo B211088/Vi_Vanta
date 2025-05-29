@@ -5,7 +5,7 @@ import {
   deleteHealthInfoHandle,
   getUserHealthInfoByIdHandle,
 } from "../services/health.service.js";
-import { caculateBMI, classifyBMI } from "../utils/health.utils.js";
+import { calculateBMI, classifyBMI } from "../utils/health.utils.js";
 
 // Lấy danh sách tất cả thông tin sức khỏe
 export const getAllHealth = async (req, res) => {
@@ -33,7 +33,7 @@ export const getUserHealthInfoById = async (req, res) => {
     let bmi;
     let bmiCategory;
     if (healthInfo.weight && healthInfo.height) {
-      bmi = caculateBMI(healthInfo.weight, healthInfo.height);
+      bmi = calculateBMI(healthInfo.weight, healthInfo.height);
       bmiCategory = classifyBMI(bmi);
     }
 
@@ -110,7 +110,7 @@ export const updateUserHealth = async (req, res) => {
     let bmi;
     let bmiCategory;
     if (updatedHealthInfo.weight && updatedHealthInfo.height) {
-      bmi = caculateBMI(updatedHealthInfo.weight, updatedHealthInfo.height);
+      bmi = calculateBMI(updatedHealthInfo.weight, updatedHealthInfo.height);
       bmiCategory = classifyBMI(bmi);
     }
 

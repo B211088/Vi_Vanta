@@ -1,5 +1,4 @@
 import { Health } from "../models/index.js";
-import { caculateBMI } from "../utils/health.utils.js";
 
 // Lấy danh sách tất cả thông tin sức khỏe
 export const getAllHealthInfoHandle = async () => {
