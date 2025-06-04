@@ -1,0 +1,32 @@
+@import url("https://fonts.googleapis.com/css2?family=Boldonse&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --font-nunito: "Nunito";
+
+  /* light theme */
+  --color-light-50: #ffffff;
+  --color-light-100: #f3f4f6;
+  --color-light-200: #e5e7eb;
+  --color-light-300: #d1d5db;
+  --color-light-400: #9ca3af;
+  --color-light-500: #6b7280;
+  --color-light-600: #4b5563;
+  --color-light-700: #374151;
+  --color-light-800: #1f2937;
+  --color-light-900: #111827;
+  --color-light-1000: #0b0f19;
+
+  /* dark theme (reversed) */
+  --color-dark-50: #0b0f19;
+  --color-dark-100: #111827;
+  --color-dark-200: #1f2937;
+  --color-dark-300: #374151;
+  --color-dark-400: #4b5563;
+  --color-dark-500: #6b7280;
+  --color-dark-600: #9ca3af;
+  --color-dark-700: #d1d5db;
+  --color-dark-800: #e5e7eb;
+  --color-dark-900: #f3f4f6;
+  --color-dark-1000: #f9fafb;
+}
