@@ -1,18 +1,24 @@
 import mongoose from "mongoose";
 const { Schema } = mongoose;
 
-const treatmentSchema = new Schema(
+const complicationSchema = new Schema(
   {
     name: { type: String, required: true, unique: true, trim: true },
     slug: { type: String, unique: true, trim: true },
     description: { type: String, trim: true },
-    type: {
-      type: String,
-      enum: ["medication", "procedure", "surgery", "other"],
-      default: "other",
-    },
-    drugs: [{ type: Schema.Types.ObjectId, ref: "Drug" }],
     relatedDiseases: [{ type: Schema.Types.ObjectId, ref: "Disease" }],
+    severity: {
+      type: String,
+      enum: ["mild", "moderate", "severe", "critical", "unknown"],
+      default: "unknown",
+    },
+    images: [
+      {
+        url: { type: String, trim: true },
+        public_id: { type: String, trim: true },
+        description: { type: String, trim: true },
+      },
+    ],
     references: [{ type: Schema.Types.ObjectId, ref: "Reference" }],
     tags: [{ type: Schema.Types.ObjectId, ref: "Tag" }],
     status: {
@@ -26,6 +32,4 @@ const treatmentSchema = new Schema(
   { timestamps: true }
 );
 
-const Treatment = mongoose.model("Treatment", treatmentSchema);
-
-export default Treatment;
+export default mongoose.model("Complication", complicationSchema);

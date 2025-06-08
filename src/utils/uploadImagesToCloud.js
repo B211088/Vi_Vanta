@@ -14,6 +14,7 @@ export const uploads = async (file, userId, imageName) => {
 
     return {
       url: result.secure_url,
+      public_id: result.public_id,
     };
   } catch (error) {
     console.error("Có lỗi xảy ra trong quá trình upload ảnh", error);

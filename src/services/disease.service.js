@@ -1,3 +1,4 @@
+import { toObjectIdArray } from "../helpers/parseFields.js";
 import {
   Disease,
   Cause,
@@ -9,48 +10,72 @@ import {
 import { deleteFromCloudinary } from "../utils/uploadImagesToCloud.js";
 
 // Tạo một bệnh mới
-export const createDiseaseHandle = async (payload) => {
+export const createDiseaseHandle = async (payload, userId) => {
   try {
-    const {
-      causes,
-      treatments,
-      symptoms,
-      prevention,
-      relatedDiseases,
-      category,
-    } = payload;
+    if (!payload.name) throw new Error("Thiếu tên bệnh");
+    const existingDisease = await Disease.findOne({ name: payload.name });
+    if (existingDisease) {
+      throw new Error("Bệnh đã tồn tại trong hệ thống");
+    }
 
-    // Kiểm tra và lấy ID từ các model liên quan
-    const causeIds = await Cause.find({ _id: { $in: causes } }).select("_id");
-    const treatmentIds = await Treatment.find({
-      _id: { $in: treatments },
-    }).select("_id");
-    const symptomIds = await Symptom.find({ _id: { $in: symptoms } }).select(
-      "_id"
-    );
-    const preventionIds = await Prevention.find({
-      _id: { $in: prevention },
-    }).select("_id");
-    const relatedDiseaseIds = await Disease.find({
-      _id: { $in: relatedDiseases },
-    }).select("_id");
-    const categoryId = await DiseaseCategory.findById({
-      _id: { $in: category },
-    }).select("_id");
+    // Chuẩn hóa các trường liên kết
+    const diseaseData = {
+      name: payload.name,
+      slug: payload.slug,
+      scientificName: payload.scientificName,
+      icd10Code: payload.icd10Code,
+      definition: payload.definition,
+      category: toObjectIdArray(payload.category),
+      specialty: toObjectIdArray(payload.specialty),
+      tags: toObjectIdArray(payload.tags),
+      keywords: toObjectIdArray(payload.keywords),
+      complications: toObjectIdArray(payload.complications),
+      riskFactors: toObjectIdArray(payload.riskFactors),
+      symptoms: toObjectIdArray(payload.symptoms),
+      causes: toObjectIdArray(payload.causes),
+      treatments: toObjectIdArray(payload.treatments),
+      preventions: toObjectIdArray(payload.preventions),
+      prognosis: payload.prognosis || [],
+      diagnosis: payload.diagnosis || [],
+      riskLevel: payload.riskLevel,
+      relatedDiseases: toObjectIdArray(payload.relatedDiseases),
+      detailedArticle: payload.detailedArticle,
+      references: toObjectIdArray(payload.references),
+      guidelines: toObjectIdArray(payload.guidelines),
+      epidemiology: payload.epidemiology,
+      images: payload.images || [],
+      thumbnail: payload.thumbnail,
+      status: payload.status,
+      createdBy: payload.createdBy,
+      updatedBy: payload.updatedBy,
+      reviewedBy: payload.reviewedBy,
+      approvedAt: payload.approvedAt,
+      reviewedAt: payload.reviewedAt,
+      version: payload.version,
+      history: payload.history || [],
+      isActive: payload.isActive,
+    };
 
-    // Tạo bệnh mới
-    const newDisease = new Disease({
-      ...payload,
-      causes: causeIds.map((cause) => cause._id),
-      treatments: treatmentIds.map((treatment) => treatment._id),
-      symptoms: symptomIds.map((symptom) => symptom._id),
-      prevention: preventionIds.map((prevention) => prevention._id),
-      relatedDiseases: relatedDiseaseIds.map((disease) => disease._id),
-      category: categoryId.map((cat) => cat._id),
-    });
+    // Tạo bản ghi mới
+    const newDisease = new Disease(diseaseData);
+    const disease = await newDisease.save();
 
-    await newDisease.save();
-    return newDisease;
+    // Populate các trường liên kết khi trả về
+    return await Disease.findById(disease._id)
+      .populate("causes", "name description")
+      .populate("treatments", "name description")
+      .populate("symptoms", "name description")
+      .populate("preventions", "name description")
+      .populate("relatedDiseases", "name scientificName")
+      .populate("category", "name description")
+      .populate("specialty", "name description")
+      .populate("tags", "name")
+      .populate("complications", "name description")
+      .populate("riskFactors", "name description")
+      .populate("references", "title source url")
+      .populate("guidelines", "title")
+      .populate("epidemiology")
+      .select("-__v -createdAt -updatedAt");
   } catch (error) {
     console.error("Lỗi khi tạo bệnh:", error.message);
     throw new Error("Lỗi khi tạo bệnh");
@@ -58,49 +83,79 @@ export const createDiseaseHandle = async (payload) => {
 };
 
 // Lấy danh sách tất cả các bệnh
-export const getAllDiseasesHandle = async (page, limit) => {
+export const getAllDiseasesHandle = async (
+  page = 1,
+  limit = 20,
+  filter = {}
+) => {
   try {
-    // Tính toán skip và limit cho phân trang
+    const query = {};
+    if (filter.status) query.status = filter.status;
+    if (typeof filter.isActive === "boolean") query.isActive = filter.isActive;
+    // Có thể bổ sung các filter khác nếu cần
+
     const skip = (page - 1) * limit;
-
-    // Lấy danh sách bệnh với phân trang và chỉ lấy các trường cần thiết
-    const diseases = await Disease.find()
-      .select("name scientificName thumbnail description category isActive")
-      .skip(skip)
-      .limit(limit);
-
-    // Đếm tổng số bệnh để trả về tổng số trang
-    const totalDiseases = await Disease.countDocuments();
-    const totalPages = Math.ceil(totalDiseases / limit);
-
-    return {
-      diseases,
-      pagination: {
-        currentPage: page,
-        totalPages,
-        totalDiseases,
-      },
-    };
+    const [diseases, total] = await Promise.all([
+      Disease.find(query)
+        .select(
+          "name scientificName definition status isActive createdAt updatedAt"
+        )
+        .skip(skip)
+        .limit(limit),
+      Disease.countDocuments(query),
+    ]);
+    return { diseases, total, page, limit };
   } catch (error) {
     console.error("Lỗi khi lấy danh sách bệnh:", error.message);
     throw new Error("Lỗi khi lấy danh sách bệnh");
   }
 };
 
-// Lấy danh sách tất cả các bệnh
+// Lấy thông tin chi tiết một bệnh
+export const getDiseaseByIdHandle = async (diseaseId) => {
+  try {
+    const disease = await Disease.findById(diseaseId)
+      .populate("causes", "name description")
+      .populate("treatments", "name description")
+      .populate("symptoms", "name description")
+      .populate("preventions", "name description")
+      .populate("relatedDiseases", "name scientificName")
+      .populate("category", "name description")
+      .populate("specialty", "name description")
+      .populate("tags", "name")
+      .populate("complications", "name description")
+      .populate("riskFactors", "name description")
+      .populate("references", "title source url")
+      .populate("guidelines", "title")
+      .populate("epidemiology")
+      .select("-__v -createdAt -updatedAt");
+
+    if (!disease) {
+      throw new Error("Không tìm thấy bệnh");
+    }
+
+    return disease;
+  } catch (error) {
+    console.error("Lỗi khi lấy thông tin bệnh:", error.message);
+    throw new Error("Lỗi khi lấy thông tin bệnh");
+  }
+};
+
 export const getAllDiseasesActiveHandle = async (page, limit) => {
   try {
     // Tính toán skip và limit cho phân trang
     const skip = (page - 1) * limit;
 
-    // Lấy danh sách bệnh với phân trang và chỉ lấy các trường cần thiết
     const diseases = await Disease.find({ isActive: true })
-      .select("name scientificName thumbnail description category ") // Chỉ lấy các trường cần thiết
+      .select(
+        "name scientificName thumbnail description  isActive createdAt updatedAt"
+      )
+      .populate("category", "-_id name")
       .skip(skip)
       .limit(limit);
 
     // Đếm tổng số bệnh để trả về tổng số trang
-    const totalDiseases = await Disease.countDocuments();
+    const totalDiseases = await Disease.countDocuments({ isActive: true });
     const totalPages = Math.ceil(totalDiseases / limit);
 
     return {
@@ -128,8 +183,8 @@ export const getDiseasesByCategoryHandle = async (
 
     // Lấy danh sách bệnh theo categoryId với phân trang
     const diseases = await Disease.find({ category: categoryId })
-      .select("name scientificName thumbnail description category")
-      .populate("category", "name description")
+      .select("name scientificName thumbnail description  isActive")
+      .populate("category", "-_id name")
       .skip(skip)
       .limit(limit);
 
@@ -150,29 +205,6 @@ export const getDiseasesByCategoryHandle = async (
   } catch (error) {
     console.error("Lỗi khi lấy danh sách bệnh theo danh mục:", error.message);
     throw new Error("Lỗi khi lấy danh sách bệnh theo danh mục");
-  }
-};
-
-// Lấy thông tin chi tiết một bệnh
-export const getDiseaseByIdHandle = async (diseaseId) => {
-  try {
-    const disease = await Disease.findById(diseaseId)
-      .populate("causes", "name description")
-      .populate("treatments", "name description")
-      .populate("symptoms", "name description")
-      .populate("preventions", "name description")
-      .populate("relatedDiseases", "name scientificName")
-      .populate("category", "name description")
-      .select("-__v -createdAt -updatedAt");
-
-    if (!disease) {
-      throw new Error("Không tìm thấy bệnh");
-    }
-
-    return disease;
-  } catch (error) {
-    console.error("Lỗi khi lấy thông tin bệnh:", error.message);
-    throw new Error("Lỗi khi lấy thông tin bệnh");
   }
 };
 
@@ -207,7 +239,7 @@ export const updateDiseaseHandle = async (diseaseId, payload) => {
     const relatedDiseaseIds = relatedDiseases
       ? await Disease.find({ _id: { $in: relatedDiseases } }).select("_id")
       : [];
-    const categoryId = category
+    const categoryIds = category
       ? await DiseaseCategory.find({ _id: { $in: category } }).select("_id")
       : [];
 
@@ -280,7 +312,7 @@ export const updateDiseaseHandle = async (diseaseId, payload) => {
         relatedDiseases: relatedDiseaseIds.length
           ? relatedDiseaseIds.map((disease) => disease._id)
           : existingDisease.relatedDiseases,
-        category: categoryId ? categoryId._id : existingDisease.category,
+        category: categoryIds ? categoryIds._id : existingDisease.category,
         images: updatedImages, // Cập nhật ảnh mới nếu có
         thumbnail: thumbnail || existingDisease.thumbnail, // Cập nhật thumbnail mới nếu có
         detailedArticle: detailedArticle || existingDisease.detailedArticle, // Cập nhật bài viết chi tiết nếu có

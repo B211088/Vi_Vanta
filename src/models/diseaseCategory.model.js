@@ -5,17 +5,38 @@ const diseaseCategorySchema = new Schema(
   {
     name: {
       type: String,
-      required: true, // Tên danh mục bệnh (bắt buộc)
-      unique: true, // Đảm bảo tên danh mục là duy nhất
-      trim: true, // Loại bỏ khoảng trắng thừa
+      required: true,
+      unique: true,
+      trim: true,
     },
     description: {
-      type: String, // Mô tả danh mục bệnh
+      type: String,
       default: "",
+    },
+    parent: {
+      type: Schema.Types.ObjectId,
+      ref: "DiseaseCategory",
+      default: null,
+    },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+    updatedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    deleted: {
+      type: Boolean,
+      default: false,
     },
   },
   {
-    timestamps: true, // Tự động thêm createdAt và updatedAt
+    timestamps: true,
   }
 );
 

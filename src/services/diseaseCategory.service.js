@@ -13,12 +13,27 @@ export const createDiseaseCategoryHandle = async (payload) => {
 };
 
 // Lấy danh sách tất cả danh mục bệnh
-export const getAllDiseaseCategoriesHandle = async () => {
+export const getAllDiseaseCategoriesHandle = async (page, limit) => {
   try {
-    const categories = await DiseaseCategory.find().select(
-      "-__v -createdAt -updatedAt"
-    );
-    return categories;
+    const skip = (page - 1) * limit;
+    const categories = await DiseaseCategory.find({
+      deleted: false,
+      parent: null,
+    })
+      .populate("createdBy", "_id fullName")
+      .populate("updatedBy", "_id fullName")
+      .select("-__v ")
+      .skip(skip)
+      .limit(limit);
+    const totalCategories = await DiseaseCategory.countDocuments({
+      deleted: false,
+      parent: null,
+    });
+    const totalPages = Math.ceil(totalCategories / limit);
+    return {
+      categories,
+      pagination: { currentPage: page, totalPages, totalCategories },
+    };
   } catch (error) {
     console.error("Lỗi khi lấy danh sách danh mục bệnh:", error.message);
     throw new Error("Lỗi khi lấy danh sách danh mục bệnh");
@@ -28,9 +43,9 @@ export const getAllDiseaseCategoriesHandle = async () => {
 // Lấy thông tin chi tiết một danh mục bệnh
 export const getDiseaseCategoryByIdHandle = async (categoryId) => {
   try {
-    const category = await DiseaseCategory.findById(categoryId).select(
-      "-__v -createdAt -updatedAt"
-    );
+    const category = await DiseaseCategory.findById(categoryId)
+      .select("-__v -createdAt -updatedAt")
+      .populate("parent", "_id name");
     if (!category) {
       throw new Error("Không tìm thấy danh mục bệnh");
     }
@@ -38,6 +53,33 @@ export const getDiseaseCategoryByIdHandle = async (categoryId) => {
   } catch (error) {
     console.error("Lỗi khi lấy thông tin danh mục bệnh:", error.message);
     throw new Error("Lỗi khi lấy thông tin danh mục bệnh");
+  }
+};
+
+export const getChildrenDiseaseCategoriesHandle = async (
+  categoryId,
+  page,
+  limit
+) => {
+  try {
+    const skip = (page - 1) * limit;
+    const categories = await DiseaseCategory.find({ parent: categoryId })
+      .populate("createdBy", "_id fullName")
+      .populate("updatedBy", "_id fullName")
+      .select("-__v ")
+      .skip(skip)
+      .limit(limit);
+    const totalCategories = await DiseaseCategory.countDocuments({
+      parent: categoryId,
+    });
+    const totalPages = Math.ceil(totalCategories / limit);
+    return {
+      categories,
+      pagination: { currentPage: page, totalPages, totalCategories },
+    };
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách danh mục bệnh con:", error.message);
+    throw new Error("Lỗi khi lấy danh sách danh mục bệnh con");
   }
 };
 

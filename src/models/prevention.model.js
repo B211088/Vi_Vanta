@@ -7,11 +7,16 @@ const preventionSchema = new Schema(
       type: String,
       required: true,
       unique: true,
+      trim: true,
     },
-
+    slug: {
+      type: String,
+      unique: true,
+      trim: true,
+    },
     description: {
       type: String,
-      default: "",
+      trim: true,
     },
     images: [
       {
@@ -25,6 +30,16 @@ const preventionSchema = new Schema(
         },
       },
     ],
+    relatedDiseases: [{ type: Schema.Types.ObjectId, ref: "Disease" }],
+    references: [{ type: Schema.Types.ObjectId, ref: "Reference" }],
+    tags: [{ type: Schema.Types.ObjectId, ref: "Tag" }],
+    status: {
+      type: String,
+      enum: ["active", "inactive", "draft"],
+      default: "active",
+    },
+    createdBy: { type: Schema.Types.ObjectId, ref: "User" },
+    updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
   },
   {
     timestamps: true,

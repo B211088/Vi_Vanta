@@ -14,10 +14,19 @@ export const createCauseHandle = async (payload) => {
 };
 
 // Lấy danh sách tất cả nguyên nhân
-export const getAllCausesHandle = async () => {
+export const getAllCausesHandle = async (page, limit) => {
   try {
-    const causes = await Cause.find().select("-__v -createdAt -updatedAt");
-    return causes;
+    const skip = (page - 1) * limit;
+    const causes = await Cause.find()
+      .select("-__v -createdAt -updatedAt")
+      .skip(skip)
+      .limit(limit);
+    const totalCauses = await Cause.countDocuments();
+    const totalPages = Math.ceil(totalCauses / limit);
+    return {
+      causes,
+      pagination: { currentPage: page, totalPages, totalCauses },
+    };
   } catch (error) {
     console.error("Lỗi khi lấy danh sách nguyên nhân:", error.message);
     throw new Error("Lỗi khi lấy danh sách nguyên nhân");

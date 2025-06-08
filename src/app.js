@@ -26,6 +26,8 @@ import vaccineRouter from "./routes/vaccine.route.js";
 import clinicRouter from "./routes/clinic.route.js";
 import bodyIndexRouter from "./routes/bodyIndex.route.js";
 import exerciseRouter from "./routes/exercise.route.js";
+import medicationReminderRouter from "./routes/medicationReminder.route.js";
+import diseaseCategoryRouter from "./routes/diseaseCategory.route.js";
 
 const app = express();
 
@@ -41,7 +43,7 @@ app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173", "http://localhost:5174"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization", "CSRF-Token"],
@@ -87,7 +89,8 @@ app.use("/api/v1/vaccines", vaccineRouter);
 app.use("/api/v1/clinics", clinicRouter);
 app.use("/api/v1/body-index", bodyIndexRouter);
 app.use("/api/v1/exercises", exerciseRouter);
-
+app.use("/api/v1/disease-categories", diseaseCategoryRouter);
+app.use("/api/v1/medication-reminders", medicationReminderRouter);
 app.get("/api/v1/csrf-token", (req, res) => {
   res.json({ csrfToken: req.csrfToken() });
 });

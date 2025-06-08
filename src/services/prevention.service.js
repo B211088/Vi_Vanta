@@ -22,12 +22,21 @@ export const createPreventionHandle = async (payload) => {
 };
 
 // Lấy danh sách tất cả biện pháp phòng ngừa
-export const getAllPreventionsHandle = async () => {
+export const getAllPreventionsHandle = async (page, limit) => {
   try {
-    const preventions = await Prevention.find().select(
-      "-__v -createdAt -updatedAt"
-    );
-    return preventions;
+    const skip = (page - 1) * limit;
+    const preventions = await Prevention.find()
+      .select("name description")
+      .skip(skip)
+      .limit(limit)
+      .select("-__v -createdAt -updatedAt");
+    const totalPreventions = await Prevention.countDocuments();
+    const totalPages = Math.ceil(totalPreventions / limit);
+
+    return {
+      preventions,
+      pagination: { currentPage: page, totalPages, totalPreventions },
+    };
   } catch (error) {
     console.error("Lỗi khi lấy danh sách biện pháp phòng ngừa:", error.message);
     throw new Error("Lỗi khi lấy danh sách biện pháp phòng ngừa");

@@ -69,7 +69,6 @@ export const getBMIRecordById = async (req, res) => {
 export const calculateBMI = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const payload = req.body;
 
     const { weight, height } = req.body;
     if (!weight || !height) {

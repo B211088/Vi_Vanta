@@ -23,8 +23,6 @@ import Disease from "./disease.model.js";
 import DiseaseCategory from "./diseaseCategory.model.js";
 import Medication from "./medication.model.js";
 import MedicationCategory from "./medicationCategory.model.js";
-
-// Thêm các model còn thiếu:
 import Clinic from "./clinic.model.js";
 import ClinicStaff from "./clinicStaff.model.js";
 import Appointment from "./appointment.model.js";
@@ -40,6 +38,9 @@ import BodyFatRecord from "./bodyFatRecord.model.js";
 import WHRRecord from "./whr.model.js";
 import Exercise from "./exercises.model.js";
 import ExerciseCategory from "./exercisesCategory.model.js";
+import MedicationReminderItem from "./medicationReminderItem.model.js";
+import MedicationPrescription from "./medicationPrescription.model.js";
+
 export {
   User,
   Code,
@@ -81,4 +82,6 @@ export {
   WHRRecord,
   Exercise,
   ExerciseCategory,
+  MedicationReminderItem,
+  MedicationPrescription,
 };

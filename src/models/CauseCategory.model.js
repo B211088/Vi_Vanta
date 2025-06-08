@@ -1,19 +1,12 @@
 import mongoose from "mongoose";
 const { Schema } = mongoose;
 
-const treatmentSchema = new Schema(
+const causeCategorySchema = new Schema(
   {
     name: { type: String, required: true, unique: true, trim: true },
-    slug: { type: String, unique: true, trim: true },
+    slug: { type: String, unique: true, trim: true }, // Đường dẫn thân thiện SEO
     description: { type: String, trim: true },
-    type: {
-      type: String,
-      enum: ["medication", "procedure", "surgery", "other"],
-      default: "other",
-    },
-    drugs: [{ type: Schema.Types.ObjectId, ref: "Drug" }],
-    relatedDiseases: [{ type: Schema.Types.ObjectId, ref: "Disease" }],
-    references: [{ type: Schema.Types.ObjectId, ref: "Reference" }],
+    parent: { type: Schema.Types.ObjectId, ref: "CauseCategory" }, // Phân loại cha (nếu có)
     tags: [{ type: Schema.Types.ObjectId, ref: "Tag" }],
     status: {
       type: String,
@@ -26,6 +19,4 @@ const treatmentSchema = new Schema(
   { timestamps: true }
 );
 
-const Treatment = mongoose.model("Treatment", treatmentSchema);
-
-export default Treatment;
+export default mongoose.model("CauseCategory", causeCategorySchema);

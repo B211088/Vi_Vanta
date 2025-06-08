@@ -9,9 +9,13 @@ const diseaseSchema = new Schema(
       unique: true,
       trim: true,
     },
+    slug: {
+      type: String,
+      unique: true,
+      trim: true,
+    },
     scientificName: {
       type: String,
-      required: true,
       trim: true,
     },
     icd10Code: {
@@ -20,22 +24,44 @@ const diseaseSchema = new Schema(
       uppercase: true,
       unique: true,
     },
-    description: {
+    definition: {
       type: String,
-      required: true,
       trim: true,
     },
     category: [
       {
         type: Schema.Types.ObjectId,
         ref: "DiseaseCategory",
-        required: true,
       },
     ],
-    medications: [
+    specialty: [
       {
         type: Schema.Types.ObjectId,
-        ref: "Medication",
+        ref: "Specialty",
+      },
+    ],
+    tags: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Tag",
+      },
+    ],
+    keywords: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    complications: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Complication",
+      },
+    ],
+    riskFactors: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "RiskFactor",
       },
     ],
     symptoms: [
@@ -62,28 +88,30 @@ const diseaseSchema = new Schema(
         ref: "Prevention",
       },
     ],
-    riskFactors: [
+    prognosis: [
       {
-        type: String,
-        trim: true,
+        name: { type: String, trim: true },
+        description: { type: String, trim: true },
+        references: [
+          {
+            type: Schema.Types.ObjectId,
+            ref: "Reference",
+          },
+        ],
       },
     ],
-    complications: [
+    diagnosis: [
       {
-        type: String,
-        trim: true,
+        name: { type: String, trim: true },
+        description: { type: String, trim: true },
+        references: [
+          {
+            type: Schema.Types.ObjectId,
+            ref: "Reference",
+          },
+        ],
       },
     ],
-    prognosis: {
-      type: String,
-      trim: true,
-      default: "",
-    },
-    diagnosis: {
-      type: String,
-      trim: true,
-      default: "",
-    },
     riskLevel: {
       type: String,
       enum: ["low", "medium", "high", "critical", "unknown"],
@@ -98,37 +126,20 @@ const diseaseSchema = new Schema(
     detailedArticle: {
       type: String,
       trim: true,
-      default: "chưa có bài viết chi tiết",
     },
     references: [
       {
-        title: String,
-        authors: [String],
-        source: String,
-        url: String,
-        publicationDate: Date,
+        type: Schema.Types.ObjectId,
+        ref: "Reference",
       },
     ],
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
-    version: {
-      type: Number,
-      default: 1,
-    },
-    thumbnail: {
-      url: {
-        type: String,
-        required: true,
-        trim: true,
+    guidelines: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Guideline",
       },
-      public_id: {
-        type: String,
-        required: true,
-        trim: true,
-      },
-    },
+    ],
+    epidemiology: { type: Schema.Types.ObjectId, ref: "Epidemiology" },
     images: [
       {
         url: {
@@ -141,8 +152,47 @@ const diseaseSchema = new Schema(
           required: true,
           trim: true,
         },
+        description: {
+          type: String,
+          trim: true,
+        },
       },
     ],
+    thumbnail: {
+      url: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+      public_id: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+    },
+    status: {
+      type: String,
+      enum: ["draft", "pending", "published", "archived"],
+      default: "draft",
+    },
+    createdBy: { type: Schema.Types.ObjectId, ref: "User" },
+    updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
+    reviewedBy: { type: Schema.Types.ObjectId, ref: "User" },
+    approvedAt: { type: Date },
+    reviewedAt: { type: Date },
+    version: {
+      type: Number,
+      default: 1,
+    },
+    history: [
+      {
+        version: Number,
+        data: Schema.Types.Mixed,
+        updatedAt: Date,
+        updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
+      },
+    ],
+    isActive: { type: Boolean, default: true },
   },
   {
     timestamps: true,

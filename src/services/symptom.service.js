@@ -14,10 +14,19 @@ export const createSymptomHandle = async (payload) => {
 };
 
 // Lấy danh sách tất cả triệu chứng
-export const getAllSymptomsHandle = async () => {
+export const getAllSymptomsHandle = async (page, limit) => {
   try {
-    const symptoms = await Symptom.find().select("-__v -createdAt -updatedAt");
-    return symptoms;
+    const skip = (page - 1) * limit;
+    const symptoms = await Symptom.find()
+      .select("-__v -createdAt -updatedAt")
+      .skip(skip)
+      .limit(limit);
+    const totalSymptoms = await Symptom.countDocuments();
+    const totalPages = Math.ceil(totalSymptoms / limit);
+    return {
+      symptoms,
+      pagination: { currentPage: page, totalPages, totalSymptoms },
+    };
   } catch (error) {
     console.error("Lỗi khi lấy danh sách triệu chứng:", error.message);
     throw new Error("Lỗi khi lấy danh sách triệu chứng");

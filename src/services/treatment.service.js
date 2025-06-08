@@ -14,12 +14,19 @@ export const createTreatmentHandle = async (payload) => {
 };
 
 // Lấy danh sách tất cả phương pháp điều trị
-export const getAllTreatmentsHandle = async () => {
+export const getAllTreatmentsHandle = async (page, limit) => {
   try {
+    const skip = (page - 1) * limit;
     const treatments = await Treatment.find()
-      .populate("medications", "-__v -createdAt -updatedAt ")
-      .select("-__v -createdAt -updatedAt");
-    return treatments;
+      .select("-__v -createdAt -updatedAt -medications")
+      .skip(skip)
+      .limit(limit);
+    const totalTreatments = await Treatment.countDocuments();
+    const totalPages = Math.ceil(totalTreatments / limit);
+    return {
+      treatments,
+      pagination: { currentPage: page, totalPages, totalTreatments },
+    };
   } catch (error) {
     console.error("Lỗi khi lấy danh sách phương pháp điều trị:", error.message);
     throw new Error("Lỗi khi lấy danh sách phương pháp điều trị");
