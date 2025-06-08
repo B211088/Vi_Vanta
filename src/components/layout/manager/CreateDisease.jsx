@@ -41,7 +41,7 @@ const CreateDisease = () => {
     name: "",
     scientificName: "",
     icd10Code: "",
-    description: "",
+    definition: "",
     category: [],
     medications: [],
     symptoms: [],
@@ -54,7 +54,6 @@ const CreateDisease = () => {
     diagnosis: "",
     riskLevel: "medium",
     relatedDiseases: [],
-    detailedArticle: "",
     references: [],
     images: [],
     isActive: false,
@@ -220,8 +219,8 @@ const CreateDisease = () => {
       notifyWarning("Mã ICD10 không đúng định dạng (ví dụ: A00, B20.1)!");
       return;
     }
-    if (!form.description.trim()) {
-      notifyWarning("Vui lòng nhập mô tả bệnh!");
+    if (!form.definition.trim()) {
+      notifyWarning("Vui lòng nhập định nghĩa bệnh!");
       return;
     }
     if (selectedDiseaseCategories.length === 0) {
@@ -275,11 +274,6 @@ const CreateDisease = () => {
     // Validate diagnosis
     if (!form.diagnosis.trim()) {
       notifyWarning("Vui lòng nhập chẩn đoán bệnh!");
-      return;
-    }
-    // Validate detailedArticle
-    if (!form.detailedArticle.trim()) {
-      notifyWarning("Vui lòng nhập bài viết chi tiết về bệnh!");
       return;
     }
 
@@ -453,13 +447,15 @@ const CreateDisease = () => {
                 }  rounded-sm`}
               >
                 <div className="w-full flex justify-between py-[5px] px-[10px] ">
-                  <span className="text-sm font-bold pb-[5px]">Mô tả bệnh</span>
+                  <span className="text-sm font-bold pb-[5px]">
+                    Đinh nghĩa bệnh
+                  </span>
                 </div>
                 <textarea
                   className="flex-1 min-h-[110px] max-h-[200px]  text-sm px-[10px] py-[8px] outline-none border-t-[1px] border-dashed border-dark-800"
-                  name="description"
+                  name="definition"
                   type="text"
-                  placeholder="Thêm mô tả về bệnh"
+                  placeholder="Thêm định nghĩa về bệnh"
                   onChange={handleChange}
                   disabled={loading}
                 />
@@ -628,7 +624,7 @@ const CreateDisease = () => {
                 >
                   <div className="w-full flex justify-between py-[5px] px-[10px] ">
                     <span className="text-sm font-bold pb-[5px]">
-                      Nguyên nhân gây bệnh
+                      Nguyên nhân gây bệnh (cause)
                     </span>
                     <span
                       className="text-sm text-blue-500 cursor-pointer"
@@ -674,7 +670,7 @@ const CreateDisease = () => {
                 >
                   <div className="w-full flex justify-between py-[5px] px-[10px] ">
                     <span className="text-sm font-bold pb-[5px]">
-                      Triệu chứng
+                      Triệu chứng (symptom)
                     </span>
                     <span
                       className="text-sm text-blue-500 cursor-pointer"
@@ -722,7 +718,7 @@ const CreateDisease = () => {
                 >
                   <div className="w-full flex justify-between py-[5px] px-[10px] ">
                     <span className="text-sm font-bold pb-[5px]">
-                      Phòng ngừa
+                      Phòng ngừa (prevention)
                     </span>
                     <span
                       className="text-sm text-blue-500 cursor-pointer"
@@ -770,7 +766,7 @@ const CreateDisease = () => {
                 >
                   <div className="w-full flex justify-between py-[5px] px-[10px] ">
                     <span className="text-sm font-bold pb-[5px]">
-                      Phương pháp điều trị
+                      Phương pháp điều trị (treatment)
                     </span>
                     <span
                       className="text-sm text-blue-500 cursor-pointer"
@@ -820,7 +816,7 @@ const CreateDisease = () => {
                 >
                   <div className="w-full flex justify-between py-[5px] px-[10px] ">
                     <span className="text-sm font-bold pb-[5px]">
-                      Các đối tương dễ mắc bệnh
+                      Các đối tương nguy cơ (risk fators)
                     </span>
                     <div
                       className="text-sm text-blue-500 cursor-pointer"
@@ -837,7 +833,7 @@ const CreateDisease = () => {
                       riskFactors.map((riskFactor, index) => (
                         <div
                           key={index}
-                          className={`w-full flex flex-col border-primary ${
+                          className={`w-full flex items-center  pr-[10px] border-primary ${
                             isDarkMode
                               ? " border-dark-600 "
                               : "bg-dark-400 border-transparent"
@@ -853,7 +849,19 @@ const CreateDisease = () => {
                               handleRiskFactorChange(index, e.target.value)
                             }
                             disabled={loading}
-                          />
+                          />{" "}
+                          {riskFactors.length > 1 && (
+                            <div
+                              className="cursor-pointer"
+                              onClick={() =>
+                                setRiskFactors(
+                                  riskFactors.filter((_, i) => i !== index)
+                                )
+                              }
+                            >
+                              xóa
+                            </div>
+                          )}
                         </div>
                       ))}
                   </div>
@@ -871,7 +879,9 @@ const CreateDisease = () => {
                 } rounded-sm`}
               >
                 <div className="w-full flex justify-between py-[5px] px-[10px] ">
-                  <span className="text-sm font-bold pb-[5px]">Biến chứng</span>
+                  <span className="text-sm font-bold pb-[5px]">
+                    Biến chứng (complications)
+                  </span>
                   <div
                     className="text-sm text-blue-500 cursor-pointer"
                     onClick={loading ? undefined : addComplication}
@@ -879,7 +889,7 @@ const CreateDisease = () => {
                       loading ? { pointerEvents: "none", opacity: 0.5 } : {}
                     }
                   >
-                    <span>Thêm biến chứng</span>
+                    <span>Thêm biến chứng </span>
                   </div>
                 </div>
                 <div className="w-full min-h-[110px] max-h-[200px] overflow-y-auto  flex flex-col gap-[5px] border-t-[1px] border-dashed border-dark-800  p-[5px]">
@@ -887,7 +897,7 @@ const CreateDisease = () => {
                     complications.map((complication, index) => (
                       <div
                         key={index}
-                        className={`w-full flex flex-col border-primary ${
+                        className={`w-full flex items-center pr-[10px] border-primary ${
                           isDarkMode
                             ? " border-dark-600 "
                             : "bg-dark-400 border-transparent"
@@ -904,6 +914,18 @@ const CreateDisease = () => {
                           }
                           disabled={loading}
                         />
+                        {complications.length > 1 && (
+                          <div
+                            className="cursor-pointer"
+                            onClick={() =>
+                              setComplications(
+                                complications.filter((_, i) => i !== index)
+                              )
+                            }
+                          >
+                            xóa
+                          </div>
+                        )}
                       </div>
                     ))}
                 </div>
@@ -970,35 +992,7 @@ const CreateDisease = () => {
               </div>
             </div>
           </div>
-          <div className="w-full flex  gap-[20px]">
-            <div className="w-full flex gap-[10px]">
-              <div className="w-full flex flex-col">
-                <div
-                  className={`w-full flex flex-col items-center border-primary  outline-none text-sm ${
-                    isDarkMode
-                      ? "border-dark-600"
-                      : "bg-dark-400 border-transparent"
-                  } rounded-sm`}
-                >
-                  <div className="w-full flex justify-between py-[5px] px-[10px] ">
-                    <span className="text-sm font-bold pb-[5px]">
-                      Bài viết chi tiết (detailedArticle)
-                    </span>
-                  </div>
-                  <div className="w-full flex flex-col gap-[5px] border-t-[1px] border-dashed border-dark-800  p-[5px]">
-                    <textarea
-                      className="flex-1  text-sm px-[10px] py-[8px] min-h-[500px] max-h-[800px] outline-none"
-                      name="detailedArticle"
-                      value={form.detailedArticle}
-                      placeholder="Nhập bài viết chi tiết về bệnh"
-                      onChange={handleChange}
-                      disabled={loading}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+
           <div className="w-full flex flex-col border-primary rounded-md">
             <div className="w-full flex justify-between  py-[5px] px-[10px]">
               <span className="text-sm font-bold pb-[5px]">Bệnh liên quan</span>

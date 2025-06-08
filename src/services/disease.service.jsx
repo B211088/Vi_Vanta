@@ -7,13 +7,13 @@ import {
   setCauses,
   setDisease,
   setDiseases,
-  setNewDisease,
   setPreventions,
   setSymptoms,
   setTreatments,
   updateDisease,
   deleteDisease,
   addDisease,
+  addCategories,
 } from "../store/slices/diseaseSlice";
 
 const api = axios.create({
@@ -22,14 +22,29 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// ======== Disease Category =====
+export const getAllDiseasesHandle =
+  (page, limit, status) => async (dispatch) => {
+    try {
+      dispatch(fetchStart());
+      const response = await api.get(
+        `/api/v1/diseases?page=${page}&limit=${limit}&status=${status}`
+      );
+      console.log({ response });
+      dispatch(setDiseases(response.data.diseases));
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "Không thể tải danh sách bệnh!";
+      dispatch(fetchFailure(errorMessage));
+      throw error;
+    }
+  };
 
 export const getAllDiseaseCategoriesHandle =
   (page, limit) => async (dispatch) => {
     try {
       dispatch(fetchStart());
       const response = await api.get(
-        `/api/v1/diseases/categories?page=${page}&limit=${limit}`
+        `/api/v1/disease-categories?page=${page}&limit=${limit}`
       );
       dispatch(setCategories(response.data.categories));
     } catch (error) {
@@ -41,18 +56,33 @@ export const getAllDiseaseCategoriesHandle =
     }
   };
 
-// ===== PREVENTION =====
-export const getAllDiseasesHandle = (page, limit) => async (dispatch) => {
+export const getChildrenDiseaseCategoriesHandle =
+  (page, limit, id) => async (dispatch) => {
+    try {
+      dispatch(fetchStart());
+      const response = await api.get(
+        `/api/v1/disease-categories/${id}/children?page=${page}&limit=${limit}`
+      );
+      dispatch(setCategories(response.data.categories));
+      return response.data;
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message ||
+        "Không thể tải danh sách phân loại bệnh con!";
+      dispatch(fetchFailure(errorMessage));
+      throw error;
+    }
+  };
+
+export const createDiseaseCategoryHandle = (formData) => async (dispatch) => {
   try {
     dispatch(fetchStart());
-    const response = await api.get(
-      `/api/v1/diseases/get-all-diseases?page=${page}&limit=${limit}`
-    );
-    console.log({ response });
-    dispatch(setDiseases(response.data.diseases));
+    const response = await api.post(`/api/v1/disease-categories`, formData);
+    dispatch(addCategories(response.data.diseaseCategory));
+    return response.data;
   } catch (error) {
     const errorMessage =
-      error.response?.data?.message || "Không thể tải danh sách bệnh!";
+      error.response?.data?.message || "Không thể tạo phân loại mới!";
     dispatch(fetchFailure(errorMessage));
     throw error;
   }
@@ -62,7 +92,6 @@ export const getDiseaseByIdHandle = (id) => async (dispatch) => {
   try {
     dispatch(fetchStart());
     const response = await api.get(`/api/v1/diseases/get-disease/${id}`);
-    console.log({ response });
     dispatch(setDisease(response.data.disease));
   } catch (error) {
     const errorMessage =

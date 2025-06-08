@@ -11,6 +11,7 @@ import ListAllDisease from "../components/layout/manager/ListAllDisease";
 import LibraryManager from "../pages/manager/LibraryManager";
 import DiseaseDetail from "../components/layout/manager/DiseaseDetail";
 import CreateDisease from "../components/layout/manager/CreateDisease";
+import DiseaseCategory from "../components/layout/manager/DiseaseCategory";
 
 const Home = lazy(() => import("../pages/user/Home"));
 const Auth = lazy(() => import("../pages/auth/Auth"));
@@ -123,6 +124,15 @@ const router = createBrowserRouter([
                     errorElement: <ErrorPage />,
                   },
                 ],
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "disease-categories",
+                element: (
+                  <Suspense fallback={<Loading />}>
+                    <DiseaseCategory />
+                  </Suspense>
+                ),
                 errorElement: <ErrorPage />,
               },
               {

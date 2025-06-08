@@ -15,7 +15,7 @@ const SelectRelatedDiseasesModal = ({
   const [selectedRelatedDiseases, setSelectedRelatedDiseases] = useState([]);
 
   useEffect(() => {
-    dispatch(getAllDiseasesHandle(page, limit));
+    dispatch(getAllDiseasesHandle(page, limit, "all"));
   }, [dispatch, page, limit]);
 
   useEffect(() => {

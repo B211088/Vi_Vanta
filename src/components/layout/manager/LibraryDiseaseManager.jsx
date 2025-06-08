@@ -41,7 +41,12 @@ const routes = [
     path: "add-disease",
     name: "Thêm bệnh",
   },
-
+  {
+    id: "disease-categories",
+    icon: null,
+    path: "disease-categories",
+    name: "Phân loại bệnh",
+  },
   {
     id: "prvention",
     icon: null,

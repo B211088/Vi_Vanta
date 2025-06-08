@@ -1,7 +1,14 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  categories: [],
+  categories: {
+    categories: [],
+    pagination: {
+      currentPage: 1,
+      totalPages: 1,
+      totalCategories: 0,
+    },
+  },
   diseases: [],
   disease: null,
   preventions: [],
@@ -30,6 +37,13 @@ const diseaseSlice = createSlice({
     },
     setCategories: (state, action) => {
       state.categories = action.payload;
+      state.loading = false;
+    },
+    addCategories: (state, action) => {
+      state.categories.categories = [
+        ...state.categories.categories,
+        action.payload,
+      ];
       state.loading = false;
     },
     setDiseases: (state, action) => {
@@ -156,6 +170,7 @@ export const {
   fetchFailure,
   setCategories,
   setDiseases,
+  addCategories,
   addDisease,
   setDisease,
   setNewDisease,

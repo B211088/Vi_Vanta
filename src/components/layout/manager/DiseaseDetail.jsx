@@ -72,9 +72,10 @@ const DiseaseDetail = () => {
           {riskLevelVN(disease.riskLevel)}
         </div>
       )}
-      {disease.description && (
+      {disease.definition && (
         <div className="mb-2">
-          <span className="font-semibold">Mô tả:</span> {disease.description}
+          <span className="font-semibold">Định nghĩa bệnh:</span>{" "}
+          {disease.definition}
         </div>
       )}
       {disease.detailedArticle && (
@@ -104,7 +105,7 @@ const DiseaseDetail = () => {
       <Section title="Phòng ngừa" items={disease.preventions} />
       <Section title="Biến chứng" items={disease.complications} isStringArray />
       <Section
-        title="Yếu tố nguy cơ"
+        title="Đối tượng  nguy cơ"
         items={disease.riskFactors}
         isStringArray
       />
