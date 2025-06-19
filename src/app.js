@@ -13,8 +13,7 @@ import csurf from "csurf";
 
 import authRouter from "./routes/auth.route.js";
 import addressRouter from "./routes/address.route.js";
-import informationSocietyRouter from "./routes/informationSociety.route.js";
-import emergencyContactRouter from "./routes/emergencyContact.route.js";
+
 import pregnancyRouter from "./routes/pregnancy.route.js";
 import healthRouter from "./routes/health.route.js";
 import menstrualCycleRouter from "./routes/menstrualCycle.route.js";
@@ -24,10 +23,11 @@ import medicationCategoryRouter from "./routes/medicationCategory.route.js";
 import childrenRouter from "./routes/children.route.js";
 import vaccineRouter from "./routes/vaccine.route.js";
 import clinicRouter from "./routes/clinic.route.js";
-import bodyIndexRouter from "./routes/bodyIndex.route.js";
 import exerciseRouter from "./routes/exercise.route.js";
 import medicationReminderRouter from "./routes/medicationReminder.route.js";
 import diseaseCategoryRouter from "./routes/diseaseCategory.route.js";
+import ragRouter from "./routes/rag.routes.js";
+import fs from "fs";
 
 const app = express();
 
@@ -39,16 +39,24 @@ const limiter = rateLimit({
   legacyHeaders: false,
 });
 
-app.use(express.json({ limit: "10kb" }));
-app.use(express.urlencoded({ extended: true, limit: "10kb" }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5174"],
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "http://localhost:8000",
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization", "CSRF-Token"],
   })
 );
+
+if (!fs.existsSync("uploads")) {
+  fs.mkdirSync("uploads");
+}
 app.use(bodyParser.json());
 app.use(helmet());
 app.use(cookieParser());
@@ -73,11 +81,9 @@ if (process.env.NODE_ENV === "development") {
     })
   );
 }
-
+app.use("/api/rag", ragRouter);
 app.use("/api/v1/user", authRouter);
 app.use("/api/v1/address", addressRouter);
-app.use("/api/v1/information-society", informationSocietyRouter);
-app.use("/api/v1/emergency-contact", emergencyContactRouter);
 app.use("/api/v1/pregnancy", pregnancyRouter);
 app.use("/api/v1/health", healthRouter);
 app.use("/api/v1/menstrual-cycle", menstrualCycleRouter);
@@ -87,10 +93,10 @@ app.use("/api/v1/medication-categories", medicationCategoryRouter);
 app.use("/api/v1/children", childrenRouter);
 app.use("/api/v1/vaccines", vaccineRouter);
 app.use("/api/v1/clinics", clinicRouter);
-app.use("/api/v1/body-index", bodyIndexRouter);
 app.use("/api/v1/exercises", exerciseRouter);
 app.use("/api/v1/disease-categories", diseaseCategoryRouter);
 app.use("/api/v1/medication-reminders", medicationReminderRouter);
+app.use("/api/v1/rag", ragRouter);
 app.get("/api/v1/csrf-token", (req, res) => {
   res.json({ csrfToken: req.csrfToken() });
 });

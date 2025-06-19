@@ -64,31 +64,6 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    citizenId: {
-      type: String,
-      unique: true,
-      sparse: true,
-    },
-    citizenIdFrontImage: [
-      {
-        public_id: {
-          type: String,
-        },
-        url: {
-          type: String,
-        },
-      },
-    ],
-    citizenIdBackImage: [
-      {
-        public_id: {
-          type: String,
-        },
-        url: {
-          type: String,
-        },
-      },
-    ],
   },
   {
     timestamps: true,

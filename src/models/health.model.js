@@ -33,6 +33,10 @@ const healthSchema = new Schema(
       type: [String],
       default: [],
     },
+    heartRate: {
+      type: Number,
+      default: 0,
+    },
     allergies: {
       type: [String],
       default: [],

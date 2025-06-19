@@ -10,7 +10,6 @@ const attachmentSchema = new Schema(
     size: { type: Number }, // Kích thước file (bytes)
     description: { type: String, trim: true },
     uploadedBy: { type: Schema.Types.ObjectId, ref: "User" },
-    tags: [{ type: Schema.Types.ObjectId, ref: "Tag" }],
     status: {
       type: String,
       enum: ["active", "inactive", "archived"],

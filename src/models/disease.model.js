@@ -3,143 +3,174 @@ const { Schema } = mongoose;
 
 const diseaseSchema = new Schema(
   {
+    // Tên bệnh (duy nhất)
     name: {
       type: String,
       required: true,
       unique: true,
       trim: true,
     },
+    // Slug cho URL (duy nhất)
     slug: {
       type: String,
       unique: true,
       trim: true,
     },
-    scientificName: {
-      type: String,
-      trim: true,
-    },
-    icd10Code: {
-      type: String,
-      trim: true,
-      uppercase: true,
-      unique: true,
-    },
-    definition: {
-      type: String,
-      trim: true,
-    },
-    category: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "DiseaseCategory",
-      },
-    ],
-    specialty: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Specialty",
-      },
-    ],
+    // Tag/phân loại liên quan (ref tới Tag)
     tags: [
       {
         type: Schema.Types.ObjectId,
         ref: "Tag",
       },
     ],
+    // Từ khóa tìm kiếm
     keywords: [
       {
         type: String,
         trim: true,
       },
     ],
-    complications: [
+    // Tên khoa học của bệnh
+    scientificName: {
+      type: String,
+      trim: true,
+    },
+    // Mã ICD-10 (duy nhất)
+    icd10Code: {
+      type: String,
+      trim: true,
+      uppercase: true,
+      unique: true,
+    },
+    // Định nghĩa bệnh
+    definition: {
+      type: String,
+      trim: true,
+    },
+    // Danh mục phân loại bệnh (ref tới DiseaseCategory)
+    category: [
       {
         type: Schema.Types.ObjectId,
-        ref: "Complication",
+        ref: "DiseaseCategory",
       },
     ],
+    // Biến chứng liên quan (ref tới Complication)
+    complications: [
+      {
+        type: String,
+      },
+    ],
+    //dịch tễ học
+    epidemiology: {
+      prevalence: {
+        type: String,
+        trim: true,
+      },
+      incidence: {
+        type: String,
+        trim: true,
+      },
+      mortality: {
+        type: String,
+        trim: true,
+      },
+      ageDistribution: {
+        type: String,
+        trim: true,
+      },
+      region: {
+        type: String,
+        trim: true,
+      },
+      riskGroups: {
+        type: String,
+        trim: true,
+      },
+      trends: {
+        type: String,
+        trim: true,
+      },
+      seasonality: {
+        type: String,
+        trim: true,
+      },
+    },
+    // Yếu tố nguy cơ (ref tới RiskFactor)
     riskFactors: [
       {
         type: Schema.Types.ObjectId,
         ref: "RiskFactor",
       },
     ],
+    // Triệu chứng (ref tới Symptom)
     symptoms: [
       {
-        type: Schema.Types.ObjectId,
-        ref: "Symptom",
+        type: String,
       },
     ],
+    // Nguyên nhân (ref tới Cause)
     causes: [
       {
-        type: Schema.Types.ObjectId,
-        ref: "Cause",
+        type: String,
       },
     ],
+    // Phác đồ điều trị (ref tới Treatment)
     treatments: [
       {
-        type: Schema.Types.ObjectId,
-        ref: "Treatment",
+        type: String,
       },
     ],
+    // Biện pháp phòng ngừa (ref tới Prevention)
     preventions: [
       {
-        type: Schema.Types.ObjectId,
-        ref: "Prevention",
+        type: String,
       },
     ],
+    // Tiên lượng bệnh (mảng các mục)
     prognosis: [
       {
-        name: { type: String, trim: true },
-        description: { type: String, trim: true },
-        references: [
-          {
-            type: Schema.Types.ObjectId,
-            ref: "Reference",
-          },
-        ],
+        type: String, // Tiên lượng
       },
     ],
+    // Chẩn đoán bệnh (mảng các mục)
     diagnosis: [
       {
-        name: { type: String, trim: true },
-        description: { type: String, trim: true },
-        references: [
-          {
-            type: Schema.Types.ObjectId,
-            ref: "Reference",
-          },
-        ],
+        type: String, // Phương pháp chẩn đoán
       },
     ],
+    // Mức độ nguy cơ
     riskLevel: {
       type: String,
       enum: ["low", "medium", "high", "critical", "unknown"],
       default: "medium",
     },
+    // Bệnh liên quan (ref tới Disease)
     relatedDiseases: [
       {
         type: Schema.Types.ObjectId,
         ref: "Disease",
       },
     ],
-    detailedArticle: {
-      type: String,
-      trim: true,
-    },
+    // Bài viết chi tiết (ref tới Article)
+    detailedArticle: [
+      {
+        articles: { type: Schema.Types.ObjectId, ref: "Article" },
+      },
+    ],
+    // Tài liệu tham khảo (ref tới Reference)
     references: [
       {
         type: Schema.Types.ObjectId,
         ref: "Reference",
       },
     ],
+    // Hướng dẫn liên quan (ref tới Guideline)
     guidelines: [
       {
-        type: Schema.Types.ObjectId,
-        ref: "Guideline",
+        type: String,
       },
     ],
-    epidemiology: { type: Schema.Types.ObjectId, ref: "Epidemiology" },
+    // Hình ảnh minh họa
     images: [
       {
         url: {
@@ -158,6 +189,7 @@ const diseaseSchema = new Schema(
         },
       },
     ],
+    // Ảnh đại diện (thumbnail)
     thumbnail: {
       url: {
         type: String,
@@ -170,20 +202,28 @@ const diseaseSchema = new Schema(
         trim: true,
       },
     },
+    // Trạng thái bài viết
     status: {
       type: String,
       enum: ["draft", "pending", "published", "archived"],
       default: "draft",
     },
+    // Người tạo (ref tới User)
     createdBy: { type: Schema.Types.ObjectId, ref: "User" },
+    // Người cập nhật gần nhất (ref tới User)
     updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
+    // Người kiểm duyệt (ref tới User)
     reviewedBy: { type: Schema.Types.ObjectId, ref: "User" },
+    // Thời gian duyệt
     approvedAt: { type: Date },
+    // Thời gian kiểm duyệt
     reviewedAt: { type: Date },
+    // Phiên bản
     version: {
       type: Number,
       default: 1,
     },
+    // Lịch sử thay đổi
     history: [
       {
         version: Number,
@@ -192,13 +232,15 @@ const diseaseSchema = new Schema(
         updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
       },
     ],
+    // Đánh dấu bệnh còn hoạt động
     isActive: { type: Boolean, default: true },
   },
   {
-    timestamps: true,
+    timestamps: true, // Tự động thêm createdAt, updatedAt
   }
 );
 
+// Các chỉ mục để tối ưu tìm kiếm
 diseaseSchema.index({
   name: "text",
   scientificName: "text",
@@ -217,6 +259,7 @@ diseaseSchema.index({ references: 1 });
 diseaseSchema.index({ isActive: 1 });
 diseaseSchema.index({ version: 1 });
 diseaseSchema.index({ thumbnail: 1 });
+
 const Disease = mongoose.model("Disease", diseaseSchema);
 
 export default Disease;

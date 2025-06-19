@@ -5,7 +5,10 @@ export const createDiseaseCategoryHandle = async (payload) => {
   try {
     const newCategory = new DiseaseCategory(payload);
     await newCategory.save();
-    return newCategory;
+    const category = await DiseaseCategory.findById(newCategory._id)
+      .populate("createdBy", "_id fullName")
+      .populate("updatedBy", "_id fullName");
+    return category;
   } catch (error) {
     console.error("Lỗi khi tạo danh mục bệnh:", error.message);
     throw new Error("Lỗi khi tạo danh mục bệnh");
@@ -25,13 +28,27 @@ export const getAllDiseaseCategoriesHandle = async (page, limit) => {
       .select("-__v ")
       .skip(skip)
       .limit(limit);
+
+    // Chuyển sang array thường để dễ thao tác
+    const plainCategories = categories.map((cat) => cat.toObject());
+
+    // Kiểm tra từng category có con không
+    for (let category of plainCategories) {
+      const children = await DiseaseCategory.find({ parent: category._id });
+      if (children.length > 0) {
+        category.hasChildren = true;
+      } else {
+        category.hasChildren = false;
+      }
+    }
+
     const totalCategories = await DiseaseCategory.countDocuments({
       deleted: false,
       parent: null,
     });
     const totalPages = Math.ceil(totalCategories / limit);
     return {
-      categories,
+      categories: plainCategories,
       pagination: { currentPage: page, totalPages, totalCategories },
     };
   } catch (error) {
@@ -69,12 +86,22 @@ export const getChildrenDiseaseCategoriesHandle = async (
       .select("-__v ")
       .skip(skip)
       .limit(limit);
+
+    // Chuyển sang array thường để dễ thao tác
+    const plainCategories = categories.map((cat) => cat.toObject());
+
+    // Kiểm tra từng category có con không
+    for (let category of plainCategories) {
+      const children = await DiseaseCategory.find({ parent: category._id });
+      category.hasChildren = children.length > 0;
+    }
+
     const totalCategories = await DiseaseCategory.countDocuments({
       parent: categoryId,
     });
     const totalPages = Math.ceil(totalCategories / limit);
     return {
-      categories,
+      categories: plainCategories,
       pagination: { currentPage: page, totalPages, totalCategories },
     };
   } catch (error) {
@@ -106,6 +133,14 @@ export const updateDiseaseCategoryHandle = async (categoryId, payload) => {
 // Xóa một danh mục bệnh
 export const deleteDiseaseCategoryHandle = async (categoryId) => {
   try {
+    // Kiểm tra có phân loại con không
+    const children = await DiseaseCategory.find({ parent: categoryId });
+    if (children.length > 0) {
+      // Nếu có con, không cho xóa
+      throw new Error("Không thể xóa vì phân loại này đang có phân loại con!");
+    }
+
+    // Thực hiện xóa
     const deletedCategory = await DiseaseCategory.findByIdAndDelete(categoryId);
     if (!deletedCategory) {
       throw new Error("Không tìm thấy danh mục bệnh để xóa");
@@ -114,6 +149,6 @@ export const deleteDiseaseCategoryHandle = async (categoryId) => {
     return { message: "Xóa danh mục bệnh thành công" };
   } catch (error) {
     console.error("Lỗi khi xóa danh mục bệnh:", error.message);
-    throw new Error("Lỗi khi xóa danh mục bệnh");
+    throw new Error(error.message || "Lỗi khi xóa danh mục bệnh");
   }
 };

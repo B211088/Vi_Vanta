@@ -1,16 +1,9 @@
 import { toObjectIdArray } from "../helpers/parseFields.js";
-import {
-  Disease,
-  Cause,
-  Treatment,
-  Symptom,
-  Prevention,
-  DiseaseCategory,
-} from "../models/index.js";
+import { Disease, DiseaseCategory } from "../models/index.js";
 import { deleteFromCloudinary } from "../utils/uploadImagesToCloud.js";
 
 // Tạo một bệnh mới
-export const createDiseaseHandle = async (payload, userId) => {
+export const createDiseaseHandle = async (payload) => {
   try {
     if (!payload.name) throw new Error("Thiếu tên bệnh");
     const existingDisease = await Disease.findOne({ name: payload.name });
@@ -42,7 +35,16 @@ export const createDiseaseHandle = async (payload, userId) => {
       detailedArticle: payload.detailedArticle,
       references: toObjectIdArray(payload.references),
       guidelines: toObjectIdArray(payload.guidelines),
-      epidemiology: payload.epidemiology,
+      epidemiology: {
+        prevalence: payload.epidemiology.prevalence,
+        incidence: payload.epidemiology.incidence,
+        mortality: payload.epidemiology.mortality,
+        ageDistribution: payload.epidemiology.ageDistribution,
+        region: payload.epidemiology.region,
+        riskGroups: payload.epidemiology.riskGroups,
+        trends: payload.epidemiology.trends,
+        seasonality: payload.epidemiology.seasonality,
+      },
       images: payload.images || [],
       thumbnail: payload.thumbnail,
       status: payload.status,
@@ -68,13 +70,12 @@ export const createDiseaseHandle = async (payload, userId) => {
       .populate("preventions", "name description")
       .populate("relatedDiseases", "name scientificName")
       .populate("category", "name description")
-      .populate("specialty", "name description")
       .populate("tags", "name")
       .populate("complications", "name description")
       .populate("riskFactors", "name description")
       .populate("references", "title source url")
       .populate("guidelines", "title")
-      .populate("epidemiology")
+
       .select("-__v -createdAt -updatedAt");
   } catch (error) {
     console.error("Lỗi khi tạo bệnh:", error.message);

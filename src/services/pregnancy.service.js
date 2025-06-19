@@ -1,6 +1,5 @@
 import {
   Pregnancy,
-  VisitType,
   PregnancyVisit,
   PregnancyWeek,
   PregnancyVisitAddress,
@@ -187,80 +186,6 @@ export const deleteInfoPregnancyHandle = async (pregnancyId) => {
     return { message: "Xóa thông tin thai kỳ thành công" };
   } catch (error) {
     throw new Error("Lỗi khi xóa thông tin thai kỳ");
-  }
-};
-
-// Lấy tất cả loại khám thai định kỳ
-export const getVisitTypesHandle = async () => {
-  try {
-    const visitTypes = await VisitType.find();
-
-    return visitTypes;
-  } catch (error) {
-    throw new Error("Lỗi khi lấy loại khám khám thai định kỳ");
-  }
-};
-
-// Tạo một loại khám thai định kỳ mới
-export const createVisitTypeHandle = async (payload) => {
-  try {
-    const { code, name, week, description, color, iconUrl } = payload;
-    const createVisitType = new VisitType({
-      code,
-      name,
-      week,
-      description,
-      color,
-      iconUrl,
-    });
-    await createVisitType.save();
-    return createVisitType;
-  } catch (error) {
-    throw new Error("Lỗi khi tạo loại khám khám thai định kỳ");
-  }
-};
-
-// Cập nhật thông tin một loại khám thai định kỳ
-export const updateVisitTypeHandle = async (visitTypeId, payload) => {
-  try {
-    const { code, name, week, description, color, iconUrl } = payload;
-    const updateVisitType = {
-      code,
-      name,
-      week,
-      description,
-      color,
-      iconUrl,
-    };
-
-    const updateVisitTypeData = await VisitType.findByIdAndUpdate(
-      { _id: visitTypeId },
-      updateVisitType,
-      { new: true }
-    );
-    if (!updateVisitTypeData) {
-      throw new Error("Không tìm thấy loại khám thai định kỳ để cập nhật");
-    }
-    return updateVisitType;
-  } catch (error) {
-    console.error("Lỗi khi cập nhật loại khám thai định kỳ:", error.message);
-    throw new Error("Lỗi khi cập nhật loại khám khám thai định kỳ");
-  }
-};
-
-// Xóa một loại khám thai định kỳ
-export const deletedVisitTypesHandle = async (visitTypeId) => {
-  try {
-    const deletedVisitType = await VisitType.findByIdAndDelete(visitTypeId);
-
-    if (!deletedVisitType) {
-      throw new Error("Không tìm thấy loại khám thai định kỳ để xóa");
-    }
-
-    return deletedVisitType._id;
-  } catch (error) {
-    console.error("Lỗi khi xóa loại khám thai định kỳ:", error.message);
-    throw new Error("Lỗi khi xóa loại khám thai định kỳ");
   }
 };
 

@@ -6,8 +6,7 @@ const specialtySchema = new Schema(
     name: { type: String, required: true, unique: true, trim: true },
     slug: { type: String, unique: true, trim: true },
     description: { type: String, trim: true },
-    parent: { type: Schema.Types.ObjectId, ref: "Specialty" }, // Chuyên khoa cha (nếu có)
-    tags: [{ type: Schema.Types.ObjectId, ref: "Tag" }],
+    parent: { type: Schema.Types.ObjectId, ref: "Specialty" },
     status: {
       type: String,
       enum: ["active", "inactive", "draft"],

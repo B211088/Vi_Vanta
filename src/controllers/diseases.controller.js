@@ -35,6 +35,7 @@ export const createDisease = async (req, res) => {
     const payload = req.body;
     const userId = req.user.userId;
     const { images, thumbnail } = req.files;
+    console.log({ payload });
 
     if (!validateDiseasePayload(payload, images, thumbnail, res)) return;
 
@@ -51,7 +52,6 @@ export const createDisease = async (req, res) => {
       "specialty",
       "tags",
       "keywords",
-      "complications",
       "riskFactors",
       "symptoms",
       "causes",

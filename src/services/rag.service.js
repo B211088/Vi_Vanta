@@ -1,0 +1,379 @@
+// src/services/embedService.js
+import fs from "fs";
+import path from "path";
+import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
+
+import dotenv from "dotenv";
+import OpenAI from "openai";
+import {
+  OPENAI_API_KEY,
+  OPENAI_EMBEDDING_MODEL,
+} from "../config/openai.config.js";
+import chromaService from "./chromadb.service.js";
+dotenv.config();
+
+const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
+
+export class EmbedService {
+  async loadFile(filePath) {
+    try {
+      if (!fs.existsSync(filePath)) {
+        throw new Error(`File not found: ${filePath}`);
+      }
+
+      const ext = path.extname(filePath).toLowerCase();
+      const fileName = path.basename(filePath);
+
+      switch (ext) {
+        case ".pdf":
+          const pdfLoader = new PDFLoader(filePath);
+          return await pdfLoader.load();
+
+        case ".txt":
+          const content = fs.readFileSync(filePath, "utf-8");
+          return [
+            {
+              pageContent: content,
+              metadata: {
+                source: filePath,
+                fileName: fileName,
+                type: "text",
+                createdAt: new Date().toISOString(),
+              },
+            },
+          ];
+
+        case ".md":
+          const mdContent = fs.readFileSync(filePath, "utf-8");
+          return [
+            {
+              pageContent: mdContent,
+              metadata: {
+                source: filePath,
+                fileName: fileName,
+                type: "markdown",
+                createdAt: new Date().toISOString(),
+              },
+            },
+          ];
+
+        case ".json":
+          const jsonContent = fs.readFileSync(filePath, "utf-8");
+          const jsonData = JSON.parse(jsonContent);
+          return [
+            {
+              pageContent: JSON.stringify(jsonData, null, 2),
+              metadata: {
+                source: filePath,
+                fileName: fileName,
+                type: "json",
+                createdAt: new Date().toISOString(),
+              },
+            },
+          ];
+
+        default:
+          throw new Error(`Unsupported file type: ${ext}`);
+      }
+    } catch (error) {
+      console.error(`Error loading file ${filePath}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Split documents into chunks
+   */
+  chunkTextDocs(docs, chunkSize = 1000, chunkOverlap = 200) {
+    const allChunks = [];
+
+    for (const doc of docs) {
+      const text = doc.pageContent;
+      const chunks = this.splitTextIntoChunks(text, chunkSize, chunkOverlap);
+
+      chunks.forEach((chunk, index) => {
+        if (chunk.trim().length > 0) {
+          allChunks.push({
+            content: chunk,
+            metadata: {
+              ...doc.metadata,
+              chunkIndex: index,
+              chunkId: `${doc.metadata.source}_${index}`,
+            },
+          });
+        }
+      });
+    }
+
+    return allChunks;
+  }
+
+  /**
+   * Split text into chunks with smart splitting
+   */
+  splitTextIntoChunks(text, chunkSize = 1000, chunkOverlap = 200) {
+    const chunks = [];
+    const separators = ["\n\n", "\n", ". ", "! ", "? ", "; ", ", ", " "];
+
+    if (text.length <= chunkSize) {
+      return [text];
+    }
+
+    let start = 0;
+
+    while (start < text.length) {
+      let end = start + chunkSize;
+
+      if (end >= text.length) {
+        chunks.push(text.slice(start));
+        break;
+      }
+
+      let bestBreakPoint = end;
+      for (const separator of separators) {
+        const lastIndex = text.lastIndexOf(separator, end);
+        if (lastIndex > start && lastIndex < end) {
+          bestBreakPoint = lastIndex + separator.length;
+          break;
+        }
+      }
+
+      chunks.push(text.slice(start, bestBreakPoint));
+      start = bestBreakPoint - chunkOverlap;
+      if (start < 0) start = 0;
+    }
+
+    return chunks;
+  }
+
+  /**
+   * Generate embedding for a single chunk using OpenAI
+   */
+  async embedChunk(chunk) {
+    try {
+      const response = await openai.embeddings.create({
+        model: OPENAI_EMBEDDING_MODEL,
+        input: chunk.content,
+      });
+      return {
+        ...chunk,
+        embedding: response.data[0].embedding,
+      };
+    } catch (error) {
+      console.error("Error embedding chunk with OpenAI:", error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Process chunks in batches with OpenAI
+   */
+  async embedChunksBatch(chunks, batchSize = 3) {
+    const embedded = [];
+    for (let i = 0; i < chunks.length; i += batchSize) {
+      const batch = chunks.slice(i, i + batchSize);
+      const batchResults = await Promise.all(
+        batch.map((chunk) => this.embedChunk(chunk))
+      );
+      embedded.push(...batchResults);
+
+      // Rate limiting - wait 1 second between batches
+      if (i + batchSize < chunks.length) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+    return embedded;
+  }
+
+  /**
+   * Index a file into the vector database - IMPROVED VERSION
+   */
+  async indexFile(id, filePath) {
+    try {
+      console.log(`🚀 Starting indexing for file: ${filePath}`);
+
+      const rawDocs = await this.loadFile(filePath);
+      console.log(`📄 Loaded ${rawDocs.length} documents`);
+
+      const chunks = this.chunkTextDocs(rawDocs);
+      console.log(`✂️ Created ${chunks.length} chunks`);
+
+      const embedded = await this.embedChunksBatch(chunks);
+      console.log(`🔢 Generated embeddings for ${embedded.length} chunks`);
+
+      // Ensure ChromaDB client is initialized
+      await chromaService.initialize();
+
+      // Create new collection with correct settings
+      await chromaService.getOrCreateCollection("documents", {
+        description: "Document embeddings collection",
+      });
+
+      // Add documents with embeddings
+      await chromaService.addDocuments(
+        "documents",
+        embedded.map((c) => c.content),
+        embedded.map((c) => ({
+          ...c.metadata,
+          documentId: id,
+          indexedAt: new Date().toISOString(),
+        })),
+        embedded.map((_, i) => `${id}_chunk_${i}`),
+        embedded.map((c) => c.embedding) // Pass embeddings directly
+      );
+
+      console.log(
+        `✅ Successfully indexed ${embedded.length} chunks for document ${id}`
+      );
+      return embedded.length;
+    } catch (error) {
+      console.error(`❌ Error indexing file ${filePath}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Query for similar documents - IMPROVED VERSION
+   */
+  async querySimilar(query, k = 5, filters = {}) {
+    try {
+      console.log(`🔍 Querying: "${query}" with k=${k}`);
+
+      // Generate query embedding
+      const response = await openai.embeddings.create({
+        model: OPENAI_EMBEDDING_MODEL,
+        input: query,
+      });
+      const queryVector = response.data[0].embedding;
+      console.log(
+        `🔢 Generated query embedding with dimension: ${queryVector.length}`
+      );
+
+      await chromaService.initialize();
+
+      // Query documents with embeddings
+      const results = await chromaService.queryDocuments(
+        "documents",
+        null, // queryTexts is null since we're using embeddings
+        k,
+        filters,
+        [queryVector] // pass the embedding vector
+      );
+
+      const formattedResults = {
+        query: query,
+        results: results.documents[0].map((doc, i) => ({
+          content: doc,
+          metadata: results.metadatas[0][i],
+          distance: results.distances[0][i],
+          id: results.ids[0][i],
+        })),
+        totalResults: results.documents[0].length,
+      };
+
+      console.log(
+        `✅ Found ${formattedResults.totalResults} similar documents`
+      );
+      return formattedResults;
+    } catch (error) {
+      console.error("❌ Error querying similar documents:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a document from the collection - IMPLEMENTED
+   */
+  async deleteDocument(documentId) {
+    try {
+      console.log(`🗑️  Deleting document: ${documentId}`);
+
+      await chromaService.initialize();
+
+      // Delete by filter (documentId in metadata)
+      await chromaService.deleteDocumentsByFilter("documents", {
+        documentId: documentId,
+      });
+
+      console.log(`✅ Successfully deleted document: ${documentId}`);
+      return true;
+    } catch (error) {
+      console.error(`❌ Error deleting document ${documentId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * List all documents in the collection - IMPLEMENTED
+   */
+  async listDocuments() {
+    try {
+      console.log(`📋 Listing all documents...`);
+
+      await chromaService.initialize();
+
+      const result = await chromaService.listAllDocuments("documents", 1000);
+
+      // Group by documentId to get unique documents
+      const documentsMap = new Map();
+
+      if (result.metadatas) {
+        result.metadatas.forEach((metadata, index) => {
+          const docId = metadata.documentId;
+          if (!documentsMap.has(docId)) {
+            documentsMap.set(docId, {
+              documentId: docId,
+              fileName: metadata.fileName,
+              type: metadata.type,
+              createdAt: metadata.createdAt,
+              indexedAt: metadata.indexedAt,
+              chunks: 0,
+            });
+          }
+          documentsMap.get(docId).chunks++;
+        });
+      }
+
+      const documents = Array.from(documentsMap.values());
+      console.log(`✅ Found ${documents.length} unique documents`);
+
+      return documents;
+    } catch (error) {
+      console.error("❌ Error listing documents:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get collection statistics - IMPLEMENTED
+   */
+  async getStats() {
+    try {
+      console.log(`📊 Getting collection statistics...`);
+
+      await chromaService.initialize();
+
+      const stats = await chromaService.getCollectionStats("documents");
+
+      // Get additional info
+      const documents = await this.listDocuments();
+
+      const result = {
+        ...stats,
+        totalDocuments: documents.length,
+        totalChunks: stats.count,
+        documents: documents,
+      };
+
+      console.log(
+        `✅ Retrieved stats: ${result.totalDocuments} documents, ${result.totalChunks} chunks`
+      );
+      return result;
+    } catch (error) {
+      console.error("❌ Error getting collection stats:", error);
+      throw error;
+    }
+  }
+}
+
+export default EmbedService;
