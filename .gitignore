@@ -1,6 +1,7 @@
 node_module# Node modules
 node_modules/
 chroma/
+
 # Logs
 logs
 *.log
