@@ -1,6 +1,6 @@
 node_module# Node modules
 node_modules/
-
+chroma/
 # Logs
 logs
 *.log
@@ -30,7 +30,9 @@ Thumbs.db
 # Coverage reports
 coverage/
 
-# Optional: database / cache
+# Optional: data
+base / cache
 *.sqlite
 *.db
 .cache/
+
