@@ -31,6 +31,9 @@ import ExerciseCategory from "./exercisesCategory.model.js";
 import MedicationReminderItem from "./medicationReminderItem.model.js";
 import MedicationPrescription from "./medicationPrescription.model.js";
 
+import Section from "./section.model.js";
+import Message from "./message.model.js";
+
 export {
   User,
   Code,
@@ -63,4 +66,6 @@ export {
   ExerciseCategory,
   MedicationReminderItem,
   MedicationPrescription,
+  Section,
+  Message,
 };

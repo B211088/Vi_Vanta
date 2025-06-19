@@ -26,7 +26,8 @@ import clinicRouter from "./routes/clinic.route.js";
 import exerciseRouter from "./routes/exercise.route.js";
 import medicationReminderRouter from "./routes/medicationReminder.route.js";
 import diseaseCategoryRouter from "./routes/diseaseCategory.route.js";
-import ragRouter from "./routes/rag.routes.js";
+import ragRouter from "./routes/ragOpenAI.routes.js";
+import aiChatRoutes from "./routes/aiChat.route.js";
 import fs from "fs";
 
 const app = express();
@@ -96,7 +97,7 @@ app.use("/api/v1/clinics", clinicRouter);
 app.use("/api/v1/exercises", exerciseRouter);
 app.use("/api/v1/disease-categories", diseaseCategoryRouter);
 app.use("/api/v1/medication-reminders", medicationReminderRouter);
-app.use("/api/v1/rag", ragRouter);
+app.use("/api/v1/ai-chat", aiChatRoutes);
 app.get("/api/v1/csrf-token", (req, res) => {
   res.json({ csrfToken: req.csrfToken() });
 });

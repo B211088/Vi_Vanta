@@ -313,15 +313,18 @@ class ChromaService {
     try {
       const client = this.getClient();
 
-      // Always delete existing collection to ensure clean state
-      try {
-        await this.deleteCollection(name);
-        console.log(`🗑️ Deleted existing collection: ${name}`);
-      } catch (error) {
-        console.log("No existing collection to delete");
+      // Check if collection exists
+      const exists = await this.collectionExists(name);
+
+      if (exists) {
+        // Get existing collection info
+        const collectionInfo = await this.getCollectionInfo(name);
+        console.log(`✅ Using existing collection: ${name}`);
+        return await client.getCollection({ name });
       }
 
       // Create new collection with explicit dimension
+      console.log(`🆕 Creating new collection: ${name}`);
       const collection = await client.createCollection({
         name,
         metadata: {
@@ -342,7 +345,7 @@ class ChromaService {
       console.log(`✅ Created collection: ${name} with dimension 1536`);
       return collection;
     } catch (error) {
-      throw new Error(`Failed to create collection: ${error.message}`);
+      throw new Error(`Failed to get or create collection: ${error.message}`);
     }
   }
 

@@ -82,7 +82,7 @@ export class EmbedService {
   }
 
   /**
-   * Split documents into chunks
+   * Split documents into chunks with sanitized metadata
    */
   chunkTextDocs(docs, chunkSize = 1000, chunkOverlap = 200) {
     const allChunks = [];
@@ -93,13 +93,18 @@ export class EmbedService {
 
       chunks.forEach((chunk, index) => {
         if (chunk.trim().length > 0) {
+          // Sanitize metadata - keep only simple values
+          const sanitizedMetadata = {
+            source: doc.metadata.source || "",
+            page: doc.metadata.page || 0,
+            chunkIndex: index,
+            chunkId: `${doc.metadata.source || ""}_${index}`,
+            createdAt: new Date().toISOString(),
+          };
+
           allChunks.push({
             content: chunk,
-            metadata: {
-              ...doc.metadata,
-              chunkIndex: index,
-              chunkId: `${doc.metadata.source}_${index}`,
-            },
+            metadata: sanitizedMetadata,
           });
         }
       });
@@ -204,20 +209,54 @@ export class EmbedService {
       // Ensure ChromaDB client is initialized
       await chromaService.initialize();
 
-      // Create new collection with correct settings
+      // Delete old chunks for this document ID if they exist
+      try {
+        await chromaService.deleteDocumentsByFilter("documents", {
+          documentId: id,
+        });
+        console.log(`🗑️ Deleted old chunks for document: ${id}`);
+      } catch (error) {
+        console.log(`ℹ️ No existing chunks found for document: ${id}`);
+      }
+
+      // Get or create collection (won't delete other documents)
       await chromaService.getOrCreateCollection("documents", {
         description: "Document embeddings collection",
       });
 
-      // Add documents with embeddings
-      await chromaService.addDocuments(
-        "documents",
-        embedded.map((c) => c.content),
-        embedded.map((c) => ({
+      // Prepare metadata - ensure all values are simple types
+      const sanitizedMetadata = embedded.map((c) => {
+        const metadata = {
           ...c.metadata,
           documentId: id,
           indexedAt: new Date().toISOString(),
-        })),
+          fileName: path.basename(filePath),
+          fileType: path.extname(filePath).toLowerCase(),
+          chunkIndex: c.metadata.chunkIndex || 0,
+        };
+
+        // Convert any complex objects to strings
+        Object.keys(metadata).forEach((key) => {
+          if (typeof metadata[key] === "object" && metadata[key] !== null) {
+            metadata[key] = JSON.stringify(metadata[key]);
+          }
+        });
+
+        // Remove any undefined or null values
+        Object.keys(metadata).forEach((key) => {
+          if (metadata[key] === undefined || metadata[key] === null) {
+            delete metadata[key];
+          }
+        });
+
+        return metadata;
+      });
+
+      // Add new chunks for this document
+      await chromaService.addDocuments(
+        "documents",
+        embedded.map((c) => c.content),
+        sanitizedMetadata,
         embedded.map((_, i) => `${id}_chunk_${i}`),
         embedded.map((c) => c.embedding) // Pass embeddings directly
       );
