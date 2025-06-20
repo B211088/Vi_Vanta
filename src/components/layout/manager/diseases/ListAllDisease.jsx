@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, Outlet, useParams } from "react-router-dom";
-import { getAllDiseasesHandle } from "../../../services/disease.service";
-import { formatDateDDMMYY } from "../../../utils/formatDate";
-import Pagination from "../../features/Pagination";
+import { getAllDiseasesHandle } from "../../../../services/disease.service";
+import { formatDateDDMMYY } from "../../../../utils/formatDate";
+import Pagination from "../../../features/Pagination";
 
 const ListAllDisease = () => {
   const isDarkMode = true;

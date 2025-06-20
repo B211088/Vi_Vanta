@@ -1,4 +1,3 @@
-import React from "react";
 import { Outlet } from "react-router-dom";
 
 const Dashboard = () => {
@@ -7,9 +6,7 @@ const Dashboard = () => {
       <div
         style={{ minHeight: "calc(100vh - 100px)" }}
         className="w-full flex  bg-light-50 rounded-lg p-[20px]"
-      >
-        <Outlet />
-      </div>
+      ></div>
     </div>
   );
 };

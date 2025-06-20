@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { getAllDiseaseCategoriesHandle } from "../../../services/disease.service";
+import {
+  getAllDiseaseCategoriesHandle,
+  getChildrenDiseaseCategoriesHandle,
+} from "../../../services/disease.service";
 import { useDispatch, useSelector } from "react-redux";
 import Modal from "../../layout/Modal";
 import Pagination from "../../features/Pagination";
+import { useNotify } from "../../../hook/useNotify";
 
 const SelectDiseaseCategoryModal = ({
   closeModal,
@@ -11,17 +15,41 @@ const SelectDiseaseCategoryModal = ({
 }) => {
   const dispatch = useDispatch();
   const { categories } = useSelector((state) => state.disease);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(8);
+  const { notifySuccess, notifyWarning } = useNotify();
+  const [pageRoot, setPageRoot] = useState(1);
+  const [limitRoot, setLimitRoot] = useState(20);
+  const [pageChilren, setPageChildren] = useState(1);
+  const [limitChilren, setLimitChilren] = useState(20);
+  const [categoryPath, setCategoryPath] = useState([]);
+  const [categoryBefore, setCategoryBefore] = useState(null);
   const [selectedDiseaseCategories, setSelectedDiseaseCategories] = useState(
     []
   );
 
-  console.log({ categories });
+  console.log({ categoryBefore });
+
+  const loadRootCategories = async () => {
+    try {
+      await dispatch(getAllDiseaseCategoriesHandle(pageRoot, limitRoot));
+    } catch (error) {
+      notifyWarning(error.message || "Không thể tải danh sách phân loại!");
+    }
+  };
 
   useEffect(() => {
-    dispatch(getAllDiseaseCategoriesHandle(page, limit));
-  }, [dispatch, page, limit]);
+    loadRootCategories();
+  }, [pageRoot]);
+
+  const handleGetDiseaseCategoriesChildren = async (id) => {
+    try {
+      await dispatch(
+        getChildrenDiseaseCategoriesHandle(pageChilren, limitChilren, id)
+      );
+      notifySuccess("Lấy danh mục con thành công!");
+    } catch (error) {
+      notifyWarning(error.message || "Không thể tải danh sách phân loại con!");
+    }
+  };
 
   useEffect(() => {
     if (currentSelected && currentSelected.length > 0) {
@@ -46,19 +74,49 @@ const SelectDiseaseCategoryModal = ({
     closeModal();
   };
 
+  const handleBreadcrumbClick = async (index) => {
+    const clickedCategory = categoryPath[index];
+    setCategoryBefore(clickedCategory);
+    setCategoryPath(categoryPath.slice(0, index + 1));
+    await handleGetDiseaseCategoriesChildren(clickedCategory._id);
+  };
+
   const pagination = categories.pagination || { currentPage: 1, totalPages: 1 };
 
   return (
     <Modal closeModal={closeModal}>
       <div className="w-8/12 max-w-11/12 max-h-[80vh] overflow-y-auto bg-light-50 p-4 rounded-lg flex flex-col gap-4">
-        <div className="w-full flex items-center gap-[20px] ">
-          <h1 className="font-bold text-lg">Chọn phân loại bệnh</h1>
+        <div className="w-full flex items-center gap-[5px] ">
+          <div
+            onClick={() => {
+              setCategoryBefore(null);
+              setCategoryPath([]);
+              setPageRoot(1);
+              loadRootCategories();
+            }}
+            className="w-[32px] h-[32px] flex items-center justify-center rounded-full border-[1px] border-dark-700 text-sm cursor-pointer hover:bg-gray-50"
+          >
+            <i className="fa-solid fa-house"></i>
+          </div>
+          {categoryPath.map((cat, idx) => (
+            <React.Fragment key={cat._id}>
+              <span className="">/</span>
+              <span
+                className="cursor-pointer hover:underline text-blue-600"
+                onClick={() => handleBreadcrumbClick(idx)}
+              >
+                {cat.name}
+              </span>
+            </React.Fragment>
+          ))}
         </div>
         <div className="w-full flex gap-[10px] min-h-[400px]">
           <div className="w-full  flex flex-col border-[1px] border-dark-800 rounded-md ">
-            <h1 className="text-sm font-bold py-[8px] px-[8px]">
-              Danh sách các phân loại bệnh
-            </h1>
+            <div className="w-full flex justify-between">
+              <h1 className="text-sm font-bold py-[8px] px-[8px]">
+                Danh sách phân loại bệnh
+              </h1>
+            </div>
             <ul className="w-full min-h-[320px] max-h-[320px] overflow-y-auto flex flex-col gap-[5px] p-[5px]">
               {categories.categories?.map((category) => {
                 const isSelected = selectedDiseaseCategories.some(
@@ -71,11 +129,19 @@ const SelectDiseaseCategoryModal = ({
                       isSelected ? "bg-blue-100" : "bg-white"
                     }`}
                     onClick={() => {
-                      if (!isSelected)
-                        setSelectedDiseaseCategories([
-                          ...selectedDiseaseCategories,
-                          category,
-                        ]);
+                      if (!isSelected && !category.hasChildren) {
+                        handleSelectedDiseaseCategory(category);
+                      } else if (isSelected && !category.hasChildren) {
+                        setSelectedDiseaseCategories(
+                          selectedDiseaseCategories.filter(
+                            (item) => item._id !== category._id
+                          )
+                        );
+                      } else if (!isSelected && category.hasChildren) {
+                        setCategoryBefore(category);
+                        setCategoryPath((prev) => [...prev, category]);
+                        handleGetDiseaseCategoriesChildren(category._id);
+                      }
                     }}
                   >
                     <span>{category.name}</span>
@@ -87,9 +153,9 @@ const SelectDiseaseCategoryModal = ({
               })}
             </ul>
             <Pagination
-              currentPage={page}
+              currentPage={pageRoot}
               totalPages={pagination.totalPages}
-              onPageChange={setPage}
+              onPageChange={setPageRoot}
             />
           </div>
           <div className="w-full  flex flex-col border-[1px] border-dark-800 rounded-md ">
@@ -99,7 +165,9 @@ const SelectDiseaseCategoryModal = ({
               </h1>
               <div
                 className="text-[0.8rem] font-bold py-[8px] px-[8px] text-red-500"
-                onClick={() => setSelectedDiseaseCategories([])}
+                onClick={() => {
+                  setSelectedDiseaseCategories([]);
+                }}
               >
                 Xóa tất cả
               </div>

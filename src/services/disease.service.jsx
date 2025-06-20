@@ -14,6 +14,8 @@ import {
   deleteDisease,
   addDisease,
   addCategories,
+  updateCategories,
+  deleteCategories,
 } from "../store/slices/diseaseSlice";
 
 const api = axios.create({
@@ -83,6 +85,38 @@ export const createDiseaseCategoryHandle = (formData) => async (dispatch) => {
   } catch (error) {
     const errorMessage =
       error.response?.data?.message || "Không thể tạo phân loại mới!";
+    dispatch(fetchFailure(errorMessage));
+    throw error;
+  }
+};
+
+export const updateDiseaseCategoryHandle =
+  (id, formData) => async (dispatch) => {
+    try {
+      dispatch(fetchStart());
+      const response = await api.put(
+        `/api/v1/disease-categories/${id}`,
+        formData
+      );
+      dispatch(updateCategories(response.data.category));
+      return response.data;
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "Không thể cập nhật phân loại mới!";
+      dispatch(fetchFailure(errorMessage));
+      throw error;
+    }
+  };
+
+export const deleteDiseaseCategoryHandle = (id) => async (dispatch) => {
+  try {
+    dispatch(fetchStart());
+    const response = await api.delete(`/api/v1/disease-categories/${id}`);
+    dispatch(deleteCategories(id));
+    return response.data;
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message || "Không thể xóa phân loại!";
     dispatch(fetchFailure(errorMessage));
     throw error;
   }

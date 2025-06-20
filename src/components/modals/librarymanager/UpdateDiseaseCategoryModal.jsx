@@ -1,24 +1,23 @@
 import { useState } from "react";
-import { useTheme } from "../../../hook/useTheme";
 import { useDispatch, useSelector } from "react-redux";
-import { createDiseaseCategoryHandle } from "../../../services/disease.service";
+import { useTheme } from "../../../hook/useTheme";
 import { useNotify } from "../../../hook/useNotify";
-import Modal from "../../layout/Modal";
+import { updateDiseaseCategoryHandle } from "../../../services/disease.service";
 import SubmitButton from "../../common/buttons/SubmitButton";
 import CancelButton from "../../common/buttons/CancelButton";
+import Modal from "../../layout/Modal";
 
-const CreateDiseaseCategoryModal = ({ closeModal, parent }) => {
+const UpdateDiseaseCategoryModal = ({ closeModal, currentData }) => {
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.disease);
   const { isDarkMode } = useTheme();
   const { notifySuccess, notifyWarning, notifyError } = useNotify();
   const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    parent: parent?._id ? parent?._id : "",
+    name: currentData.name,
+    description: currentData.description,
+    parent: currentData?.parent ? currentData?.parent : "",
   });
-  console.log({ formData });
-  console.log({ parent });
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -26,6 +25,7 @@ const CreateDiseaseCategoryModal = ({ closeModal, parent }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const { _id } = currentData;
       const { name, description } = formData;
       if (!name) {
         notifyWarning("Chưa có tên phân loại!");
@@ -35,14 +35,15 @@ const CreateDiseaseCategoryModal = ({ closeModal, parent }) => {
         notifyWarning("Chưa có mô tả phân loại!");
         return;
       }
-      const data = await dispatch(createDiseaseCategoryHandle(formData));
+      const data = await dispatch(updateDiseaseCategoryHandle(_id, formData));
+      console.log({ data });
       if (data) {
-        notifySuccess("Tạo phân loại mới thành công!");
+        notifySuccess("Cập nhật phân loại thành công thành công!");
         closeModal();
       }
     } catch (error) {
       notifyError(
-        error.response?.data?.message || "Không thể tạo phân loại mới!"
+        error.response?.data?.message || "Không thể cập nhật phân loại !"
       );
     }
   };
@@ -52,13 +53,7 @@ const CreateDiseaseCategoryModal = ({ closeModal, parent }) => {
         className="w-6/12 max-w-[600px] flex flex-col bg-light-50 p-[26px] rounded-lg"
         onClick={(e) => e.stopPropagation()}
       >
-        <h1 className="font-bold text-2xl pb-[20px]">
-          {parent?.name ? (
-            <span>Thêm phân loại cho: {parent.name}</span>
-          ) : (
-            <span>Thêm phân loại gốc</span>
-          )}
-        </h1>
+        <h1 className="font-bold text-2xl pb-[20px]">Chỉnh sửa phân loại</h1>
         <form
           onSubmit={handleSubmit}
           className="w-full flex flex-col gap-[25px]"
@@ -114,4 +109,4 @@ const CreateDiseaseCategoryModal = ({ closeModal, parent }) => {
   );
 };
 
-export default CreateDiseaseCategoryModal;
+export default UpdateDiseaseCategoryModal;

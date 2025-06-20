@@ -46,6 +46,18 @@ const diseaseSlice = createSlice({
       ];
       state.loading = false;
     },
+    updateCategories: (state, action) => {
+      state.categories.categories = state.categories.categories.map((cat) =>
+        cat._id === action.payload._id ? action.payload : cat
+      );
+      state.loading = false;
+    },
+    deleteCategories: (state, action) => {
+      state.categories.categories = state.categories.categories.filter(
+        (cat) => cat._id !== action.payload
+      );
+      state.loading = false;
+    },
     setDiseases: (state, action) => {
       state.diseases = action.payload;
       state.loading = false;
@@ -171,6 +183,8 @@ export const {
   setCategories,
   setDiseases,
   addCategories,
+  updateCategories,
+  deleteCategories,
   addDisease,
   setDisease,
   setNewDisease,

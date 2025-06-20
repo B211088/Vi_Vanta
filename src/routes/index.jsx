@@ -5,15 +5,24 @@ import ErrorPage from "../pages/errorPage";
 
 import ProtectedRoute from "./ProtectedRoute";
 import AuthRoute from "./AuthRoute";
-import Dashboard from "../pages/user/Dashboard";
-import LibraryDiseaseManager from "../components/layout/manager/LibraryDiseaseManager";
-import ListAllDisease from "../components/layout/manager/ListAllDisease";
+import Dashboard from "../pages/Dashboard";
+import LibraryDiseaseManager from "../components/layout/manager/diseases/LibraryDiseaseManager";
+import ListAllDisease from "../components/layout/manager/diseases/ListAllDisease";
 import LibraryManager from "../pages/manager/LibraryManager";
-import DiseaseDetail from "../components/layout/manager/DiseaseDetail";
-import CreateDisease from "../components/layout/manager/CreateDisease";
-import DiseaseCategory from "../components/layout/manager/DiseaseCategory";
+import DiseaseDetail from "../components/layout/manager/diseases/DiseaseDetail";
+import CreateDisease from "../components/layout/manager/diseases/CreateDisease";
+import DiseaseCategory from "../components/layout/manager/diseases/DiseaseCategory";
+import UserManager from "../components/layout/manager/users/UserManager";
+import LibraryMedicationManager from "../components/layout/manager/medications/LibraryMedicationManager";
+import LibraryFoodManager from "../components/layout/manager/medications/LibraryFoodManager";
+import AIManager from "../pages/manager/AIManager";
+import DataManager from "../components/layout/manager/ai/DataManager";
+import Collection from "../components/layout/manager/ai/Collection";
+import DataCollection from "../components/layout/manager/ai/DataCollection";
+import DetailCollection from "../components/layout/manager/ai/DetailCollection";
+import TestChatBot from "../components/ui/TestChatBot";
 
-const Home = lazy(() => import("../pages/user/Home"));
+const Home = lazy(() => import("../pages/Home"));
 const Auth = lazy(() => import("../pages/auth/Auth"));
 const Profile = lazy(() => import("../components/layout/user/Profile"));
 const Account = lazy(() => import("../pages/user/Account"));
@@ -95,7 +104,7 @@ const router = createBrowserRouter([
             element: <Navigate to="disease" replace />,
           },
           {
-            path: "disease",
+            path: "diseases",
             element: (
               <Suspense fallback={<Loading />}>
                 <LibraryDiseaseManager />
@@ -146,7 +155,99 @@ const router = createBrowserRouter([
             ],
             errorElement: <ErrorPage />,
           },
+          {
+            path: "medications",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <LibraryMedicationManager />
+              </Suspense>
+            ),
+            children: [],
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "foods",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <LibraryFoodManager />
+              </Suspense>
+            ),
+            children: [],
+            errorElement: <ErrorPage />,
+          },
         ],
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "ai-manager",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <AIManager />
+          </Suspense>
+        ),
+        children: [
+          {
+            path: "data",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <DataManager />
+              </Suspense>
+            ),
+            children: [],
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "collection",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <Collection />
+              </Suspense>
+            ),
+            children: [
+              {
+                path: "data",
+                element: (
+                  <Suspense fallback={<Loading />}>
+                    <DataCollection />
+                  </Suspense>
+                ),
+                children: [],
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "detail",
+                element: (
+                  <Suspense fallback={<Loading />}>
+                    <DetailCollection />
+                  </Suspense>
+                ),
+                children: [],
+                errorElement: <ErrorPage />,
+              },
+            ],
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "testing",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <TestChatBot />
+              </Suspense>
+            ),
+            children: [],
+            errorElement: <ErrorPage />,
+          },
+        ],
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "users-manager",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <UserManager />
+          </Suspense>
+        ),
+        children: [],
         errorElement: <ErrorPage />,
       },
     ],

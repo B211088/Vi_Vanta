@@ -12,14 +12,19 @@
   "dependencies": {
     "@reduxjs/toolkit": "^2.8.2",
     "@tailwindcss/vite": "^4.1.8",
+    "@tiptap/react": "^2.14.0",
+    "@tiptap/starter-kit": "^2.14.0",
     "axios": "^1.9.0",
     "framer-motion": "^12.15.0",
+    "lucide-react": "^0.515.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-easy-crop": "^5.4.2",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.6.1",
     "redux-persist": "^6.0.0",
+    "slate": "^0.117.0",
+    "slate-react": "^0.117.1",
     "tailwindcss": "^4.1.8"
   },
   "devDependencies": {

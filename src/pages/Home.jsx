@@ -1,9 +1,9 @@
 import { useState } from "react";
-import Header from "../../components/layout/Header";
-import Background from "../../components/layout/Background";
-import ButtonToggleTheme from "../../components/common/ButtonToggleTheme";
+import Header from "../components/layout/Header";
+import Background from "../components/layout/Background";
+import ButtonToggleTheme from "../components/common/ButtonToggleTheme";
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { useTheme } from "../../hook/useTheme";
+import { useTheme } from "../hook/useTheme";
 
 const Home = () => {
   const { isDarkMode } = useTheme();
@@ -134,8 +134,8 @@ const nav = [
     items: [],
   },
   {
-    id: "children-care",
-    path: "/children-care",
+    id: "users-manager",
+    path: "/users-manager",
     name: "Quản lý người dùng",
     icon: "fa-solid fa-users",
     items: [],
@@ -147,20 +147,20 @@ const nav = [
     icon: "fa-solid fa-book",
     items: [
       {
-        id: "disease",
-        path: "disease",
+        id: "diseases",
+        path: "diseases",
         name: "Thư viện bệnh",
         icon: "fa-solid fa-disease",
       },
       {
-        id: "medication",
-        path: "medication",
+        id: "medications",
+        path: "medications",
         name: "Thư viện thuốc",
         icon: "fa-solid fa-pills",
       },
 
       {
-        id: "foodsr",
+        id: "foods",
         path: "foods",
         name: "Thư viện thức ăn",
         icon: "fa-solid fa-utensils",
@@ -174,20 +174,20 @@ const nav = [
     ],
   },
   {
-    id: "tools",
-    path: "/tools",
+    id: "ai-manager",
+    path: "/ai-manager",
     name: "Quản lý AI",
     icon: "fa-solid fa-hexagon-nodes",
     items: [
       {
-        id: "data-manager",
-        path: "data-manager",
+        id: "data",
+        path: "data",
         name: "Quản lý dữ liệu",
         icon: "fa-solid fa-database",
       },
       {
-        id: "data-testing",
-        path: "data-testing",
+        id: "testing",
+        path: "testing",
         name: "Kiểm thử dữ liệu",
         icon: "fa-solid fa-square-binary",
       },
