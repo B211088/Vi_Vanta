@@ -274,6 +274,17 @@ class ChromaService {
     }
   }
 
+  async getAllCollections() {
+    try {
+      const client = this.getClient();
+      const collections = await client.listCollections();
+      return collections;
+    } catch (error) {
+      console.error(`Error checking collection: ${error.message}`);
+      return false;
+    }
+  }
+
   /**
    * Get collection info including dimension
    */
@@ -363,7 +374,7 @@ class ChromaService {
           dimension: 1536,
         },
       });
-      return collection;
+      return { success: true, collection };
     } catch (error) {
       throw new Error(`Failed to create collection: ${error.message}`);
     }
@@ -463,11 +474,42 @@ class ChromaService {
    * Delete documents by IDs
    */
   async deleteDocuments(collectionName, ids) {
+    console.log("🔍 deleteDocuments called with:", {
+      collectionName,
+      ids,
+      idsType: typeof ids,
+    });
+
     try {
+      // Đảm bảo ids là array
+      const idsArray = Array.isArray(ids) ? ids : [ids];
+      console.log("📋 Processed ids array:", idsArray);
+
       const collection = await this.getCollection(collectionName);
-      await collection.delete({ ids });
-      return { success: true, deletedCount: ids.length };
+      console.log({ collection });
+      console.log("📦 Collection found:", collection?.name);
+
+      // Kiểm tra xem collection có documents không
+      const count = await collection.count();
+      console.log("📊 Total chunk in collection:", count);
+
+      // Thực hiện delete
+      const result = await collection.delete({ ids: idsArray });
+      console.log("✅ Delete result:", result);
+
+      return {
+        success: true,
+        deletedCount: idsArray.length,
+        collection: collection.name,
+        result,
+      };
     } catch (error) {
+      console.error("❌ Delete error details:", {
+        message: error.message,
+        stack: error.stack,
+        collectionName,
+        ids,
+      });
       throw new Error(`Failed to delete documents: ${error.message}`);
     }
   }

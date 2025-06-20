@@ -27,7 +27,9 @@ import exerciseRouter from "./routes/exercise.route.js";
 import medicationReminderRouter from "./routes/medicationReminder.route.js";
 import diseaseCategoryRouter from "./routes/diseaseCategory.route.js";
 import ragRouter from "./routes/ragOpenAI.routes.js";
-import aiChatRoutes from "./routes/aiChat.route.js";
+import aiChatRoutes from "./routes/openAIChatBot.route.js";
+import collectionRoutes from "./routes/collection.route.js";
+import aiModalRouter from "./routes/aiModel.route.js";
 import fs from "fs";
 
 const app = express();
@@ -82,7 +84,7 @@ if (process.env.NODE_ENV === "development") {
     })
   );
 }
-app.use("/api/rag", ragRouter);
+
 app.use("/api/v1/user", authRouter);
 app.use("/api/v1/address", addressRouter);
 app.use("/api/v1/pregnancy", pregnancyRouter);
@@ -97,7 +99,10 @@ app.use("/api/v1/clinics", clinicRouter);
 app.use("/api/v1/exercises", exerciseRouter);
 app.use("/api/v1/disease-categories", diseaseCategoryRouter);
 app.use("/api/v1/medication-reminders", medicationReminderRouter);
-app.use("/api/v1/ai-chat", aiChatRoutes);
+app.use("/api/v1/rag/openai", ragRouter);
+app.use("/api/v1/openai-chat-bot", aiChatRoutes);
+app.use("/api/v1/collections", collectionRoutes);
+app.use("/api/v1/ai-modal", aiModalRouter);
 app.get("/api/v1/csrf-token", (req, res) => {
   res.json({ csrfToken: req.csrfToken() });
 });

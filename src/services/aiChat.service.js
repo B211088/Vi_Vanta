@@ -131,7 +131,7 @@ class AIChatService {
       .sort({ updatedAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
-      .populate("messages");
+      .select("_id title");
 
     const total = await Section.countDocuments({ userId });
 

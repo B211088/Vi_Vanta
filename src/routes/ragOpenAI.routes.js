@@ -1,13 +1,11 @@
 import express from "express";
 import {
   uploadAndIndex,
-  queryDoc,
   getStats,
   listDocuments,
-  deleteDocument,
   healthCheck,
-  askQuestion,
   deleteDocumentAndChunks,
+  getAllCollections,
 } from "../controllers/ragOpenAI.controller.js";
 import upload, { handleMulterError } from "../middlewares/uploadMiddleware.js";
 import verifyToken from "../middlewares/verifyToken.js";
@@ -27,26 +25,23 @@ router.post(
   handleMulterError,
   uploadAndIndex
 );
-router.post("/query", verifyToken, authorizeRoles("admin"), queryDoc);
-
-router.post("/ask", verifyToken, askQuestion);
 
 router.get("/stats", verifyToken, authorizeRoles("admin"), getStats);
 
-router.get("/documents", verifyToken, authorizeRoles("admin"), listDocuments);
+router.get(
+  "/collections",
+  verifyToken,
+  authorizeRoles("admin"),
+  getAllCollections
+);
+
+router.get("/collection", verifyToken, authorizeRoles("admin"), listDocuments);
 
 router.delete(
-  "/documents/:documentId",
+  "/document/:collectionId",
   verifyToken,
   authorizeRoles("admin"),
   deleteDocumentAndChunks
-);
-
-router.delete(
-  "/documents",
-  verifyToken,
-  authorizeRoles("admin"),
-  deleteDocument
 );
 
 export default router;

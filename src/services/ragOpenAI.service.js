@@ -193,12 +193,12 @@ export class EmbedService {
   /**
    * Index a file into the vector database - IMPROVED VERSION
    */
-  async indexFile(id, filePath) {
+  async indexFile(id, filePath, fileName, collectionName) {
     try {
       console.log(`🚀 Starting indexing for file: ${filePath}`);
 
       const rawDocs = await this.loadFile(filePath);
-      console.log(`📄 Loaded ${rawDocs.length} documents`);
+      console.log(`📄 Loaded ${rawDocs.length} ${collectionName}`);
 
       const chunks = this.chunkTextDocs(rawDocs);
       console.log(`✂️ Created ${chunks.length} chunks`);
@@ -209,19 +209,9 @@ export class EmbedService {
       // Ensure ChromaDB client is initialized
       await chromaService.initialize();
 
-      // Delete old chunks for this document ID if they exist
-      try {
-        await chromaService.deleteDocumentsByFilter("documents", {
-          documentId: id,
-        });
-        console.log(`🗑️ Deleted old chunks for document: ${id}`);
-      } catch (error) {
-        console.log(`ℹ️ No existing chunks found for document: ${id}`);
-      }
-
       // Get or create collection (won't delete other documents)
-      await chromaService.getOrCreateCollection("documents", {
-        description: "Document embeddings collection",
+      await chromaService.getOrCreateCollection(collectionName, {
+        description: `Document embeddings collection`,
       });
 
       // Prepare metadata - ensure all values are simple types
@@ -230,7 +220,7 @@ export class EmbedService {
           ...c.metadata,
           documentId: id,
           indexedAt: new Date().toISOString(),
-          fileName: path.basename(filePath),
+          fileName,
           fileType: path.extname(filePath).toLowerCase(),
           chunkIndex: c.metadata.chunkIndex || 0,
         };
@@ -254,7 +244,7 @@ export class EmbedService {
 
       // Add new chunks for this document
       await chromaService.addDocuments(
-        "documents",
+        collectionName,
         embedded.map((c) => c.content),
         sanitizedMetadata,
         embedded.map((_, i) => `${id}_chunk_${i}`),
@@ -274,7 +264,7 @@ export class EmbedService {
   /**
    * Query for similar documents - IMPROVED VERSION
    */
-  async querySimilar(query, k = 5, filters = {}) {
+  async querySimilar(collectionName, query, k = 5, filters = {}) {
     try {
       console.log(`🔍 Querying: "${query}" with k=${k}`);
 
@@ -292,7 +282,7 @@ export class EmbedService {
 
       // Query documents with embeddings
       const results = await chromaService.queryDocuments(
-        "documents",
+        collectionName,
         null, // queryTexts is null since we're using embeddings
         k,
         filters,
@@ -321,37 +311,15 @@ export class EmbedService {
   }
 
   /**
-   * Delete a document from the collection - IMPLEMENTED
-   */
-  async deleteDocument(documentId) {
-    try {
-      console.log(`🗑️  Deleting document: ${documentId}`);
-
-      await chromaService.initialize();
-
-      // Delete by filter (documentId in metadata)
-      await chromaService.deleteDocumentsByFilter("documents", {
-        documentId: documentId,
-      });
-
-      console.log(`✅ Successfully deleted document: ${documentId}`);
-      return true;
-    } catch (error) {
-      console.error(`❌ Error deleting document ${documentId}:`, error);
-      throw error;
-    }
-  }
-
-  /**
    * List all documents in the collection - IMPLEMENTED
    */
-  async listDocuments() {
+  async listDocuments(collectionName) {
     try {
-      console.log(`📋 Listing all documents...`);
+      console.log(`📋 Listing all documents of ${collectionName}`);
 
       await chromaService.initialize();
 
-      const result = await chromaService.listAllDocuments("documents", 1000);
+      const result = await chromaService.listAllDocuments(collectionName, 1000);
 
       // Group by documentId to get unique documents
       const documentsMap = new Map();
@@ -386,16 +354,16 @@ export class EmbedService {
   /**
    * Get collection statistics - IMPLEMENTED
    */
-  async getStats() {
+  async getStats(collectionName) {
     try {
       console.log(`📊 Getting collection statistics...`);
 
       await chromaService.initialize();
 
-      const stats = await chromaService.getCollectionStats("documents");
+      const stats = await chromaService.getCollectionStats(collectionName);
 
       // Get additional info
-      const documents = await this.listDocuments();
+      const documents = await this.listDocuments(collectionName);
 
       const result = {
         ...stats,
@@ -414,5 +382,4 @@ export class EmbedService {
     }
   }
 }
-
 export default EmbedService;

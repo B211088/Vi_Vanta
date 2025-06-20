@@ -1,13 +1,12 @@
-// controllers/rag.controller.js
-import EmbedService from "../services/ragOpenAI.service.js"; // Fixed import path
 import { v4 as uuidv4 } from "uuid";
-import fs from "fs";
-import path from "path";
-import OpenAI from "openai";
 import { OPENAI_API_KEY } from "../config/openai.config.js";
+import { getCollectionByIdHandle } from "../services/collection.service.js";
+import fs from "fs";
+import OpenAI from "openai";
+import EmbedService from "../services/ragOpenAI.service.js";
 import AIChatService from "../services/aiChat.service.js";
+import chromadbService from "../services/chromadb.service.js";
 
-// Initialize service once
 const service = new EmbedService();
 const chatService = new AIChatService();
 
@@ -24,9 +23,16 @@ export async function uploadAndIndex(req, res, next) {
         message: "Please upload a file to index",
       });
     }
-
+    const userId = req.user.userId;
+    const payload = req.body;
+    const { collectionId, description } = req.body;
+    const file = req.file;
     const filePath = req.file.path;
+    console.log({ file });
     const fileName = req.file.originalname;
+    if (!collectionId) throw new Error("Thiếu collectionId");
+    if (!payload || typeof payload !== "object")
+      throw new Error("Payload không hợp lệ");
 
     // Generate unique document ID
     const documentId = req.body.id || `doc_${uuidv4()}`;
@@ -41,11 +47,16 @@ export async function uploadAndIndex(req, res, next) {
         message: "Uploaded file could not be located",
       });
     }
-
+    // lấy collectiojn name
+    const collection = await getCollectionByIdHandle(collectionId);
     // Index the file
-    const count = await service.indexFile(documentId, filePath);
+    const count = await service.indexFile(
+      documentId,
+      filePath,
+      fileName,
+      collection.name
+    );
 
-    // Clean up uploaded file after processing
     try {
       fs.unlinkSync(filePath);
       console.log(`Cleaned up temporary file: ${filePath}`);
@@ -85,53 +96,6 @@ export async function uploadAndIndex(req, res, next) {
 }
 
 /**
- * Query similar documents
- */
-export async function queryDoc(req, res, next) {
-  try {
-    const { query, k = 5, filters = {} } = req.body;
-
-    // Validate input
-    if (!query || typeof query !== "string" || query.trim().length === 0) {
-      return res.status(400).json({
-        error: "Invalid query",
-        message: "Query must be a non-empty string",
-      });
-    }
-
-    if (k < 1 || k > 50) {
-      return res.status(400).json({
-        error: "Invalid k value",
-        message: "k must be between 1 and 50",
-      });
-    }
-
-    console.log(`Querying: "${query}" with k=${k}`);
-
-    // Perform similarity search
-    const result = await service.querySimilar(
-      query.trim(),
-      parseInt(k),
-      filters
-    );
-
-    res.json({
-      status: "success",
-      ...result,
-      queriedAt: new Date().toISOString(),
-    });
-  } catch (error) {
-    console.error("Error in queryDoc:", error);
-
-    res.status(500).json({
-      error: "Query failed",
-      message: error.message || "An error occurred while querying documents",
-      details: process.env.NODE_ENV === "development" ? error.stack : undefined,
-    });
-  }
-}
-
-/**
  * Get collection statistics
  */
 export async function getStats(req, res, next) {
@@ -159,7 +123,10 @@ export async function getStats(req, res, next) {
  */
 export async function listDocuments(req, res, next) {
   try {
-    const documents = await service.listDocuments();
+    const { collectionId } = req.body;
+
+    const collection = await getCollectionByIdHandle(collectionId);
+    const documents = await service.listDocuments(collection.name);
 
     res.json({
       status: "success",
@@ -179,54 +146,14 @@ export async function listDocuments(req, res, next) {
 }
 
 /**
- * Delete a document
- */
-export async function deleteDocument(req, res, next) {
-  try {
-    const { documentId } = req.params;
-
-    if (!documentId || documentId.trim().length === 0) {
-      return res.status(400).json({
-        error: "Invalid document ID",
-        message: "Document ID is required",
-      });
-    }
-
-    console.log(`Deleting document: ${documentId}`);
-
-    const deleted = await service.deleteDocument(documentId.trim());
-
-    if (deleted) {
-      res.json({
-        status: "success",
-        message: "Document deleted successfully",
-        documentId: documentId,
-        deletedAt: new Date().toISOString(),
-      });
-    } else {
-      res.status(404).json({
-        error: "Document not found",
-        message: `No document found with ID: ${documentId}`,
-      });
-    }
-  } catch (error) {
-    console.error("Error in deleteDocument:", error);
-
-    res.status(500).json({
-      error: "Delete failed",
-      message: error.message || "An error occurred while deleting the document",
-      details: process.env.NODE_ENV === "development" ? error.stack : undefined,
-    });
-  }
-}
-
-/**
  * Health check endpoint
  */
 export async function healthCheck(req, res, next) {
   try {
-    // Test basic functionality
-    const stats = await service.getStats();
+    const { collectionId } = req.body;
+
+    const collection = await getCollectionByIdHandle(collectionId);
+    const stats = await service.getStats(collection.name);
 
     res.json({
       status: "healthy",
@@ -247,7 +174,6 @@ export async function healthCheck(req, res, next) {
 }
 
 async function generateConversationContext(question, answer) {
-  // Gọi OpenAI để tạo context
   const completion = await openai.chat.completions.create({
     model: "gpt-4o-mini-2024-07-18",
     messages: [
@@ -293,7 +219,7 @@ async function generateConversationContext(question, answer) {
 export async function askQuestion(req, res) {
   const userId = req.user.userId;
   try {
-    const { question, documentId, k = 3, sectionId } = req.body;
+    const { collectionId, question, documentId, k = 3, sectionId } = req.body;
 
     // Validate input
     if (
@@ -307,17 +233,32 @@ export async function askQuestion(req, res) {
       });
     }
 
+    const collection = await getCollectionByIdHandle(collectionId);
+
     console.log(`🤔 Processing question: "${question}"`);
 
     // Get relevant documents using RAG
     const filters = documentId ? { documentId } : {};
-    const similarDocs = await service.querySimilar(question.trim(), k, filters);
-
+    const similarDocs = await service.querySimilar(
+      collection.name,
+      question.trim(),
+      Number(k),
+      filters
+    );
     if (!similarDocs.results || similarDocs.results.length === 0) {
-      return res.status(404).json({
-        error: "No relevant information found",
-        message:
-          "Could not find any relevant information to answer your question",
+      // Trả về câu trả lời mặc định thay vì lỗi 404
+      return res.json({
+        success: false,
+        data: {
+          section: null,
+          metadata: {
+            documentId: documentId || "all",
+            processedAt: new Date().toISOString(),
+            model: "gpt-4o-mini-2024-07-18",
+          },
+          answer:
+            "Xin lỗi, hiện tại hệ thống chưa có thông tin phù hợp để trả lời câu hỏi này. Chúng tôi sẽ cập nhật dữ liệu sớm nhất có thể.",
+        },
       });
     }
 
@@ -441,7 +382,7 @@ export async function askQuestion(req, res) {
 
     // Return response
     res.json({
-      status: "success",
+      success: true,
       data: {
         section,
         metadata: {
@@ -462,39 +403,124 @@ export async function askQuestion(req, res) {
   }
 }
 
-/**
- * Delete a specific document and its chunks
- */
+// Sửa lại controller
 export async function deleteDocumentAndChunks(req, res) {
   try {
-    const { documentId } = req.params;
+    const { collectionId } = req.params;
+    const { documentIds } = req.body;
 
-    if (!documentId) {
+    console.log("🔍 Request details:", {
+      collectionId,
+      documentIds,
+      documentIdsType: typeof documentIds,
+      isArray: Array.isArray(documentIds),
+    });
+
+    const collection = await getCollectionByIdHandle(collectionId);
+    console.log("📦 Collection:", {
+      id: collection?.id,
+      name: collection?.name,
+    });
+
+    if (!documentIds) {
       return res.status(400).json({
         error: "Missing document ID",
         message: "Document ID is required",
       });
     }
 
-    console.log(`🗑️ Deleting document and chunks for ID: ${documentId}`);
+    // Kiểm tra và chuẩn hóa documentIds
+    let processedIds;
+    if (Array.isArray(documentIds)) {
+      processedIds = documentIds;
+    } else if (typeof documentIds === "string") {
+      // Nếu là string, có thể là JSON string hoặc single ID
+      try {
+        processedIds = JSON.parse(documentIds);
+        if (!Array.isArray(processedIds)) {
+          processedIds = [documentIds];
+        }
+      } catch {
+        processedIds = [documentIds];
+      }
+    } else {
+      processedIds = [documentIds];
+    }
+
+    console.log("📋 Processed IDs:", processedIds);
+    console.log(
+      `🗑️ Deleting document(s) and chunks for IDs: ${JSON.stringify(
+        processedIds
+      )}`
+    );
+
+    // Trước khi delete, kiểm tra xem documents có tồn tại không
+    try {
+      const chromaCollection = await chromadbService.getCollection(
+        collection.name
+      );
+      const existingDocs = await chromaCollection.get({ ids: processedIds });
+      console.log(
+        "🔍 Existing documents found:",
+        existingDocs?.ids?.length || 0
+      );
+    } catch (checkError) {
+      console.warn(
+        "⚠️ Could not check existing documents:",
+        checkError.message
+      );
+    }
 
     // Delete all chunks with this documentId
-    await service.deleteDocumentsByFilter("documents", {
-      documentId: documentId,
-    });
+    const deleteData = await chromadbService.deleteDocuments(
+      collection.name,
+      processedIds
+    );
+
+    console.log("✅ Delete operation completed:", deleteData);
 
     res.json({
-      status: "success",
-      message: `Successfully deleted document and its chunks: ${documentId}`,
-      documentId: documentId,
+      success: true,
+      message: `Successfully deleted document(s) and chunks: ${JSON.stringify(
+        processedIds
+      )}`,
+      deleteData,
+      deletedCount: processedIds.length,
       deletedAt: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("❌ Error deleting document:", error);
+    console.error("❌ Error deleting document:", {
+      message: error.message,
+      stack: error.stack,
+      collectionId: req.params.collectionId,
+      documentIds: req.body.documentIds,
+    });
+
     res.status(500).json({
       error: "Delete failed",
       message: error.message || "An error occurred while deleting the document",
       details: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    });
+  }
+}
+
+export async function getAllCollections(req, res) {
+  try {
+    console.log(`📊 Getting collection statistics...`);
+
+    const collections = await chromadbService.getAllCollections();
+
+    res.json({
+      success: true,
+      message: `Successfully get all collections}`,
+      collections,
+    });
+  } catch (error) {
+    console.error("❌ Get  All Collectons Failer", error);
+    res.status(500).json({
+      error: "Delete failed",
+      message:
+        error.message || "An error occurred while get all the collections",
     });
   }
 }
