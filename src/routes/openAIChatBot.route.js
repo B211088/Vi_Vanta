@@ -9,7 +9,7 @@ import {
   updateSectionContext,
   addMessage,
 } from "../controllers/aiChat.controller.js";
-import { askQuestion } from "../controllers/ragOpenAI.controller.js";
+import { testingCollectionDataChatBot } from "../controllers/ragOpenAI.controller.js";
 
 const router = express.Router();
 
@@ -17,7 +17,7 @@ const router = express.Router();
 router.use(verifyToken);
 
 // Routes cho RAG OpenAI
-router.post("/ask", askQuestion);
+router.post("/ask", testingCollectionDataChatBot);
 
 // Routes cho Section
 router.post("/sections", createSection);

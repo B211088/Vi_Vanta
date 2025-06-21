@@ -3,7 +3,7 @@ const { Schema } = mongoose;
 
 const collectionSchema = new Schema(
   {
-    name: { type: String, required: true }, // Tên folde
+    name: { type: String, required: true },
     description: { type: String },
     owner: { type: Schema.Types.ObjectId, ref: "User" },
     embeddingTemplate: { type: Schema.Types.ObjectId, ref: "AIModel" },
@@ -12,6 +12,11 @@ const collectionSchema = new Schema(
       type: Object,
     },
     status: { type: Boolean, default: true },
+    prompt: { type: String },
+    maxToken: { type: Number },
+    temperature: { type: Number },
+    similarityThreshold: { type: Number },
+    isActive: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

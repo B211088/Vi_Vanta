@@ -1,11 +1,16 @@
 import { v4 as uuidv4 } from "uuid";
-import { OPENAI_API_KEY } from "../config/openai.config.js";
+import {
+  MAX_TOKEN,
+  OPENAI_API_KEY,
+  TEMPERATURE,
+} from "../config/openai.config.js";
 import { getCollectionByIdHandle } from "../services/collection.service.js";
 import fs from "fs";
 import OpenAI from "openai";
 import EmbedService from "../services/ragOpenAI.service.js";
 import AIChatService from "../services/aiChat.service.js";
 import chromadbService from "../services/chromadb.service.js";
+import { getAIModelByIdHandle } from "../services/aiModel.service.js";
 
 const service = new EmbedService();
 const chatService = new AIChatService();
@@ -216,10 +221,21 @@ async function generateConversationContext(question, answer) {
 /**
  * Ask a question and get AI-generated answer
  */
-export async function askQuestion(req, res) {
+export async function testingCollectionDataChatBot(req, res) {
   const userId = req.user.userId;
   try {
-    const { collectionId, question, documentId, k = 3, sectionId } = req.body;
+    const {
+      collectionId,
+      question,
+      documentId,
+      k = 5,
+      sectionId,
+      prompt,
+      temperature,
+      maxToken,
+      modelId,
+      similarityThreshold = 0.2, // Thêm ngưỡng similarity
+    } = req.body;
 
     // Validate input
     if (
@@ -245,8 +261,11 @@ export async function askQuestion(req, res) {
       Number(k),
       filters
     );
+
+    const modelData = await getAIModelByIdHandle(modelId);
+
+    // CẢI THIỆN: Kiểm tra cả số lượng và chất lượng kết quả
     if (!similarDocs.results || similarDocs.results.length === 0) {
-      // Trả về câu trả lời mặc định thay vì lỗi 404
       return res.json({
         success: false,
         data: {
@@ -254,7 +273,8 @@ export async function askQuestion(req, res) {
           metadata: {
             documentId: documentId || "all",
             processedAt: new Date().toISOString(),
-            model: "gpt-4o-mini-2024-07-18",
+            model: modelData.name,
+            reason: "no_results_found",
           },
           answer:
             "Xin lỗi, hiện tại hệ thống chưa có thông tin phù hợp để trả lời câu hỏi này. Chúng tôi sẽ cập nhật dữ liệu sớm nhất có thể.",
@@ -262,10 +282,50 @@ export async function askQuestion(req, res) {
       });
     }
 
-    // Prepare context from similar documents
-    const context = similarDocs.results
-      .map((doc, i) => `[Đoạn ${i + 1}]: ${doc.content}`)
+    // THÊM MỚI: Lọc kết quả theo ngưỡng similarity
+    const relevantDocs = similarDocs.results.filter((doc) => {
+      const similarity = 1 - doc.distance; // Chuyển distance thành similarity score
+      console.log(`📊 Similarity score for chunk: ${similarity.toFixed(3)}`);
+      return similarity >= similarityThreshold;
+    });
+
+    // Kiểm tra xem có kết quả liên quan hay không
+    if (relevantDocs.length === 0) {
+      console.log(
+        `⚠️ No relevant documents found. Highest similarity: ${(
+          1 - Math.min(...similarDocs.results.map((doc) => doc.distance))
+        ).toFixed(3)}`
+      );
+
+      return res.json({
+        success: false,
+        data: {
+          section: null,
+          metadata: {
+            documentId: documentId || "all",
+            processedAt: new Date().toISOString(),
+            model: modelData.name,
+            reason: "low_similarity",
+            highestSimilarity: (
+              1 - Math.min(...similarDocs.results.map((doc) => doc.distance))
+            ).toFixed(3),
+          },
+          answer:
+            "Xin lỗi, hiện tại hệ thống chưa có thông tin phù hợp để trả lời câu hỏi này. Dữ liệu hiện có không liên quan đến chủ đề bạn đang hỏi.",
+        },
+      });
+    }
+
+    // Sử dụng relevantDocs thay vì similarDocs.results
+    const context = relevantDocs
+      .map((doc, i) => {
+        const similarity = (1 - doc.distance).toFixed(3);
+        return `[Đoạn ${i + 1}] (Độ liên quan: ${similarity}): ${doc.content}`;
+      })
       .join("\n\n");
+
+    console.log({ context });
+    console.log(`✅ Using ${relevantDocs.length} relevant documents`);
 
     // Lấy context từ section nếu có
     let conversationContext = "";
@@ -276,56 +336,45 @@ export async function askQuestion(req, res) {
       }
     }
 
+    // CẢI THIỆN: Prompt với hướng dẫn rõ ràng hơn
+    const systemPrompt =
+      prompt !== ""
+        ? prompt
+        : `Bạn là một bác sĩ chuyên khoa với kinh nghiệm lâm sàng. 
+            QUAN TRỌNG: Chỉ trả lời dựa trên thông tin được cung cấp trong context. 
+            Nếu thông tin không đủ để trả lời câu hỏi, hãy thẳng thắn nói rằng bạn không có đủ thông tin.
+            Nếu không có thông tin đủ để trả lời thì đừng lấy context từ câu chuyện trước ra nói mà chỉ trả lời thẳng tháng là chưa có thông tin gì nên không thể trả lời
+            Không bịa đặt hoặc suy đoán thông tin không có trong context.`;
+
     // Generate answer using OpenAI
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini-2024-07-18",
+      model: modelData ? modelData.name : "gpt-4o-mini-2024-07-18",
       messages: [
         {
           role: "system",
-          content: `Bạn là một bác sĩ chuyên nghiệp với kiến thức sâu rộng về y học. Nhiệm vụ của bạn là cung cấp thông tin y tế toàn diện và đáng tin cậy.
-
-          NGUYÊN TẮC TRẢ LỜI:
-          1. Cấu trúc câu trả lời:
-            - Mở đầu với định nghĩa hoặc tổng quan
-            - Phân tích chi tiết từng khía cạnh
-            - Kết luận và khuyến nghị (nếu có)
-
-          2. Nội dung:
-            - Giải thích chi tiết và đầy đủ
-            - Đưa ra ví dụ cụ thể khi cần thiết
-            - Giải thích các thuật ngữ y khoa bằng ngôn ngữ đơn giản
-            - Nêu rõ mối liên hệ giữa các thông tin
-
-          3. Độ tin cậy:
-            - Chỉ sử dụng thông tin từ nguồn được cung cấp
-            - Nêu rõ khi thiếu thông tin quan trọng
-            - Từ chối trả lời các câu hỏi ngoài chuyên môn y tế
-
-          4. Định dạng:
-            - Sử dụng tiêu đề cho các phần chính
-            - Dùng bullet points cho danh sách
-            - Nhấn mạnh thông tin quan trọng
-            - Tổ chức thành các đoạn văn rõ ràng`,
+          content: systemPrompt,
         },
         ...(conversationContext
           ? [
               {
                 role: "system",
-                content: `Context từ cuộc trò chuyện trước: ${conversationContext}`,
+                content: `Context từ cuộc trò chuyện trước: ${conversationContext}  `,
               },
             ]
           : []),
         {
           role: "user",
-          content: `Dựa vào các đoạn thông tin sau đây:
+          content: `Dựa vào các đoạn thông tin sau đây (với độ liên quan đã được kiểm tra):
 
           ${context}
 
-          Hãy trả lời thật chi tiết và đầy đủ câu hỏi sau: "${question}"`,
+          Hãy trả lời câu hỏi sau một cách chi tiết dựa HOÀN TOÀN trên thông tin được cung cấp: "${question}"
+
+          LƯU Ý: Nếu thông tin trên không đủ để trả lời đầy đủ câu hỏi, hãy nói rõ những phần nào bạn không có thông tin.`,
         },
       ],
-      temperature: 0.3,
-      max_tokens: 4000,
+      temperature: temperature || TEMPERATURE,
+      max_tokens: maxToken || MAX_TOKEN,
       presence_penalty: 0.1,
       frequency_penalty: 0.1,
     });
@@ -335,17 +384,21 @@ export async function askQuestion(req, res) {
     // Tạo context cho cuộc trò chuyện
     const newContext = await generateConversationContext(question, answer);
 
-    // Chuẩn bị context cho chat
+    // Chuẩn bị context cho chat với thông tin similarity
     const chatContext = {
-      documentIds: similarDocs.results.map((doc) => doc.metadata.documentId),
-      relevantChunks: similarDocs.results.map((doc) => ({
+      documentIds: relevantDocs.map((doc) => doc.metadata.documentId),
+      relevantChunks: relevantDocs.map((doc) => ({
         content: doc.content,
         metadata: doc.metadata,
         relevance: 1 - doc.distance,
+        similarityScore: (1 - doc.distance).toFixed(3),
       })),
       additionalContext: {
-        model: "gpt-4o-mini-2024-07-18",
+        model: modelData ? modelData.name : "gpt-4o-mini-2024-07-18",
         processedAt: new Date().toISOString(),
+        similarityThreshold: similarityThreshold,
+        totalDocumentsFound: similarDocs.results.length,
+        relevantDocumentsUsed: relevantDocs.length,
       },
     };
 
@@ -388,7 +441,10 @@ export async function askQuestion(req, res) {
         metadata: {
           documentId: documentId || "all",
           processedAt: new Date().toISOString(),
-          model: "gpt-4o-mini-2024-07-18",
+          model: modelData ? modelData.name : "gpt-4o-mini-2024-07-18",
+          similarityThreshold: similarityThreshold,
+          documentsAnalyzed: similarDocs.results.length,
+          relevantDocumentsUsed: relevantDocs.length,
         },
       },
     });
