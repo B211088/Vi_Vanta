@@ -1,6 +1,9 @@
 import axios from "axios";
 import { API_URL } from "../config/api.config";
 import {
+  fetchModelsFailure,
+  fetchModelsStart,
+  fetchModelsSuccess,
   fetchSectionFailure,
   fetchSectionsFailure,
   fetchSectionsStart,
@@ -11,7 +14,7 @@ import {
 
 const api = axios.create({
   baseURL: API_URL,
-  timeout: 5000,
+  timeout: 100000,
   withCredentials: true,
 });
 
@@ -41,6 +44,21 @@ export const askChatBot = (payload) => async (dispatch) => {
     const errorMessage =
       error.response?.data?.message || "Không thể tải các sections";
     dispatch(fetchSectionFailure(errorMessage));
+    throw error;
+  }
+};
+
+export const getAllAIModel = () => async (dispatch) => {
+  try {
+    dispatch(fetchModelsStart());
+    const response = await api.get(`/api/v1/ai-modal`);
+    console.log({ response });
+    dispatch(fetchModelsSuccess(response.data.data));
+    return response.data;
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message || "Không thể tải các model";
+    dispatch(fetchModelsFailure(errorMessage));
     throw error;
   }
 };

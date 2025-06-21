@@ -1,11 +1,18 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, Outlet, useLocation, useSearchParams } from "react-router-dom";
+import {
+  Link,
+  Outlet,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import { getDetailCollection } from "../../../../services/collection.service";
 import { formatDateDDMMYYHHMMSS } from "../../../../utils/formatDate";
 
 const Collection = () => {
   const { laoding, collection } = useSelector((state) => state.collection);
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const [searchParams] = useSearchParams();
   const id = searchParams.get("id");
@@ -17,6 +24,12 @@ const Collection = () => {
   return (
     <div className="flex-1 flex flex-col  overflow-hidden ">
       <div className="w-full  flex items-center border-b-[1px]  border-dark-700  gap-[10px]  px-[20px] py-[12px] text-[1.2rem]">
+        <div
+          className="w-[28px] h-[28px] flex items-center justify-center cursor-pointer"
+          onClick={() => navigate(-1)}
+        >
+          <i className="fa-solid fa-arrow-left"></i>
+        </div>
         <h1>Data Collections</h1>
       </div>
       <div className="w-full  flex items-center  gap-[10px]  px-[20px] py-[5px]  text-[1.2rem]">
