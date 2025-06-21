@@ -1,62 +1,99 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { MarkdownRenderer } from "../../utils/convertMarkdownToJSX";
+import TypewriterText from "./TypewriterText";
 
-// Component hiệu ứng typewriter
-const TypewriterText = ({ text, speed = 50, onComplete }) => {
-  const [displayedText, setDisplayedText] = useState("");
-  const [currentIndex, setCurrentIndex] = useState(0);
+const ChatMessage = ({ message, isLatest, hasBeenAnimated, markAnimated }) => {
+  if (message.role === "user") {
+    return (
+      <div className="w-full flex justify-end">
+        <div className="w-fit max-w-[80%] flex justify-end p-[10px] text-justify bg-[#44444414] rounded-md">
+          <span className="text-sm">{message.content}</span>
+        </div>
+      </div>
+    );
+  }
 
-  useEffect(() => {
-    if (currentIndex < text.length) {
-      const timer = setTimeout(() => {
-        setDisplayedText((prev) => prev + text[currentIndex]);
-        setCurrentIndex(currentIndex + 1);
-      }, speed);
+  if (message.role === "assistant") {
+    return (
+      <div className="w-full flex justify-start text-sm">
+        <div className="w-fit max-w-[80%] p-[10px] text-justify rounded-md">
+          <AssistantMessage
+            message={message}
+            isLatest={isLatest}
+            hasBeenAnimated={hasBeenAnimated}
+            markAnimated={markAnimated}
+          />
+        </div>
+      </div>
+    );
+  }
 
-      return () => clearTimeout(timer);
-    } else if (onComplete) {
-      onComplete();
-    }
-  }, [currentIndex, text, speed, onComplete]);
-
-  // Reset khi text thay đổi
-  useEffect(() => {
-    setDisplayedText("");
-    setCurrentIndex(0);
-  }, [text]);
-
-  return (
-    <div>
-      <MarkdownRenderer content={displayedText} />
-      {currentIndex < text.length && (
-        <span className="animate-pulse text-gray-400">|</span>
-      )}
-    </div>
-  );
+  return <div key={message._id}></div>;
 };
 
-// Component tin nhắn assistant với hiệu ứng
-const AssistantMessage = ({ message }) => {
+const AssistantMessage = ({
+  message,
+  isLatest,
+  hasBeenAnimated,
+  markAnimated,
+}) => {
   const [showTypewriter, setShowTypewriter] = useState(false);
   const [isTypingComplete, setIsTypingComplete] = useState(false);
+  const [shouldStopTypewriter, setShouldStopTypewriter] = useState(false);
+  const completedRef = useRef(false);
 
+  const shouldAnimate =
+    isLatest &&
+    !hasBeenAnimated &&
+    !message.isLoading &&
+    !message.isError &&
+    !completedRef.current;
+
+  // Khởi tạo typewriter khi cần
   useEffect(() => {
-    // Chỉ hiển thị hiệu ứng typewriter cho tin nhắn mới (không loading, không error)
-    if (!message.isLoading && !message.isError && message.content) {
-      // Delay nhỏ để tạo hiệu ứng mượt mà
-      const timer = setTimeout(() => {
-        setShowTypewriter(true);
-      }, 100);
-      return () => clearTimeout(timer);
+    if (shouldAnimate && message.content && !showTypewriter) {
+      setShowTypewriter(true);
+      setShouldStopTypewriter(false);
+      setIsTypingComplete(false);
+      completedRef.current = false;
     }
-  }, [message.isLoading, message.isError, message.content]);
+  }, [shouldAnimate, message.content, showTypewriter]);
 
-  const handleTypewriterComplete = () => {
-    setIsTypingComplete(true);
-  };
+  // Reset khi message thay đổi
+  useEffect(() => {
+    if (!shouldAnimate) {
+      setShowTypewriter(false);
+      setIsTypingComplete(false);
+      setShouldStopTypewriter(false);
+      completedRef.current = false;
+    }
+  }, [shouldAnimate, message._id]);
 
+  const handleTypewriterComplete = useCallback(() => {
+    if (!completedRef.current) {
+      completedRef.current = true;
+      setIsTypingComplete(true);
+      markAnimated();
+
+      // Scroll xuống sau khi hoàn thành
+      setTimeout(() => {
+        const messagesEnd = document.querySelector("[data-messages-end]");
+        if (messagesEnd) {
+          messagesEnd.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 50);
+    }
+  }, [markAnimated]);
+
+  // Hàm để dừng typewriter (có thể gọi từ parent component)
+  const stopTypewriter = useCallback(() => {
+    setShouldStopTypewriter(true);
+  }, []);
+
+  // Loading state
   if (message.isLoading) {
     return (
-      <div className="bg-gray-100 animate-pulse">
+      <div className="bg-gray-100 animate-pulse text-sm p-[10px]">
         <div className="flex items-center gap-2">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
           <span>{message.content}</span>
@@ -65,60 +102,34 @@ const AssistantMessage = ({ message }) => {
     );
   }
 
+  // Error state
   if (message.isError) {
     return (
-      <div className="bg-red-50 border border-red-200">
+      <div className="bg-red-50 border border-red-200 p-[10px]">
         <MarkdownRenderer content={message.content} />
       </div>
     );
   }
 
+  // Normal message rendering
   return (
-    <div className="bg-white border border-gray-200">
+    <div className="p-[10px]">
       <div className="text-sm">
-        {showTypewriter && !isTypingComplete ? (
+        {shouldAnimate && showTypewriter && !isTypingComplete ? (
           <TypewriterText
+            key={`${message._id}-typewriter`}
             text={message.content}
-            speed={30} // Tốc độ hiển thị (ms per character)
+            speed={5}
             onComplete={handleTypewriterComplete}
+            shouldStop={shouldStopTypewriter}
+            messageId={message._id}
           />
-        ) : isTypingComplete ? (
-          <MarkdownRenderer content={message.content} />
         ) : (
-          // Hiển thị placeholder trong khi chờ
-          <div className="flex items-center gap-2 text-gray-400">
-            <div className="animate-pulse">Đang chuẩn bị câu trả lời...</div>
-          </div>
+          <MarkdownRenderer content={message.content} />
         )}
       </div>
     </div>
   );
 };
 
-// Component chính với messages
-const ChatMessages = ({ messages, messagesEndRef }) => {
-  return (
-    <div className="w-full h-full max-h-full overflow-y-auto flex flex-col gap-[30px] rounded-md">
-      {messages?.map((message) =>
-        message.role === "user" ? (
-          <div key={message._id} className="w-full flex justify-end">
-            <div className="w-fit max-w-[80%] flex justify-end p-[10px] text-justify bg-[#44444414] rounded-md">
-              <span className="text-sm">{message.content}</span>
-            </div>
-          </div>
-        ) : message.role === "assistant" ? (
-          <div key={message._id} className="w-full flex justify-start">
-            <div className="w-fit max-w-[80%] p-[10px] text-justify rounded-md">
-              <AssistantMessage message={message} />
-            </div>
-          </div>
-        ) : (
-          <div key={message._id}></div>
-        )
-      )}
-      <div ref={messagesEndRef} />
-    </div>
-  );
-};
-
-export default ChatMessages;
+export default ChatMessage;

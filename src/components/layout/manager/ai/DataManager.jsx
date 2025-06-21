@@ -49,7 +49,7 @@ const DataManager = () => {
         <div className="w-full flex flex-col gap-[10px] py-[5px]  text-sm font-semibold text-dark-300">
           {collections.map((collection) => (
             <Link
-              to={`/ai-manager/collection/data?id=${collection._id}?name=${collection.name}`}
+              to={`/ai-manager/collection/data?id=${collection._id}&name=${collection.name}`}
               key={collection._id}
               className="w-full flex items-center  gap-[10px] border-[1px] rounded-sm border-dark-900 py-[8px] px-[10px]  "
             >
@@ -64,7 +64,7 @@ const DataManager = () => {
                 {formatDateDDMMYYHHMMSS(collection.createdAt)}
               </div>
               <Link
-                to={`/ai-manager/testing?id=${collection._id}`}
+                to={`/ai-manager/testing?id=${collection._id}&name=${collection.name}`}
                 className="w-1/12 hover:to-blue-400"
               >
                 Testing
