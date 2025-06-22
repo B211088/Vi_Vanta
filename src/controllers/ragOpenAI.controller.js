@@ -30,10 +30,9 @@ export async function uploadAndIndex(req, res, next) {
     }
     const userId = req.user.userId;
     const payload = req.body;
-    const { collectionId, description } = req.body;
-    const file = req.file;
+    const { collectionId, source } = req.body;
     const filePath = req.file.path;
-    console.log({ file });
+
     const fileName = req.file.originalname;
     if (!collectionId) throw new Error("Thiếu collectionId");
     if (!payload || typeof payload !== "object")
@@ -59,7 +58,9 @@ export async function uploadAndIndex(req, res, next) {
       documentId,
       filePath,
       fileName,
-      collection.name
+      collection.name,
+      userId,
+      source
     );
 
     try {
@@ -72,10 +73,12 @@ export async function uploadAndIndex(req, res, next) {
     res.json({
       status: "success",
       message: "Document indexed successfully",
-      documentId: documentId,
-      fileName: fileName,
-      chunks: count,
-      indexedAt: new Date().toISOString(),
+      document: {
+        documentId: documentId,
+        fileName: fileName,
+        chunks: count,
+        indexedAt: new Date().toISOString(),
+      },
     });
   } catch (error) {
     console.error("Error in uploadAndIndex:", error);
@@ -234,9 +237,10 @@ export async function testingCollectionDataChatBot(req, res) {
       temperature,
       maxToken,
       modelId,
-      similarityThreshold = 0.2, // Thêm ngưỡng similarity
+      similarityThreshold = 0.2,
     } = req.body;
 
+    console.log({ maxToken, temperature, similarityThreshold, prompt });
     // Validate input
     if (
       !question ||
@@ -373,8 +377,8 @@ export async function testingCollectionDataChatBot(req, res) {
           LƯU Ý: Nếu thông tin trên không đủ để trả lời đầy đủ câu hỏi, hãy nói rõ những phần nào bạn không có thông tin.`,
         },
       ],
-      temperature: temperature || TEMPERATURE,
-      max_tokens: maxToken || MAX_TOKEN,
+      temperature: temperature ? temperature : TEMPERATURE,
+      max_tokens: maxToken ? maxToken : MAX_TOKEN,
       presence_penalty: 0.1,
       frequency_penalty: 0.1,
     });

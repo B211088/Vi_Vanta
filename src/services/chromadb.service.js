@@ -380,6 +380,25 @@ class ChromaService {
     }
   }
 
+  async updateCollection(name, nameUpdate, metadataUpdate) {
+    try {
+      const client = this.getClient();
+      const collection = await client.getCollection({ name });
+      console.log({ collection });
+      const updatedCollection = await collection.modify({
+        name: nameUpdate,
+        metadata: {
+          ...collection.metadata,
+          description: metadataUpdate.description,
+          owner: metadataUpdate.owner,
+        },
+      });
+      return { success: true, collection: updatedCollection };
+    } catch (error) {
+      throw new Error(`Failed to updated collection: ${error.message}`);
+    }
+  }
+
   /**
    * Lấy collection
    */

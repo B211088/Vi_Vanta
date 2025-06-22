@@ -4,6 +4,7 @@ const { Schema } = mongoose;
 const collectionSchema = new Schema(
   {
     name: { type: String, required: true },
+    collectionId: { type: String },
     description: { type: String },
     owner: { type: Schema.Types.ObjectId, ref: "User" },
     embeddingTemplate: { type: Schema.Types.ObjectId, ref: "AIModel" },

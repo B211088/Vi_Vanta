@@ -29,8 +29,10 @@ export const createCollectionController = async (req, res) => {
       { owner: userId, description: payload.description }
     );
     if (collectionChromaDB.success) {
-      console.log({ collectionChromaDB });
-      const collection = await createCollectionHandle(userId, payload);
+      console.log(collectionChromaDB.collection.metadata);
+      const collection = await createCollectionHandle(userId, payload, {
+        ...collectionChromaDB.collection.metadata,
+      });
       res.status(201).json({ success: true, collection });
     }
   } catch (error) {
@@ -75,6 +77,9 @@ export const getCollectionByIdController = async (req, res) => {
 export const updateCollectionController = async (req, res) => {
   try {
     const { id } = req.params;
+    const { name, description } = req.body;
+    const userId = req.user.userId;
+
     if (!id || typeof id !== "string") {
       return res
         .status(400)
@@ -88,7 +93,25 @@ export const updateCollectionController = async (req, res) => {
         .status(400)
         .json({ success: false, message: "Tên Collection không hợp lệ" });
     }
-    const updatedCollection = await updateCollectionHandle(id, req.body);
+
+    const collection = await getCollectionByIdHandle(id);
+
+    let updatedData = { ...req.body };
+    console.log({ updatedData });
+
+    if (collection.name !== name) {
+      const chromaUpdated = await chromaService.updateCollection(
+        collection.name,
+        name,
+        {
+          description,
+          owner: userId,
+        }
+      );
+    }
+
+    const updatedCollection = await updateCollectionHandle(id, updatedData);
+
     res.status(200).json({ success: true, data: updatedCollection });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
@@ -111,9 +134,11 @@ export const deleteCollectionController = async (req, res) => {
     if (collectionChromaDeleted) {
       await deleteCollectionHandle(id);
     }
-    res
-      .status(200)
-      .json({ success: true, message: "Xoá collection thành công!" });
+    res.status(200).json({
+      success: true,
+      message: "Xoá collection thành công!",
+      collection,
+    });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }

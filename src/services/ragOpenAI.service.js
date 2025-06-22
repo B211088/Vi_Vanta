@@ -193,7 +193,7 @@ export class EmbedService {
   /**
    * Index a file into the vector database - IMPROVED VERSION
    */
-  async indexFile(id, filePath, fileName, collectionName) {
+  async indexFile(id, filePath, fileName, collectionName, owner, source = "") {
     try {
       console.log(`🚀 Starting indexing for file: ${filePath}`);
 
@@ -219,10 +219,13 @@ export class EmbedService {
         const metadata = {
           ...c.metadata,
           documentId: id,
-          indexedAt: new Date().toISOString(),
           fileName,
+          owner,
+          source,
           fileType: path.extname(filePath).toLowerCase(),
           chunkIndex: c.metadata.chunkIndex || 0,
+          indexedAt: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
         };
 
         // Convert any complex objects to strings
@@ -243,13 +246,14 @@ export class EmbedService {
       });
 
       // Add new chunks for this document
-      await chromaService.addDocuments(
+      const documents = await chromaService.addDocuments(
         collectionName,
         embedded.map((c) => c.content),
         sanitizedMetadata,
         embedded.map((_, i) => `${id}_chunk_${i}`),
-        embedded.map((c) => c.embedding) // Pass embeddings directly
+        embedded.map((c) => c.embedding)
       );
+      console.log({ documents });
 
       console.log(
         `✅ Successfully indexed ${embedded.length} chunks for document ${id}`

@@ -1,14 +1,14 @@
 import Collection from "../models/collection.model.js";
 
 // Tạo Collection mới
-export const createCollectionHandle = async (userId, payload) => {
+export const createCollectionHandle = async (userId, payload, metadata) => {
   try {
     const { name } = payload;
     const collectionExisting = await Collection.findOne({ name });
     if (collectionExisting) {
       throw new Error({ message: "Collection đã tồn tại!" });
     }
-    const collection = new Collection({ ...payload, owner: userId });
+    const collection = new Collection({ ...payload, owner: userId, metadata });
     await collection.save();
     return collection;
   } catch (error) {
@@ -32,7 +32,7 @@ export const getAllCollectionsHandle = async (filter = {}) => {
 export const getCollectionByIdHandle = async (CollectionId) => {
   try {
     const collection = await Collection.findById(CollectionId)
-      .populate("owner", "_id avatar fullName roles ID metadata documentId")
+      .populate("owner", "_id avatar fullName roles ID  ")
       .populate("embeddingTemplate")
       .select("-__v ");
     return collection;
@@ -70,7 +70,7 @@ export const deleteCollectionHandle = async (CollectionId) => {
     if (!deleted) {
       throw new Error("Không tìm thấy Collection để xóa");
     }
-    return { message: "Xóa Collection thành công" };
+    return { message: "Xóa Collection thành công", collection: deleted };
   } catch (error) {
     console.error("Lỗi khi xóa Collection:", error.message);
     throw error;
