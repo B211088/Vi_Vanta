@@ -5,13 +5,18 @@ import { getDetailCollection } from "../../../../services/collection.service";
 import { formatDateDDMMYYHHMMSS } from "../../../../utils/formatDate";
 
 const DetailCollection = () => {
-  const { loading, collection } = useSelector((state) => state.collection);
+  const { loading, collection, documents } = useSelector(
+    (state) => state.collection
+  );
   const dispatch = useDispatch();
   const [searchParams] = useSearchParams();
   const id = searchParams.get("id");
+
   useEffect(() => {
     dispatch(getDetailCollection(id));
   }, [id, dispatch]);
+
+  console.log({ documents });
   return (
     <div className="w-full  flex items-center   gap-[px]  px-[20px] py-[12px] ">
       <div className="w-5/12 flex flex-col gap-[10px] text-sm text-justify border-[1px] px-[10px] py-[5px] border-dark-700  rounded-sm">

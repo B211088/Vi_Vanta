@@ -4,6 +4,8 @@ const initialState = {
   collections: [],
   collection: null,
   loading: false,
+  documents: [],
+  document: null,
   error: null,
 };
 
@@ -84,6 +86,42 @@ const collectionSlice = createSlice({
     clearCollectionError: (state) => {
       state.error = null;
     },
+    fetchDocumentsStart: (state) => {
+      state.loading = true;
+      state.error = null;
+    },
+    fetchDocumentsSuccess: (state, action) => {
+      state.loading = false;
+      state.documents = action.payload;
+    },
+    fetchDocumentsFailure: (state, action) => {
+      state.loading = false;
+      state.error = action.payload;
+    },
+    fetchDocumentStart: (state) => {
+      state.loading = true;
+      state.error = null;
+    },
+    fetchDocumentSuccess: (state, action) => {
+      state.loading = false;
+      state.document = action.payload;
+    },
+    fetchDocumentFailure: (state, action) => {
+      state.loading = false;
+      state.error = action.payload;
+    },
+    addDocumentStart: (state) => {
+      state.loading = true;
+      state.error = null;
+    },
+    addDocumentSuccess: (state, action) => {
+      state.loading = false;
+      state.documents = [...state.documents, action.payload];
+    },
+    addDocumentFailure: (state, action) => {
+      state.loading = false;
+      state.error = action.payload;
+    },
   },
 });
 
@@ -104,6 +142,15 @@ export const {
   deleteCollectionSuccess,
   deleteCollectionFailure,
   clearCollectionError,
+  fetchDocumentsStart,
+  fetchDocumentsSuccess,
+  fetchDocumentsFailure,
+  fetchDocumentStart,
+  fetchDocumentSuccess,
+  fetchDocumentFailure,
+  addDocumentStart,
+  addDocumentSuccess,
+  addDocumentFailure,
 } = collectionSlice.actions;
 
 export default collectionSlice.reducer;

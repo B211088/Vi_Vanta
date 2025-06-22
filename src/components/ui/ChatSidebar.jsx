@@ -29,14 +29,13 @@ const ChatSidebar = ({
   const [selectedCollectionName, setSelectedCollectionName] = useState(null);
   const formatNumber = (num) => (num < 1 ? num.toFixed(2) : num.toFixed(0));
 
-  // Load collections when component mounts
+
   useEffect(() => {
     if (!collections || collections.length === 0) {
       dispatch(getAllInfoCollections());
     }
   }, [dispatch, collections]);
 
-  // Auto-select first collection - only run once when collections are loaded
   useEffect(() => {
     if (
       collections?.length > 0 &&

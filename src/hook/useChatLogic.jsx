@@ -29,15 +29,28 @@ export const useChatLogic = (collectionId) => {
   const [animatedMessageIds, setAnimatedMessageIds] = useState(new Set());
   const [latestMessageId, setLatestMessageId] = useState(null);
   const [similarityThreshold, setSimilarityThreshold] = useState(0.2);
+  const [currentSectionId, setCurrentSectionId] = useState(null); // Thêm state riêng cho sectionId
+
   // Utility functions
   const generateMessageId = useCallback(() => {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
   }, []);
 
+  console.log("currentSectionId", currentSectionId);
+
   useEffect(() => {
     setSelectedCollectionId(collectionId);
   }, [collectionId]);
+
+  // Cập nhật currentSectionId khi section thay đổi
+  useEffect(() => {
+    if (section?._id) {
+      setCurrentSectionId(section._id);
+    }
+  }, [section]);
+
   console.log({ selectedCollectionId });
+
   // Fetch AI models
   useEffect(() => {
     const fetchModelAI = async () => {
@@ -94,8 +107,11 @@ export const useChatLogic = (collectionId) => {
           k: chunkLimit || 5,
           maxToken: maxToken,
           temperature: temperature,
-          similarityThreshold: similarityThreshold, // THÊM DÒNG NÀY
+          similarityThreshold: similarityThreshold,
+          sectionId: currentSectionId || section?._id || "", // Ưu tiên currentSectionId
         };
+
+        console.log("Payload being sent:", payload); // Debug log
 
         const response = await dispatch(askChatBot(payload));
 
@@ -144,7 +160,9 @@ export const useChatLogic = (collectionId) => {
       chunkLimit,
       maxToken,
       temperature,
-      similarityThreshold, // THÊM VÀO DEPENDENCY ARRAY
+      similarityThreshold,
+      currentSectionId, // Thêm currentSectionId vào dependency array
+      section,
       dispatch,
     ]
   );
@@ -153,6 +171,12 @@ export const useChatLogic = (collectionId) => {
   const handleSubmitQuestion = useCallback(
     async (question) => {
       if (!question.trim() || isSubmitting) return;
+
+      // Kiểm tra sectionId trước khi gửi
+      if (!currentSectionId && !section?._id) {
+        notifyWarning("Vui lòng chọn một section trước khi đặt câu hỏi");
+        return;
+      }
 
       const userMessage = {
         _id: generateMessageId(),
@@ -269,7 +293,14 @@ export const useChatLogic = (collectionId) => {
         setIsSubmitting(false);
       }
     },
-    [isSubmitting, generateMessageId, callChatbotAPI]
+    [
+      isSubmitting,
+      generateMessageId,
+      callChatbotAPI,
+      currentSectionId,
+      section,
+      notifyWarning,
+    ]
   );
 
   // Clear chat handler
@@ -337,13 +368,15 @@ export const useChatLogic = (collectionId) => {
     setMaxToken,
     chunkLimit,
     setChunkLimit,
-    similarityThreshold, // THÊM DÒNG NÀY
-    setSimilarityThreshold, // THÊM DÒNG NÀY
+    similarityThreshold,
+    setSimilarityThreshold,
     latestMessageId,
     animatedMessageIds,
     setAnimatedMessageIds,
     selectedCollectionId,
     setSelectedCollectionId,
+    currentSectionId, // Export currentSectionId
+    setCurrentSectionId, // Export setter
     loading,
 
     // Refs

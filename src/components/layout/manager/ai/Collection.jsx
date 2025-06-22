@@ -1,14 +1,8 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  Link,
-  Outlet,
-  useLocation,
-  useNavigate,
-  useSearchParams,
-} from "react-router-dom";
+import { Link, Outlet, useNavigate, useSearchParams } from "react-router-dom";
 import { getDetailCollection } from "../../../../services/collection.service";
-import { formatDateDDMMYYHHMMSS } from "../../../../utils/formatDate";
+import UploadDocument from "../../../modals/ai/UploadDocument";
 
 const Collection = () => {
   const { laoding, collection } = useSelector((state) => state.collection);
@@ -16,38 +10,54 @@ const Collection = () => {
   const dispatch = useDispatch();
   const [searchParams] = useSearchParams();
   const id = searchParams.get("id");
+  const [showUploadDocument, setShowUploadDocument] = useState(false);
   useEffect(() => {
     dispatch(getDetailCollection(id));
   }, [id, dispatch]);
-
   console.log({ collection });
   return (
     <div className="flex-1 flex flex-col  overflow-hidden ">
+      {showUploadDocument && (
+        <UploadDocument
+          closeModal={() => setShowUploadDocument(false)}
+          collectionId={collection?.collection?._id}
+        />
+      )}
       <div className="w-full  flex items-center border-b-[1px]  border-dark-700  gap-[10px]  px-[20px] py-[12px] text-[1.2rem]">
         <div
           className="w-[28px] h-[28px] flex items-center justify-center cursor-pointer"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate("/ai-manager/data")}
         >
           <i className="fa-solid fa-arrow-left"></i>
         </div>
-        <h1>Data Collections</h1>
-      </div>
-      <div className="w-full  flex items-center  gap-[10px]  px-[20px] py-[5px]  text-[1.2rem]">
-        {routes.map((item) => (
-          <Link
-            key={item.id}
-            to={`/ai-manager/collection/${item.path}?id=${id}`}
-            className={`px-[15px] py-[6px] flex items-center gap-[10px]  rounded-md border-1  cursor-pointer ${
-              location.pathname.includes(item.path)
-                ? "border-blue-500 text-blue-500 font-bold"
-                : "text-dark-400  border-dark-800"
-            }
+        <h1 className="line-clamp-1">Data Collections</h1>
+        <div className="  flex items-center  gap-[10px]  px-[20px] py-[5px]  text-[1.2rem]">
+          {routes.map((item) => (
+            <Link
+              key={item.id}
+              to={`/ai-manager/collection/${item.path}?id=${id}`}
+              className={`px-[15px] py-[6px] flex items-center gap-[10px]  rounded-md border-1  cursor-pointer ${
+                location.pathname.includes(item.path)
+                  ? "border-blue-500 text-blue-500 font-bold"
+                  : "text-dark-400  border-dark-800"
+              }
             )}`}
-          >
-            {item.icon ? <i className={`${item.icon} text-md`}></i> : ""}
-            <span className="text-sm truncate">{item.name}</span>
-          </Link>
-        ))}
+            >
+              {item.icon ? <i className={`${item.icon} text-md`}></i> : ""}
+              <span className="text-sm truncate">{item.name}</span>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      <div className="w-full flex items-center px-[20px] py-[10px]">
+        <div
+          onClick={() => setShowUploadDocument(true)}
+          className="flex items-center gap-[5px] text-sm px-[10px] py-[8px] border-1 border-dark-800 rounded-md font-bold text-blue-500 cursor-pointer"
+        >
+          <i className="fa-solid fa-upload"></i>
+          <span>Tải dữ liệu lên</span>
+        </div>
       </div>
       <Outlet />
     </div>
