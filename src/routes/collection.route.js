@@ -5,6 +5,7 @@ import {
   getCollectionByIdController,
   updateCollectionController,
   deleteCollectionController,
+  updateConfigCollectionController,
 } from "../controllers/collection.controller.js";
 import verifyToken from "../middlewares/verifyToken.js";
 import { authorizeRoles } from "../middlewares/authorizeRoles.js";
@@ -41,6 +42,13 @@ router.put(
   verifyToken,
   authorizeRoles("admin"),
   updateCollectionController
+);
+
+router.put(
+  "/config/:id",
+  verifyToken,
+  authorizeRoles("admin"),
+  updateConfigCollectionController
 );
 
 // Xóa Collection

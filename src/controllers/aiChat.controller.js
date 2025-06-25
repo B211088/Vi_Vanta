@@ -68,7 +68,7 @@ export async function addMessage(req, res) {
 export async function getSectionById(req, res) {
   try {
     const { sectionId } = req.params;
-    const section = await chatService.getSectionById(sectionId);
+    const section = await chatService.getSectionByIdUserUse(sectionId);
 
     if (!section) {
       return res.status(404).json({
@@ -205,3 +205,25 @@ export async function updateSectionContext(req, res) {
     });
   }
 }
+
+export const getMessageBySectionId = async (req, res) => {
+  try {
+    const { sectionId } = req.params;
+    if (sectionId) {
+      res.status(500).json({
+        error: "Không có sectionId",
+        message: error.message,
+      });
+    }
+    const messages = await chatService.getMessageBySectionId(sectionId);
+    res.status(200).json({
+      success: true,
+      messages,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: "Lỗi khi lấy messages",
+      message: error.message,
+    });
+  }
+};

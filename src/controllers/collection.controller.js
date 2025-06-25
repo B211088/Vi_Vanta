@@ -4,6 +4,7 @@ import {
   getCollectionByIdHandle,
   updateCollectionHandle,
   deleteCollectionHandle,
+  updateConfigCollectionHandle,
 } from "../services/collection.service.js";
 import chromaService from "../services/chromadb.service.js";
 import chromadbService from "../services/chromadb.service.js";
@@ -111,6 +112,34 @@ export const updateCollectionController = async (req, res) => {
     }
 
     const updatedCollection = await updateCollectionHandle(id, updatedData);
+
+    res.status(200).json({ success: true, data: updatedCollection });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+export const updateConfigCollectionController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { prompt, temperature, maxToken, chunkLimit, similarityThreshold } =
+      req.body;
+
+    console.log({
+      prompt,
+      temperature,
+      maxToken,
+      chunkLimit,
+      similarityThreshold,
+    });
+
+    const updatedCollection = await updateConfigCollectionHandle(id, {
+      prompt,
+      temperature,
+      maxToken,
+      chunkLimit,
+      similarityThreshold,
+    });
 
     res.status(200).json({ success: true, data: updatedCollection });
   } catch (error) {

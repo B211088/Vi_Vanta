@@ -45,11 +45,38 @@ export const getCollectionByIdHandle = async (CollectionId) => {
 // Cập nhật Collection
 export const updateCollectionHandle = async (CollectionId, payload) => {
   try {
-    const { name, description, owner, parent } = payload;
+    const { name, description, owner } = payload;
     const updatedCollection = await Collection.findByIdAndUpdate(
       CollectionId,
       {
-        $set: { name, description, owner, parent },
+        $set: { name, description, owner },
+      },
+      { new: true }
+    ).select("-__v -createdAt -updatedAt");
+    if (!updatedCollection) {
+      throw new Error("Không tìm thấy Collection để cập nhật");
+    }
+    return updatedCollection;
+  } catch (error) {
+    console.error("Lỗi khi cập nhật Collection:", error.message);
+    throw error;
+  }
+};
+
+export const updateConfigCollectionHandle = async (CollectionId, payload) => {
+  try {
+    const { prompt, temperature, maxToken, chunkLimit, similarityThreshold } =
+      payload;
+    const updatedCollection = await Collection.findByIdAndUpdate(
+      CollectionId,
+      {
+        $set: {
+          prompt,
+          temperature,
+          maxToken,
+          chunkLimit,
+          similarityThreshold,
+        },
       },
       { new: true }
     ).select("-__v -createdAt -updatedAt");

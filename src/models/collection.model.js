@@ -12,6 +12,7 @@ const collectionSchema = new Schema(
     metadata: {
       type: Object,
     },
+    chunkLimit: { type: Number },
     status: { type: Boolean, default: true },
     prompt: { type: String },
     maxToken: { type: Number },

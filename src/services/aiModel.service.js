@@ -25,7 +25,7 @@ export const getAllAIModelsHandle = async (filter = {}) => {
 // Lấy chi tiết model theo id
 export const getAIModelByIdHandle = async (id) => {
   try {
-    return await AIModel.findById(id).select("-__v");
+    return await AIModel.findById(id).select("-__v ");
   } catch (error) {
     console.error("Lỗi khi lấy chi tiết AIModel:", error.message);
     throw error;

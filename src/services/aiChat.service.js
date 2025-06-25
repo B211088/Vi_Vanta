@@ -37,21 +37,23 @@ class AIChatService {
     // Tạo section mới với tiêu đề là câu hỏi
     const section = await this.createSection(userId, question);
 
-    // Tạo message cho câu hỏi của user
+    const now = new Date();
+
+    // Tạo message cho câu hỏi của user (timestamp trước)
     const userMessage = await Message.create({
       role: "user",
       content: question,
-      timestamp: new Date(),
+      timestamp: now,
     });
 
-    // Tạo message cho câu trả lời của AI
+    // Tạo message cho câu trả lời của AI (timestamp sau 1ms)
     const aiMessage = await Message.create({
       role: "assistant",
       content: answer,
-      timestamp: new Date(),
+      timestamp: new Date(now.getTime() + 1), // +1ms để đảm bảo sau user message
     });
 
-    // Thêm cả hai message vào section và cập nhật context
+    // Thêm cả hai message vào section theo đúng thứ tự
     await Section.findByIdAndUpdate(section._id, {
       $push: {
         messages: {
@@ -65,8 +67,11 @@ class AIChatService {
       },
     });
 
-    // Trả về section đã populate messages
-    return await Section.findById(section._id).populate("messages");
+    // Trả về section đã populate messages với sort
+    return await Section.findById(section._id).populate({
+      path: "messages",
+      options: { sort: { timestamp: 1 } },
+    });
   }
 
   /**
@@ -115,14 +120,40 @@ class AIChatService {
     return section;
   }
 
-  /**
-   * Lấy chi tiết của một section
-   */
   async getSectionById(sectionId) {
-    const section = await Section.findById(sectionId).populate("messages");
+    const section = await Section.findById(sectionId).populate({
+      path: "messages",
+      options: { sort: { timestamp: 1 } }, // Sort theo timestamp tăng dần
+    });
     return section;
   }
 
+  async getMessageBySectionId(sectionId) {
+    try {
+      const messages = await Message.find({ sectionId })
+        .sort({ timestamp: 1 }) // hoặc createdAt: 1
+        .exec();
+      if (messages) {
+        throw new Error("Không tìm thấy messages!");
+      }
+      return messages;
+    } catch (error) {
+      throw new Error("Lỗi khi lấy messages:", error);
+    }
+  }
+
+  /**
+   * Lấy section cho user - FIXED VERSION
+   */
+  async getSectionByIdUserUse(sectionId) {
+    const section = await Section.findById(sectionId)
+      .populate({
+        path: "messages",
+        options: { sort: { timestamp: 1 } }, // Sort theo timestamp tăng dần
+      })
+      .select("-__v -context ");
+    return section;
+  }
   /**
    * Lấy danh sách section của user
    */
@@ -188,7 +219,7 @@ class AIChatService {
     await Message.deleteMany({ _id: { $in: section.messages } });
 
     // Xóa section
-    await section.remove();
+    await Section.findByIdAndDelete(sectionId);
 
     return true;
   }
@@ -203,6 +234,41 @@ class AIChatService {
       { new: true }
     );
     return section;
+  }
+
+  async getconversationContextSectionById(sectionId) {
+    try {
+      const section = await Section.findById(sectionId).select(
+        "conversationContext"
+      );
+
+      if (!section) {
+        return {
+          summary: "",
+          keyPoints: [],
+          lastContext: "",
+          updatedAt: new Date(),
+        };
+      }
+
+      return (
+        section.conversationContext || {
+          summary: "",
+          keyPoints: [],
+          lastContext: "",
+          updatedAt: new Date(),
+        }
+      );
+    } catch (error) {
+      console.error("Lỗi khi lấy conversation context:", error);
+      // Trả về default thay vì throw error để không làm crash app
+      return {
+        summary: "",
+        keyPoints: [],
+        lastContext: "",
+        updatedAt: new Date(),
+      };
+    }
   }
 }
 

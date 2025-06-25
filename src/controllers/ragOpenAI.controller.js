@@ -1,8 +1,12 @@
 import { v4 as uuidv4 } from "uuid";
 import {
-  MAX_TOKEN,
+  CONTEXT_HISTORY_LIMIT,
+  DEFAULT_K,
+  DEFAULT_MAX_TOKEN,
+  DEFAULT_MODEL,
+  DEFAULT_SIMILARITY_THRESHOLD,
+  DEFAULT_TEMPERATURE,
   OPENAI_API_KEY,
-  TEMPERATURE,
 } from "../config/openai.config.js";
 import { getCollectionByIdHandle } from "../services/collection.service.js";
 import fs from "fs";
@@ -78,6 +82,7 @@ export async function uploadAndIndex(req, res, next) {
         fileName: fileName,
         chunks: count,
         indexedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
       },
     });
   } catch (error) {
@@ -183,15 +188,16 @@ export async function healthCheck(req, res, next) {
 
 async function generateConversationContext(question, answer) {
   const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini-2024-07-18",
+    model: DEFAULT_MODEL,
     messages: [
       {
         role: "system",
         content: `Là một trợ lý AI, nhiệm vụ của bạn là tóm tắt cuộc trò chuyện và trích xuất các điểm chính.
         Hãy phân tích câu hỏi và câu trả lời sau, sau đó:
-        1. Tạo một tóm tắt ngắn gọn (2-3 câu)
-        2. Liệt kê 2-3 điểm chính quan trọng nhất
-        3. Tạo một context ngắn gọn cho câu hỏi tiếp theo
+        1. Hãy ghi lại ý chính của cuộc trò chuyện người dùng và chat bot đang bàn luận về vấn đề gì
+        2. Tạo một tóm tắt ngắn gọn (2-3 câu)
+        3. Liệt kê 2-3 điểm chính quan trọng nhất
+        4. Tạo một context ngắn gọn cho câu hỏi tiếp theo
         
         Format phản hồi:
         {
@@ -222,25 +228,224 @@ async function generateConversationContext(question, answer) {
 }
 
 /**
- * Ask a question and get AI-generated answer
+ * Build comprehensive conversation context from chat history
+ */
+async function buildConversationContext(
+  sectionId,
+  limit = CONTEXT_HISTORY_LIMIT
+) {
+  if (!sectionId) return "";
+
+  try {
+    // Lấy lịch sử chat gần nhất
+    const chatHistory = await chatService.getChatHistory(sectionId, limit);
+
+    if (!chatHistory || chatHistory.length === 0) {
+      return "";
+    }
+
+    // Tạo context từ lịch sử chat
+    const contextMessages = chatHistory
+      .slice(-limit) // Lấy N tin nhắn gần nhất
+      .map((msg, index) => {
+        const role = msg.role === "user" ? "Người dùng" : "Trợ lý";
+        return `${role}: ${msg.content}`;
+      })
+      .join("\n");
+
+    // Tóm tắt context nếu quá dài
+    if (contextMessages.length > 1000) {
+      const summaryCompletion = await openai.chat.completions.create({
+        model: DEFAULT_MODEL,
+        messages: [
+          {
+            role: "system",
+            content: `Hãy tóm tắt cuộc trò chuyện sau thành một đoạn context ngắn gọn (tối đa 200 từ) 
+            để giúp hiểu bối cảnh cho câu hỏi tiếp theo. Tập trung vào:
+            1. Chủ đề chính đang được thảo luận
+            2. Thông tin quan trọng đã được đề cập
+            3. Câu hỏi hoặc vấn đề chưa được giải quyết hoàn toàn`,
+          },
+          {
+            role: "user",
+            content: `Cuộc trò chuyện:\n${contextMessages}`,
+          },
+        ],
+        temperature: 0.3,
+        max_tokens: 300,
+      });
+
+      return summaryCompletion.choices[0].message.content;
+    }
+
+    return contextMessages;
+  } catch (error) {
+    console.error("Error building conversation context:", error);
+    return "";
+  }
+}
+export const simplifyQuery = async (userQuestion, context = "") => {
+  const completion = await openai.chat.completions.create({
+    model: DEFAULT_MODEL,
+    messages: [
+      {
+        role: "system",
+        content: `Bạn là một chuyên gia y tế đang hỗ trợ hệ thống truy vấn kiến thức. 
+          Đây là bối cảnh cuộc trò chuyện giữa người dùng và hệ thống: ${context}
+          Nếu có bối cảnh thì hãy tạo mô tả theo bối cảnh trò chuyện, 
+          Nếu không có bối cảnh thì đây là cuộc trò chuyện mới và cứ xây dựng bối cảnh theo câu hỏi
+          Nhiệm vụ của bạn là: 
+          1. Nhận câu hỏi từ người dùng có thể mơ hồ, trừu tượng, có thể sai chính tả.
+          2. Chuyển đổi nó thành một đoạn văn mô tả cụ thể về tình trạng sức khỏe, để hệ thống vector database có thể tìm kiếm chính xác hơn.
+          3. Hạn chế dùng từ chung chung, hãy viết như đang mô tả triệu chứng để bác sĩ dễ hiểu.`,
+      },
+      {
+        role: "user",
+        content: userQuestion,
+      },
+    ],
+    temperature: 0.5,
+    max_tokens: 300,
+  });
+
+  return completion.choices[0].message.content;
+};
+
+/**
+ * Validate and process similarity results
+ */
+function processSimilarityResults(similarDocs, similarityThreshold) {
+  if (!similarDocs?.results || similarDocs.results.length === 0) {
+    return {
+      success: false,
+      relevantDocs: [],
+      reason: "no_results_found",
+      message:
+        "Xin lỗi, hiện tại hệ thống chưa có thông tin phù hợp để trả lời câu hỏi này.",
+    };
+  }
+
+  // Lọc kết quả theo ngưỡng similarity
+  const relevantDocs = similarDocs.results.filter((doc) => {
+    const similarity = 1 - doc.distance;
+    console.log(`📊 Similarity score for chunk: ${similarity.toFixed(3)}`);
+    return similarity >= similarityThreshold;
+  });
+
+  if (relevantDocs.length === 0) {
+    const highestSimilarity =
+      1 - Math.min(...similarDocs.results.map((doc) => doc.distance));
+    console.log(
+      `⚠️ No relevant documents found. Highest similarity: ${highestSimilarity.toFixed(
+        3
+      )}`
+    );
+
+    return {
+      success: false,
+      relevantDocs: [],
+      reason: "low_similarity",
+      highestSimilarity: highestSimilarity.toFixed(3),
+      message:
+        "Xin lỗi, hiện tại hệ thống chưa có thông tin phù hợp để trả lời câu hỏi này. Dữ liệu hiện có không liên quan đến chủ đề bạn đang hỏi.",
+    };
+  }
+
+  return {
+    success: true,
+    relevantDocs,
+    totalFound: similarDocs.results.length,
+    relevantCount: relevantDocs.length,
+  };
+}
+
+/**
+ * Build context string from relevant documents
+ */
+function buildDocumentContext(relevantDocs) {
+  return relevantDocs
+    .map((doc, i) => {
+      const similarity = (1 - doc.distance).toFixed(3);
+      return `[Đoạn ${i + 1}] (Độ liên quan: ${similarity}): ${doc.content}`;
+    })
+    .join("\n\n");
+}
+
+/**
+ * Generate AI response using OpenAI
+ */
+async function generateAIResponse({
+  question,
+  documentContext,
+  conversationContext,
+  systemPrompt,
+  modelData,
+  temperature,
+  maxToken,
+}) {
+  const messages = [
+    {
+      role: "system",
+      content: systemPrompt,
+    },
+  ];
+
+  // Thêm context từ cuộc trò chuyện trước nếu có
+  if (conversationContext) {
+    messages.push({
+      role: "system",
+      content: `Context từ cuộc trò chuyện trước:\n${conversationContext}`,
+    });
+  }
+
+  // Thêm câu hỏi và context tài liệu
+  messages.push({
+    role: "user",
+    content: `Dựa vào các đoạn thông tin sau đây (với độ liên quan đã được kiểm tra):
+
+    ${documentContext}
+
+    Hãy trả lời câu hỏi sau một cách chi tiết dựa HOÀN TOÀN trên thông tin được cung cấp: "${question}"
+
+    LƯU Ý: 
+    - Nếu thông tin trên không đủ để trả lời đầy đủ câu hỏi. thì hãy thẳng thắng nói rằng hệ thống không có đủ thông tin đó.
+    - Kết hợp với context từ cuộc trò chuyện trước để đưa ra câu trả lời phù hợp và liên kết.`,
+  });
+
+  const completion = await openai.chat.completions.create({
+    model: modelData?.name || DEFAULT_MODEL,
+    messages,
+    temperature: temperature || DEFAULT_TEMPERATURE,
+    max_tokens: maxToken || DEFAULT_MAX_TOKEN,
+    presence_penalty: 0.1,
+    frequency_penalty: 0.1,
+  });
+
+  return completion.choices[0].message.content;
+}
+
+/**
+ * Main chat bot function - refactored version
  */
 export async function testingCollectionDataChatBot(req, res) {
   const userId = req.user.userId;
+
   try {
+    // Extract and validate parameters
     const {
       collectionId,
       question,
       documentId,
-      k = 5,
+      k = DEFAULT_K,
       sectionId,
-      prompt,
+      prompt = "",
       temperature,
       maxToken,
       modelId,
-      similarityThreshold = 0.2,
+      similarityThreshold = DEFAULT_SIMILARITY_THRESHOLD,
     } = req.body;
 
-    console.log({ maxToken, temperature, similarityThreshold, prompt });
+    console.log({ sectionId });
     // Validate input
     if (
       !question ||
@@ -253,23 +458,64 @@ export async function testingCollectionDataChatBot(req, res) {
       });
     }
 
-    const collection = await getCollectionByIdHandle(collectionId);
-
     console.log(`🤔 Processing question: "${question}"`);
+    console.log(
+      `📊 Parameters: k=${k}, threshold=${similarityThreshold}, model=${modelId}`
+    );
 
-    // Get relevant documents using RAG
+    if (
+      !collectionId ||
+      typeof collectionId !== "string" ||
+      collectionId.trim().length === 0
+    ) {
+      return res.status(400).json({
+        error: "Invalid collectionId",
+        message: "collectionId must be a non-empty string",
+      });
+    }
+
+    const [collection, modelData] = await Promise.all([
+      getCollectionByIdHandle(collectionId),
+      modelId ? getAIModelByIdHandle(modelId) : Promise.resolve(null),
+    ]);
+
+    if (!collection) {
+      return res.status(404).json({
+        error: "Collection not found",
+        message: `No collection found for collectionId: ${collectionId}`,
+      });
+    }
+
     const filters = documentId ? { documentId } : {};
+    let queryConversationContext = "";
+
+    if (sectionId) {
+      const contextData = await chatService.getconversationContextSectionById(
+        sectionId
+      );
+      queryConversationContext = contextData.lastContext || "";
+      console.log("📝 Last context:", queryConversationContext);
+    }
+
+    const questionSimify = await simplifyQuery(
+      question.trim(),
+      queryConversationContext
+    );
+
     const similarDocs = await service.querySimilar(
       collection.name,
-      question.trim(),
+      questionSimify,
       Number(k),
       filters
     );
 
-    const modelData = await getAIModelByIdHandle(modelId);
+    // Process similarity results
+    const similarityResult = processSimilarityResults(
+      similarDocs,
+      similarityThreshold
+    );
 
-    // CẢI THIỆN: Kiểm tra cả số lượng và chất lượng kết quả
-    if (!similarDocs.results || similarDocs.results.length === 0) {
+    if (!similarityResult.success) {
       return res.json({
         success: false,
         data: {
@@ -277,118 +523,58 @@ export async function testingCollectionDataChatBot(req, res) {
           metadata: {
             documentId: documentId || "all",
             processedAt: new Date().toISOString(),
-            model: modelData.name,
-            reason: "no_results_found",
+            model: modelData?.name || DEFAULT_MODEL,
+            reason: similarityResult.reason,
+            ...(similarityResult.highestSimilarity && {
+              highestSimilarity: similarityResult.highestSimilarity,
+            }),
           },
-          answer:
-            "Xin lỗi, hiện tại hệ thống chưa có thông tin phù hợp để trả lời câu hỏi này. Chúng tôi sẽ cập nhật dữ liệu sớm nhất có thể.",
+          answer: similarityResult.message,
         },
       });
     }
 
-    // THÊM MỚI: Lọc kết quả theo ngưỡng similarity
-    const relevantDocs = similarDocs.results.filter((doc) => {
-      const similarity = 1 - doc.distance; // Chuyển distance thành similarity score
-      console.log(`📊 Similarity score for chunk: ${similarity.toFixed(3)}`);
-      return similarity >= similarityThreshold;
-    });
+    const { relevantDocs, totalFound, relevantCount } = similarityResult;
 
-    // Kiểm tra xem có kết quả liên quan hay không
-    if (relevantDocs.length === 0) {
-      console.log(
-        `⚠️ No relevant documents found. Highest similarity: ${(
-          1 - Math.min(...similarDocs.results.map((doc) => doc.distance))
-        ).toFixed(3)}`
-      );
+    // Build contexts
+    const [documentContext, conversationContext] = await Promise.all([
+      Promise.resolve(buildDocumentContext(relevantDocs)),
+      buildConversationContext(sectionId),
+    ]);
 
-      return res.json({
-        success: false,
-        data: {
-          section: null,
-          metadata: {
-            documentId: documentId || "all",
-            processedAt: new Date().toISOString(),
-            model: modelData.name,
-            reason: "low_similarity",
-            highestSimilarity: (
-              1 - Math.min(...similarDocs.results.map((doc) => doc.distance))
-            ).toFixed(3),
-          },
-          answer:
-            "Xin lỗi, hiện tại hệ thống chưa có thông tin phù hợp để trả lời câu hỏi này. Dữ liệu hiện có không liên quan đến chủ đề bạn đang hỏi.",
-        },
-      });
-    }
+    console.log(
+      `✅ Using ${relevantCount} relevant documents out of ${totalFound} found`
+    );
+    console.log(
+      `📝 Conversation context length: ${conversationContext.length} characters`
+    );
 
-    // Sử dụng relevantDocs thay vì similarDocs.results
-    const context = relevantDocs
-      .map((doc, i) => {
-        const similarity = (1 - doc.distance).toFixed(3);
-        return `[Đoạn ${i + 1}] (Độ liên quan: ${similarity}): ${doc.content}`;
-      })
-      .join("\n\n");
-
-    console.log({ context });
-    console.log(`✅ Using ${relevantDocs.length} relevant documents`);
-
-    // Lấy context từ section nếu có
-    let conversationContext = "";
-    if (sectionId) {
-      const section = await chatService.getSectionById(sectionId);
-      if (section?.conversationContext?.lastContext) {
-        conversationContext = section.conversationContext.lastContext;
-      }
-    }
-
-    // CẢI THIỆN: Prompt với hướng dẫn rõ ràng hơn
+    // Set up system prompt
     const systemPrompt =
-      prompt !== ""
-        ? prompt
-        : `Bạn là một bác sĩ chuyên khoa với kinh nghiệm lâm sàng. 
-            QUAN TRỌNG: Chỉ trả lời dựa trên thông tin được cung cấp trong context. 
-            Nếu thông tin không đủ để trả lời câu hỏi, hãy thẳng thắn nói rằng bạn không có đủ thông tin.
-            Nếu không có thông tin đủ để trả lời thì đừng lấy context từ câu chuyện trước ra nói mà chỉ trả lời thẳng tháng là chưa có thông tin gì nên không thể trả lời
-            Không bịa đặt hoặc suy đoán thông tin không có trong context.`;
+      prompt ||
+      `Bạn là một bác sĩ chuyên khoa với kinh nghiệm lâm sàng. 
+        QUAN TRỌNG: 
+        - Chỉ trả lời dựa trên thông tin được cung cấp trong context và tài liệu.
+        - Sử dụng thông tin từ cuộc trò chuyện trước để đưa ra câu trả lời liên kết và phù hợp.
+        - Nếu thông tin không đủ để trả lời câu hỏi, hãy thẳng thắn nói rằng bạn không có đủ thông tin.
+        - Không bịa đặt hoặc suy đoán thông tin không có trong context.
+        - Khi trả lời, hãy tham khảo và liên kết với những gì đã thảo luận trước đó nếu có liên quan.`;
 
-    // Generate answer using OpenAI
-    const completion = await openai.chat.completions.create({
-      model: modelData ? modelData.name : "gpt-4o-mini-2024-07-18",
-      messages: [
-        {
-          role: "system",
-          content: systemPrompt,
-        },
-        ...(conversationContext
-          ? [
-              {
-                role: "system",
-                content: `Context từ cuộc trò chuyện trước: ${conversationContext}  `,
-              },
-            ]
-          : []),
-        {
-          role: "user",
-          content: `Dựa vào các đoạn thông tin sau đây (với độ liên quan đã được kiểm tra):
-
-          ${context}
-
-          Hãy trả lời câu hỏi sau một cách chi tiết dựa HOÀN TOÀN trên thông tin được cung cấp: "${question}"
-
-          LƯU Ý: Nếu thông tin trên không đủ để trả lời đầy đủ câu hỏi, hãy nói rõ những phần nào bạn không có thông tin.`,
-        },
-      ],
-      temperature: temperature ? temperature : TEMPERATURE,
-      max_tokens: maxToken ? maxToken : MAX_TOKEN,
-      presence_penalty: 0.1,
-      frequency_penalty: 0.1,
+    // Generate AI response
+    const answer = await generateAIResponse({
+      question,
+      documentContext,
+      conversationContext,
+      systemPrompt,
+      modelData,
+      temperature,
+      maxToken,
     });
 
-    const answer = completion.choices[0].message.content;
-
-    // Tạo context cho cuộc trò chuyện
+    // Generate new conversation context
     const newContext = await generateConversationContext(question, answer);
 
-    // Chuẩn bị context cho chat với thông tin similarity
+    // Prepare chat context
     const chatContext = {
       documentIds: relevantDocs.map((doc) => doc.metadata.documentId),
       relevantChunks: relevantDocs.map((doc) => ({
@@ -398,36 +584,33 @@ export async function testingCollectionDataChatBot(req, res) {
         similarityScore: (1 - doc.distance).toFixed(3),
       })),
       additionalContext: {
-        model: modelData ? modelData.name : "gpt-4o-mini-2024-07-18",
+        model: modelData?.name || DEFAULT_MODEL,
         processedAt: new Date().toISOString(),
-        similarityThreshold: similarityThreshold,
-        totalDocumentsFound: similarDocs.results.length,
-        relevantDocumentsUsed: relevantDocs.length,
+        similarityThreshold,
+        totalDocumentsFound: totalFound,
+        relevantDocumentsUsed: relevantCount,
+        conversationContextUsed: conversationContext.length > 0,
       },
     };
 
     let section;
     if (sectionId) {
-      // Thêm tin nhắn mới vào section hiện có
+      // CÁCH 1: Tuần tự để đảm bảo thứ tự
       await chatService.addMessage(sectionId, "user", question);
-      const aiMessage = await chatService.addMessage(
-        sectionId,
-        "assistant",
-        answer
-      );
+      await chatService.addMessage(sectionId, "assistant", answer);
 
-      // Cập nhật context với thông tin mới
-      await chatService.updateSectionContext(sectionId, {
-        ...chatContext,
-        updatedAt: new Date().toISOString(),
-      });
-
-      // Cập nhật conversation context
-      await chatService.updateConversationContext(sectionId, newContext);
+      // Cập nhật context song song
+      await Promise.all([
+        chatService.updateSectionContext(sectionId, {
+          ...chatContext,
+          updatedAt: new Date().toISOString(),
+        }),
+        chatService.updateConversationContext(sectionId, newContext),
+      ]);
 
       section = await chatService.getSectionById(sectionId);
     } else {
-      // Tạo section mới cho cuộc trò chuyện mới
+      // Initialize new chat section
       section = await chatService.initializeChat(
         userId,
         question,
@@ -437,23 +620,32 @@ export async function testingCollectionDataChatBot(req, res) {
       );
     }
 
-    // Return response
+    // Return successful response
     res.json({
       success: true,
       data: {
         section,
+        answer: {
+          _id: uuidv4(),
+          role: "assistant",
+          content: answer,
+          timestamp: new Date().toISOString(),
+        },
         metadata: {
           documentId: documentId || "all",
           processedAt: new Date().toISOString(),
-          model: modelData ? modelData.name : "gpt-4o-mini-2024-07-18",
-          similarityThreshold: similarityThreshold,
-          documentsAnalyzed: similarDocs.results.length,
-          relevantDocumentsUsed: relevantDocs.length,
+          model: modelData?.name || DEFAULT_MODEL,
+          similarityThreshold,
+          documentsAnalyzed: totalFound,
+          relevantDocumentsUsed: relevantCount,
+          conversationContextUsed: conversationContext.length > 0,
+          conversationContextLength: conversationContext.length,
         },
       },
     });
   } catch (error) {
     console.error("❌ Error processing question:", error);
+
     res.status(500).json({
       error: "Question processing failed",
       message:
