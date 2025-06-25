@@ -1,6 +1,13 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getAllInfoCollections } from "../../services/collection.service";
+import {
+  getAllInfoCollections,
+  getDetailCollection,
+  updateConfigCollection,
+} from "../../services/collection.service";
+import { formatDateDDMMYYHHMMSS } from "../../utils/formatDate";
+import { useNotify } from "../../hook/useNotify";
+import { useSearchParams } from "react-router-dom";
 
 const ChatSidebar = ({
   collectionName,
@@ -24,12 +31,19 @@ const ChatSidebar = ({
   setCollectionId,
 }) => {
   const dispatch = useDispatch();
-  const { collections } = useSelector((state) => state.collection);
+  const [searchParams] = useSearchParams();
+  const collectionIdParams = searchParams.get("id");
+  const { collections, collection } = useSelector((state) => state.collection);
   const hasInitialized = useRef(false);
   const [selectedCollectionName, setSelectedCollectionName] = useState(null);
-  const formatNumber = (num) => (num < 1 ? num.toFixed(2) : num.toFixed(0));
+  const [selectedCollectionId, setSelectedCollectionId] =
+    useState(collectionId);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [originalConfig, setOriginalConfig] = useState({});
+  const { notifyError, notifySuccess } = useNotify();
 
-
+  // Load collections on mount
   useEffect(() => {
     if (!collections || collections.length === 0) {
       dispatch(getAllInfoCollections());
@@ -37,9 +51,79 @@ const ChatSidebar = ({
   }, [dispatch, collections]);
 
   useEffect(() => {
+    if (collectionIdParams) {
+      dispatch(getDetailCollection(collectionIdParams));
+    }
+  }, [collectionIdParams]);
+
+  // Load collection config when collectionId changes
+  useEffect(() => {
+    const loadConfig = async () => {
+      if (
+        selectedCollectionId &&
+        collection &&
+        collection._id === selectedCollectionId
+      ) {
+        const config = {
+          prompt: collection?.prompt || "",
+          maxToken: collection?.maxToken || 1000,
+          temperature: collection?.temperature || 0.7,
+          chunkLimit: collection?.chunkLimit || 5,
+          similarityThreshold: collection?.similarityThreshold || 0.2,
+        };
+
+        setOriginalConfig(config);
+
+        // Chỉ set giá trị nếu các setter functions tồn tại
+        if (setPrompt && config.prompt !== prompt) setPrompt(config.prompt);
+        if (setMaxToken && config.maxToken !== maxToken)
+          setMaxToken(config.maxToken);
+        if (setTemperature && config.temperature !== temperature)
+          setTemperature(config.temperature);
+        if (setChunkLimit && config.chunkLimit !== chunkLimit)
+          setChunkLimit(config.chunkLimit);
+        if (
+          setSimilarityThreshold &&
+          config.similarityThreshold !== similarityThreshold
+        )
+          setSimilarityThreshold(config.similarityThreshold);
+
+        setHasUnsavedChanges(false);
+      }
+    };
+
+    loadConfig();
+  }, [selectedCollectionId, collection, collectionId]);
+
+  // Track changes to detect unsaved modifications
+  useEffect(() => {
+    if (originalConfig.prompt !== undefined) {
+      const currentConfig = {
+        prompt,
+        maxToken,
+        temperature,
+        chunkLimit,
+        similarityThreshold,
+      };
+      const hasChanges = Object.keys(originalConfig).some(
+        (key) => originalConfig[key] !== currentConfig[key]
+      );
+      setHasUnsavedChanges(hasChanges);
+    }
+  }, [
+    prompt,
+    maxToken,
+    temperature,
+    chunkLimit,
+    similarityThreshold,
+    originalConfig,
+  ]);
+
+  // Auto-select first collection if no collection is selected
+  useEffect(() => {
     if (
       collections?.length > 0 &&
-      !collectionId &&
+      !selectedCollectionId &&
       setCollectionId &&
       !hasInitialized.current
     ) {
@@ -50,21 +134,100 @@ const ChatSidebar = ({
   }, [collections, collectionId, setCollectionId]);
 
   // Find current collection based on collectionId
-  const currentCollection = collections?.find((c) => c._id === collectionId);
+  const currentCollection = collections?.find(
+    (c) => c._id === selectedCollectionId
+  );
 
   // Display logic for collection name and ID
   const displayCollectionName =
     currentCollection?.name || collectionName || "Chưa chọn";
-  const displayCollectionId = collectionId || "Chưa chọn";
 
-  const handleChangeCollection = (e) => {
+  const handleChangeCollection = async (e) => {
     const selectedId = e.target.value;
     if (selectedId && setCollectionId) {
-      const collection = collections.find((c) => c._id === selectedId);
-      setSelectedCollectionName(collection?.name);
-      setCollectionId(selectedId);
+      try {
+        await dispatch(getDetailCollection(selectedId));
+        const collection = collections.find((c) => c._id === selectedId);
+        setSelectedCollectionName(collection?.name);
+        setSelectedCollectionId(selectedId);
+        setCollectionId(selectedId);
+        setHasUnsavedChanges(false);
+      } catch (error) {
+        notifyError("Không thể tải collection");
+      }
     }
   };
+
+  const updateConfigCollectionHandle = async () => {
+    if (!selectedCollectionId || isUpdating || !hasUnsavedChanges) return;
+
+    try {
+      setIsUpdating(true);
+      const payload = {
+        prompt,
+        maxToken,
+        temperature,
+        similarityThreshold,
+        chunkLimit,
+      };
+
+      console.log("Updating collection config:", payload);
+
+      const response = await dispatch(
+        updateConfigCollection(selectedCollectionId, payload)
+      );
+
+      if (response.success) {
+        notifySuccess(response.message || "Cập nhật thành công");
+        setOriginalConfig({
+          prompt,
+          maxToken,
+          temperature,
+          chunkLimit,
+          similarityThreshold,
+        });
+        setHasUnsavedChanges(false);
+      }
+    } catch (error) {
+      console.error("Update error:", error);
+      notifyError(error.message || "Không thể cập nhật collection");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const resetToDefaults = () => {
+    const defaults = {
+      prompt: "",
+      maxToken: 1000,
+      temperature: 0.7,
+      chunkLimit: 5,
+      similarityThreshold: 0.2,
+    };
+
+    setPrompt?.(defaults.prompt);
+    setMaxToken?.(defaults.maxToken);
+    setTemperature?.(defaults.temperature);
+    setChunkLimit?.(defaults.chunkLimit);
+    setSimilarityThreshold?.(defaults.similarityThreshold);
+  };
+
+  const resetToOriginal = () => {
+    if (originalConfig.prompt !== undefined) {
+      setPrompt?.(originalConfig.prompt);
+      setMaxToken?.(originalConfig.maxToken);
+      setTemperature?.(originalConfig.temperature);
+      setChunkLimit?.(originalConfig.chunkLimit);
+      setSimilarityThreshold?.(originalConfig.similarityThreshold);
+    }
+  };
+
+  console.log({
+    collection,
+    selectedCollectionId,
+    collectionId,
+    collectionIdParams,
+  });
 
   return (
     <div className="w-3/12 h-full items-center p-[10px]">
@@ -111,9 +274,9 @@ const ChatSidebar = ({
                   </p>
                 </div>
               )}
-            </div>{" "}
+            </div>
+
             <div className="flex items-center gap-[5px]">
-              {" "}
               <p className="font-medium">Collection Name:</p>
               {selectedCollectionName && !collectionName && (
                 <div className="space-y-2">
@@ -130,6 +293,7 @@ const ChatSidebar = ({
                 </div>
               )}
             </div>
+
             <p>
               <span className="font-medium">Số tin nhắn:</span>{" "}
               {messagesLength || 0}
@@ -169,7 +333,7 @@ const ChatSidebar = ({
 
           {/* Related Documents */}
           {section?.context?.relevantChunks && (
-            <div className="mt-4 p-3 bg-blue-50 rounded-md">
+            <div className="mt-4 p-3 bg-blue-50 rounded-md relative">
               <h4 className="font-semibold mb-1 text-blue-700">
                 Tài liệu liên quan:
               </h4>
@@ -177,15 +341,38 @@ const ChatSidebar = ({
                 {section.context.relevantChunks.length} đoạn văn bản được tham
                 khảo
               </p>
+              <div className="h-[300px] w-full flex flex-col overflow-y-auto bg-light-50 z-50 p-[5px] rounded-md">
+                {section?.context?.relevantChunks.map((chunk) => (
+                  <div key={chunk._id} className="text-[0.8rem] py-[10px]">
+                    <div className="w-full flex flex-col mb-2 p-[5px] border-1 border-dark-800 rounded-sm">
+                      <h1>Tên tài liệu: {chunk?.metadata?.fileName}</h1>
+                      <p className="text-[0.76rem]">
+                        Tạo lúc:{" "}
+                        {formatDateDDMMYYHHMMSS(chunk?.metadata?.createdAt)}
+                      </p>
+                      <p>Nguồn {chunk?.metadata?.source}</p>
+                    </div>
+                    <p>{chunk.content}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
 
         {/* AI Parameter Settings */}
         <div className="border-t pt-4">
-          <h3 className="font-semibold mb-3 text-sm text-gray-700">
-            Cài đặt tham số AI
-          </h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-sm text-gray-700">
+              Cài đặt tham số AI
+            </h3>
+            {hasUnsavedChanges && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-orange-600">Chưa lưu</span>
+                <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+              </div>
+            )}
+          </div>
 
           {/* Max Token */}
           <SettingSlider
@@ -195,7 +382,7 @@ const ChatSidebar = ({
             min={100}
             max={10000}
             step={100}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isUpdating}
           />
 
           {/* Temperature */}
@@ -206,7 +393,7 @@ const ChatSidebar = ({
             min={0}
             max={2}
             step={0.1}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isUpdating}
             note="Thấp: Tập trung hơn | Cao: Sáng tạo hơn"
           />
 
@@ -218,7 +405,7 @@ const ChatSidebar = ({
             min={1}
             max={20}
             step={1}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isUpdating}
             note="Số lượng đoạn văn để tham khảo"
           />
 
@@ -230,24 +417,41 @@ const ChatSidebar = ({
             min={0}
             max={1}
             step={0.05}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isUpdating}
             note="Thấp: Linh hoạt hơn | Cao: Chính xác hơn"
           />
 
-          {/* Reset button */}
-          <div className="mt-4 pt-3 border-t">
-            <button
-              onClick={() => {
-                setMaxToken?.(1000);
-                setTemperature?.(0.7);
-                setChunkLimit?.(5);
-                setSimilarityThreshold?.(0.2);
-              }}
-              disabled={isSubmitting}
-              className="w-full text-xs px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              🔄 Đặt lại mặc định
-            </button>
+          {/* Action buttons */}
+          <div className="mt-4 pt-3 border-t space-y-2">
+            {hasUnsavedChanges && (
+              <button
+                onClick={updateConfigCollectionHandle}
+                disabled={isSubmitting || isUpdating}
+                className="w-full text-xs px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {isUpdating ? "Đang lưu..." : "💾 Lưu cài đặt"}
+              </button>
+            )}
+
+            <div className="flex gap-2">
+              <button
+                onClick={resetToDefaults}
+                disabled={isSubmitting || isUpdating}
+                className="flex-1 text-xs px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                🔄 Mặc định
+              </button>
+
+              {hasUnsavedChanges && (
+                <button
+                  onClick={resetToOriginal}
+                  disabled={isSubmitting || isUpdating}
+                  className="flex-1 text-xs px-3 py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ↶ Hoàn tác
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -256,11 +460,11 @@ const ChatSidebar = ({
           <h3 className="font-bold text-sm pb-[5px] text-gray-700">
             Ngữ cảnh hệ thống
           </h3>
-          <div className="w-full h-full  min-h-[300px] flex flex-col flex-1 border-[1px] border-dark-800 rounded-md p-[10px] text-sm min-h-0">
+          <div className="w-full h-full min-h-[300px] flex flex-col flex-1 border-[1px] border-dark-800 rounded-md p-[10px] text-sm min-h-0">
             <textarea
               className="w-full h-full min-h-full flex-1 text-sm outline-none resize-none"
               placeholder="Thêm prompt để AI trả lời chính xác hơn..."
-              disabled={isSubmitting}
+              disabled={isSubmitting || isUpdating}
               value={prompt || ""}
               onChange={(e) => setPrompt?.(e.target.value)}
             />
@@ -283,7 +487,7 @@ const ChatSidebar = ({
   );
 };
 
-// Setting Slider Component
+// Setting Slider Component - Enhanced with better validation
 const SettingSlider = ({
   label,
   value,
@@ -294,7 +498,17 @@ const SettingSlider = ({
   disabled,
   note,
 }) => {
-  const formatValue = (v) => (v < 1 ? v.toFixed(2) : v.toFixed(0));
+  const formatValue = (v) => {
+    if (typeof v !== "number") return "0";
+    return v < 1 ? v.toFixed(2) : v.toFixed(0);
+  };
+
+  const handleChange = (e) => {
+    const newValue = Number(e.target.value);
+    if (!isNaN(newValue) && onChange) {
+      onChange(newValue);
+    }
+  };
 
   return (
     <div className="space-y-2 mb-4">
@@ -309,8 +523,8 @@ const SettingSlider = ({
         min={min}
         max={max}
         step={step}
-        value={value}
-        onChange={(e) => onChange?.(Number(e.target.value))}
+        value={value || 0}
+        onChange={handleChange}
         disabled={disabled}
         className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
       />

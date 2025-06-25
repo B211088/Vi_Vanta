@@ -21,6 +21,7 @@ import Collection from "../components/layout/manager/ai/Collection";
 import DataCollection from "../components/layout/manager/ai/DataCollection";
 import DetailCollection from "../components/layout/manager/ai/DetailCollection";
 import TestChatBot from "../components/ui/TestChatBot";
+import DataCleaningFlow from "../components/modals/ai/DataCleaningFlow";
 
 const Home = lazy(() => import("../pages/Home"));
 const Auth = lazy(() => import("../pages/auth/Auth"));
@@ -232,6 +233,16 @@ const router = createBrowserRouter([
             element: (
               <Suspense fallback={<Loading />}>
                 <TestChatBot />
+              </Suspense>
+            ),
+            children: [],
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "cleaning",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <DataCleaningFlow />
               </Suspense>
             ),
             children: [],

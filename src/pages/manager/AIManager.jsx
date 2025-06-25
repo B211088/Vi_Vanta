@@ -6,7 +6,7 @@ const AIManager = () => {
     <div className="w-full font-nunito">
       <div
         style={{ minHeight: "calc(100vh - 95px)" }}
-        className="w-full flex  bg-light-50 rounded-lg "
+        className="w-full flex  bg-light-50 rounded-lg overflow-hidden"
       >
         <Outlet />
       </div>

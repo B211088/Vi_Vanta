@@ -3,6 +3,8 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   sections: [], // Danh sách các section (cuộc hội thoại)
   section: null, // Section đang xem hoặc đang chat
+  messages: [],
+  message: null,
   dialogues: [],
   models: [],
   loading: false,
@@ -28,12 +30,23 @@ const chatbotSlice = createSlice({
     fetchSectionStart: (state) => {
       state.loading = true;
       state.error = null;
+      // Clear section cũ để tránh hiển thị data cũ
+      state.section = null;
     },
+
     fetchSectionSuccess: (state, action) => {
       state.loading = false;
       state.section = action.payload;
     },
     fetchSectionFailure: (state, action) => {
+      state.loading = false;
+      state.error = action.payload;
+    },
+    fetchMessageSuccess: (state, action) => {
+      state.loading = false;
+      state.message = action.payload;
+    },
+    fetchMessageFailure: (state, action) => {
       state.loading = false;
       state.error = action.payload;
     },
@@ -86,6 +99,11 @@ const chatbotSlice = createSlice({
     clearSection: (state) => {
       state.section = null;
     },
+    clearCurrentSection: (state) => {
+      state.section = null;
+      state.loading = false;
+      state.error = null;
+    },
   },
 });
 
@@ -107,6 +125,7 @@ export const {
   fetchModelsStart,
   fetchModelsFailure,
   clearSection,
+  clearCurrentSection,
 } = chatbotSlice.actions;
 
 export default chatbotSlice.reducer;

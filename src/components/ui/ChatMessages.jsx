@@ -2,7 +2,13 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { MarkdownRenderer } from "../../utils/convertMarkdownToJSX";
 import TypewriterText from "./TypewriterText";
 
-const ChatMessage = ({ message, isLatest, hasBeenAnimated, markAnimated }) => {
+const ChatMessage = ({
+  message,
+  isLatest,
+  hasBeenAnimated,
+  markAnimated,
+  shouldStopTypewriter, // **THÊM prop mới**
+}) => {
   if (message.role === "user") {
     return (
       <div className="w-full flex justify-end">
@@ -22,6 +28,7 @@ const ChatMessage = ({ message, isLatest, hasBeenAnimated, markAnimated }) => {
             isLatest={isLatest}
             hasBeenAnimated={hasBeenAnimated}
             markAnimated={markAnimated}
+            shouldStopTypewriter={shouldStopTypewriter} // **TRUYỀN prop xuống**
           />
         </div>
       </div>
@@ -36,10 +43,11 @@ const AssistantMessage = ({
   isLatest,
   hasBeenAnimated,
   markAnimated,
+  shouldStopTypewriter, // **NHẬN prop mới**
 }) => {
   const [showTypewriter, setShowTypewriter] = useState(false);
   const [isTypingComplete, setIsTypingComplete] = useState(false);
-  const [shouldStopTypewriter, setShouldStopTypewriter] = useState(false);
+  const [internalShouldStop, setInternalShouldStop] = useState(false);
   const completedRef = useRef(false);
 
   const shouldAnimate =
@@ -49,22 +57,43 @@ const AssistantMessage = ({
     !message.isError &&
     !completedRef.current;
 
+  // **THÊM: Effect để theo dõi shouldStopTypewriter từ parent**
+  useEffect(() => {
+    if (shouldStopTypewriter) {
+      setInternalShouldStop(true);
+      // Nếu đang chạy typewriter thì dừng ngay và hiển thị full content
+      if (showTypewriter && !isTypingComplete) {
+        setShowTypewriter(false);
+        setIsTypingComplete(true);
+        completedRef.current = true;
+        markAnimated();
+      }
+    }
+  }, [shouldStopTypewriter, showTypewriter, isTypingComplete, markAnimated]);
+
   // Khởi tạo typewriter khi cần
   useEffect(() => {
-    if (shouldAnimate && message.content && !showTypewriter) {
+    // **UPDATED: Chỉ khởi tạo typewriter nếu không bị yêu cầu dừng từ parent**
+    if (
+      shouldAnimate &&
+      message.content &&
+      !showTypewriter &&
+      !shouldStopTypewriter
+    ) {
+      console.log("Starting typewriter for message:", message._id);
       setShowTypewriter(true);
-      setShouldStopTypewriter(false);
+      setInternalShouldStop(false);
       setIsTypingComplete(false);
       completedRef.current = false;
     }
-  }, [shouldAnimate, message.content, showTypewriter]);
+  }, [shouldAnimate, message.content, showTypewriter, shouldStopTypewriter]);
 
   // Reset khi message thay đổi
   useEffect(() => {
     if (!shouldAnimate) {
       setShowTypewriter(false);
       setIsTypingComplete(false);
-      setShouldStopTypewriter(false);
+      setInternalShouldStop(false);
       completedRef.current = false;
     }
   }, [shouldAnimate, message._id]);
@@ -84,11 +113,6 @@ const AssistantMessage = ({
       }, 50);
     }
   }, [markAnimated]);
-
-  // Hàm để dừng typewriter (có thể gọi từ parent component)
-  const stopTypewriter = useCallback(() => {
-    setShouldStopTypewriter(true);
-  }, []);
 
   // Loading state
   if (message.isLoading) {
@@ -115,13 +139,16 @@ const AssistantMessage = ({
   return (
     <div className="p-[10px]">
       <div className="text-sm">
-        {shouldAnimate && showTypewriter && !isTypingComplete ? (
+        {shouldAnimate &&
+        showTypewriter &&
+        !isTypingComplete &&
+        !shouldStopTypewriter ? (
           <TypewriterText
             key={`${message._id}-typewriter`}
             text={message.content}
             speed={5}
             onComplete={handleTypewriterComplete}
-            shouldStop={shouldStopTypewriter}
+            shouldStop={internalShouldStop || shouldStopTypewriter} // **CẬP NHẬT logic**
             messageId={message._id}
           />
         ) : (

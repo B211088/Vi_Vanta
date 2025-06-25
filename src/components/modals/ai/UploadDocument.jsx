@@ -4,9 +4,12 @@ import CancelButton from "../../common/buttons/CancelButton";
 import { useDispatch, useSelector } from "react-redux";
 import { addDocument } from "../../../services/collection.service";
 import { useNotify } from "../../../hook/useNotify";
+import { useSearchParams } from "react-router-dom";
 
 const UploadDocument = ({ closeModal, collectionId }) => {
   const dispatch = useDispatch();
+  const [searchParams] = useSearchParams();
+  const collectionIdParam = searchParams.get("id");
   const { notifySuccess, notifyWarning, notifyError, notifyConfirm } =
     useNotify();
   const { loading } = useSelector((state) => state.collection);
@@ -17,7 +20,7 @@ const UploadDocument = ({ closeModal, collectionId }) => {
   const [isGoogleApiLoaded, setIsGoogleApiLoaded] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
   const [currentAccessToken, setCurrentAccessToken] = useState(null);
-
+  const [currentCollectionId, setCurrentCollectionId] = useState(collectionId);
   // States cho processing bar
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingProgress, setProcessingProgress] = useState(0);
@@ -25,7 +28,9 @@ const UploadDocument = ({ closeModal, collectionId }) => {
   const [processedCount, setProcessedCount] = useState(0);
   const [totalFiles, setTotalFiles] = useState(0);
 
-  console.log({ collectionId });
+  useEffect(() => {
+    setCurrentCollectionId(collectionIdParam);
+  }, [collectionIdParam]);
 
   // Google Drive API configuration
   const CLIENT_ID =
@@ -411,7 +416,7 @@ const UploadDocument = ({ closeModal, collectionId }) => {
           // Tạo FormData cho từng file
           const formData = new FormData();
           formData.append("file", file);
-          formData.append("collectionId", collectionId);
+          formData.append("collectionId", currentCollectionId);
 
           // Xác định source dựa trên file origin
           const source = file.googleDriveId ? "google_drive" : "local";
@@ -693,7 +698,7 @@ const UploadDocument = ({ closeModal, collectionId }) => {
                                     : "bg-blue-500 hover:bg-dark-600"
                                 } 
                                 transition-colors cursor-pointer`}
-                      loading={loading}
+                      disabled={loading || isProcessing}
                       onClick={handleSubmit}
                     >
                       {loading ? (
@@ -823,7 +828,7 @@ const UploadDocument = ({ closeModal, collectionId }) => {
                                     : "bg-blue-500 hover:bg-dark-600"
                                 } 
                                 transition-colors cursor-pointer`}
-                      loading={loading}
+                      disabled={loading || isProcessing}
                       onClick={handleSubmit}
                     >
                       {loading ? (

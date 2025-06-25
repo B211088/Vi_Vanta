@@ -1,6 +1,8 @@
 import axios from "axios";
 import { API_URL } from "../config/api.config";
 import {
+  addSection,
+  clearCurrentSection,
   fetchModelsFailure,
   fetchModelsStart,
   fetchModelsSuccess,
@@ -35,28 +37,41 @@ export const getAllSectionsChat = () => async (dispatch) => {
 
 export const getSectionChat = (id) => async (dispatch) => {
   try {
+    // Clear section hiện tại trước
+    dispatch(clearCurrentSection());
+
+    // Bắt đầu loading
     dispatch(fetchSectionStart());
+
     const response = await api.get(`/api/v1/openai-chat-bot/sections/${id}`);
 
+    // Dispatch success với data mới
     dispatch(fetchSectionSuccess(response.data.data));
+
     return response.data;
   } catch (error) {
     const errorMessage =
-      error.response?.data?.message || "Không thể tải các sections";
+      error.response?.data?.message || "Không thể tải section";
     dispatch(fetchSectionFailure(errorMessage));
     throw error;
   }
 };
 
+// FIXED: Đảm bảo askChatBot luôn trả về section với messages đúng thứ tự
 export const askChatBot = (payload) => async (dispatch) => {
   try {
     dispatch(fetchSectionStart());
     const response = await api.post(`/api/v1/openai-chat-bot/ask`, payload);
-    dispatch(fetchSectionSuccess(response.data.data));
+
+    // Đảm bảo section được cập nhật đúng
+    if (response.data?.data?.section) {
+      dispatch(fetchSectionSuccess(response.data.data.section));
+    }
+
     return response.data;
   } catch (error) {
     const errorMessage =
-      error.response?.data?.message || "Không thể tải các sections";
+      error.response?.data?.message || "Không thể gửi câu hỏi";
     dispatch(fetchSectionFailure(errorMessage));
     throw error;
   }

@@ -1,12 +1,17 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { askChatBot, getAllAIModel } from "../services/chatbot.service";
+import {
+  askChatBot,
+  getAllAIModel,
+  getAllSectionsChat,
+} from "../services/chatbot.service";
 import { useNotify } from "./useNotify";
+import { updateCollection } from "../services/collection.service";
 
-export const useChatLogic = (collectionId) => {
+export const useChatLogic = (collectionId, currentSectionId) => {
   const { loading, section } = useSelector((state) => state.chatbot);
   const dispatch = useDispatch();
-  const { notifySuccess, notifyWarning, notifyError } = useNotify();
+  const { notifyError, notifySuccess } = useNotify();
 
   // Refs
   const textareaRef = useRef(null);
@@ -22,34 +27,71 @@ export const useChatLogic = (collectionId) => {
   const [selectedAiModel, setSelectedAiModel] = useState();
   const [prompt, setPrompt] = useState("");
   const [temperature, setTemperature] = useState(1);
-  const [maxToken, setMaxToken] = useState(4000);
+  const [maxToken, setMaxToken] = useState(1000);
   const [messages, setMessages] = useState([]);
+  const [answer, setAnswer] = useState(null);
   const [chunkLimit, setChunkLimit] = useState(5);
   const [conversationContext, setConversationContext] = useState(null);
   const [animatedMessageIds, setAnimatedMessageIds] = useState(new Set());
   const [latestMessageId, setLatestMessageId] = useState(null);
   const [similarityThreshold, setSimilarityThreshold] = useState(0.2);
-  const [currentSectionId, setCurrentSectionId] = useState(null); // Thêm state riêng cho sectionId
+
+  // **THÊM: State để track khi nào là message mới (không phải từ section cũ)**
+  const [isNewMessage, setIsNewMessage] = useState(false);
 
   // Utility functions
   const generateMessageId = useCallback(() => {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
   }, []);
 
-  console.log("currentSectionId", currentSectionId);
-
+  // Update collection ID when prop changes
   useEffect(() => {
     setSelectedCollectionId(collectionId);
   }, [collectionId]);
 
-  // Cập nhật currentSectionId khi section thay đổi
-  useEffect(() => {
-    if (section?._id) {
-      setCurrentSectionId(section._id);
-    }
-  }, [section]);
+  console.log({
+    prompt,
+    temperature,
+    maxToken,
+    chunkLimit,
+    similarityThreshold,
+  });
 
-  console.log({ selectedCollectionId });
+  // **UPDATED: Load messages when section changes**
+  useEffect(() => {
+    if (section?.messages) {
+      console.log("Loading messages from section:", section.messages);
+      setMessages(section.messages);
+
+      // **THAY ĐỔI: Không reset animatedMessageIds và latestMessageId khi load section cũ**
+      // Thay vào đó, mark tất cả messages cũ là đã animated
+      const allMessageIds = section.messages
+        .filter((msg) => msg.role === "assistant")
+        .map((msg) => msg._id);
+      setAnimatedMessageIds(new Set(allMessageIds));
+
+      // **KHÔNG set latestMessageId = null** để tránh trigger typewriter cho messages cũ
+      setIsNewMessage(false);
+
+      // Set conversation context if available
+      if (section.conversationContext) {
+        setConversationContext(section.conversationContext);
+      }
+
+      // Scroll to bottom after loading messages
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+    } else if (section === null && currentSectionId === null) {
+      // Clear messages when starting new conversation
+      console.log("Clearing messages for new conversation");
+      setMessages([]);
+      setAnimatedMessageIds(new Set());
+      setLatestMessageId(null);
+      setConversationContext(null);
+      setIsNewMessage(false);
+    }
+  }, [section, currentSectionId]);
 
   // Fetch AI models
   useEffect(() => {
@@ -63,7 +105,7 @@ export const useChatLogic = (collectionId) => {
         } else {
           notifyError("Không có model nào");
         }
-      } catch (error) {
+      } catch {
         notifyError("Không thể lấy models");
       }
     };
@@ -71,29 +113,20 @@ export const useChatLogic = (collectionId) => {
     fetchModelAI();
   }, [dispatch, notifyError]);
 
-  // Track latest assistant message
+  // **UPDATED: Track latest assistant message - chỉ cho messages mới**
   useEffect(() => {
     const assistantMessages = messages.filter(
-      (msg) => msg.role === "assistant"
+      (msg) => msg.role === "assistant" && !msg.isLoading
     );
-    if (assistantMessages.length > 0) {
+
+    if (assistantMessages.length > 0 && isNewMessage) {
       const latestAssistant = assistantMessages[assistantMessages.length - 1];
-      if (
-        latestAssistant._id !== latestMessageId &&
-        !latestAssistant.isLoading
-      ) {
+      if (latestAssistant._id !== latestMessageId) {
+        console.log("Setting new latest message ID:", latestAssistant._id);
         setLatestMessageId(latestAssistant._id);
       }
     }
-  }, [messages, latestMessageId]);
-
-  // Load section messages
-  useEffect(() => {
-    if (section?.messages && messages.length === 0) {
-      setMessages(section.messages);
-      setAnimatedMessageIds(new Set());
-    }
-  }, [section, messages.length]);
+  }, [messages, latestMessageId, isNewMessage]);
 
   // API call function
   const callChatbotAPI = useCallback(
@@ -108,39 +141,30 @@ export const useChatLogic = (collectionId) => {
           maxToken: maxToken,
           temperature: temperature,
           similarityThreshold: similarityThreshold,
-          sectionId: currentSectionId || section?._id || "", // Ưu tiên currentSectionId
+          sectionId: currentSectionId || "",
         };
 
-        console.log("Payload being sent:", payload); // Debug log
+        console.log("Payload being sent:", payload);
 
         const response = await dispatch(askChatBot(payload));
 
-        if (response?.payload?.success || response?.data?.success) {
-          const responseData = response.payload || response.data;
+        if (response?.success || response?.data?.success) {
+          const responseData = response.data || response;
           const sectionData =
             responseData.section || responseData.data?.section;
 
           if (sectionData?.conversationContext) {
             setConversationContext(sectionData.conversationContext);
           }
+          if (sectionData?.message) {
+            setAnswer(response.data?.message);
+          }
 
           return {
             success: true,
             data: sectionData,
             messages: sectionData?.messages || [],
-            context: sectionData?.context || null,
-          };
-        }
-
-        if (response?.payload || response?.data) {
-          const responseData = response.payload || response.data;
-          const sectionData =
-            responseData.section || responseData.data?.section;
-
-          return {
-            success: true,
-            data: sectionData,
-            messages: sectionData?.messages || [],
+            message: response.data.message,
             context: sectionData?.context || null,
           };
         }
@@ -161,23 +185,34 @@ export const useChatLogic = (collectionId) => {
       maxToken,
       temperature,
       similarityThreshold,
-      currentSectionId, // Thêm currentSectionId vào dependency array
-      section,
+      currentSectionId,
       dispatch,
     ]
   );
 
-  // Submit question handler
+  // **UPDATED: Submit question handler - Mark là message mới**
   const handleSubmitQuestion = useCallback(
     async (question) => {
       if (!question.trim() || isSubmitting) return;
 
-      // Kiểm tra sectionId trước khi gửi
-      if (!currentSectionId && !section?._id) {
-        notifyWarning("Vui lòng chọn một section trước khi đặt câu hỏi");
-        return;
-      }
+      setUserInput("");
+      setIsSubmitting(true);
 
+      // **QUAN TRỌNG: Đánh dấu đây là message mới**
+      setIsNewMessage(true);
+
+      // Tạo loading message trước
+      const loadingMessageId = generateMessageId();
+      const loadingMessage = {
+        _id: loadingMessageId,
+        role: "assistant",
+        content: "Đang xử lý câu hỏi của bạn...",
+        timestamp: new Date().toISOString(),
+        isLoading: true,
+        __v: 0,
+      };
+
+      // Thêm user message và loading message vào state
       const userMessage = {
         _id: generateMessageId(),
         role: "user",
@@ -186,55 +221,36 @@ export const useChatLogic = (collectionId) => {
         __v: 0,
       };
 
-      setMessages((prevMessages) => [...prevMessages, userMessage]);
-      setUserInput("");
-      setIsSubmitting(true);
-
-      const loadingMessageId = generateMessageId();
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        userMessage,
+        loadingMessage,
+      ]);
 
       try {
-        const loadingMessage = {
-          _id: loadingMessageId,
-          role: "assistant",
-          content: "Đang xử lý câu hỏi của bạn...",
-          timestamp: new Date().toISOString(),
-          isLoading: true,
-          __v: 0,
-        };
-
-        setMessages((prevMessages) => [...prevMessages, loadingMessage]);
-
         const response = await callChatbotAPI(question);
 
         if (response.success) {
+          // Luôn luôn sử dụng messages từ API response để đảm bảo thứ tự đúng
           if (response.messages && response.messages.length > 0) {
+            console.log("Updating messages from API response");
+            setMessages(response.messages);
+
+            // **UPDATED: Set latest message cho message mới**
             const assistantMessages = response.messages.filter(
-              (msg) => msg.role === "assistant"
+              (msg) => msg.role === "assistant" && !msg.isLoading
             );
-            const latestAssistantMessage =
+            const latestAssistant =
               assistantMessages[assistantMessages.length - 1];
-
-            if (latestAssistantMessage) {
-              const finalMessageId =
-                latestAssistantMessage._id || generateMessageId();
-
-              setMessages((prevMessages) =>
-                prevMessages.map((msg) =>
-                  msg._id === loadingMessageId
-                    ? {
-                        ...latestAssistantMessage,
-                        _id: finalMessageId,
-                        timestamp:
-                          latestAssistantMessage.timestamp ||
-                          new Date().toISOString(),
-                      }
-                    : msg
-                )
+            if (latestAssistant) {
+              console.log(
+                "Setting latest message from API response:",
+                latestAssistant._id
               );
-
-              setLatestMessageId(finalMessageId);
+              setLatestMessageId(latestAssistant._id);
             }
           } else {
+            // Fallback: nếu không có messages array, thay thế loading message
             let content = "";
 
             if (response.data?.content) {
@@ -245,6 +261,8 @@ export const useChatLogic = (collectionId) => {
               content = response.data.message;
             } else if (response.data?.answer) {
               content = response.data.answer;
+            } else if (response.message?.content) {
+              content = response.message.content;
             } else {
               console.log("Response data structure:", response.data);
               content =
@@ -267,6 +285,11 @@ export const useChatLogic = (collectionId) => {
             );
 
             setLatestMessageId(finalMessageId);
+          }
+
+          // Refresh sections list để cập nhật section mới (nếu tạo mới)
+          if (!currentSectionId) {
+            dispatch(getAllSectionsChat());
           }
         } else {
           throw new Error("API response indicates failure");
@@ -298,8 +321,7 @@ export const useChatLogic = (collectionId) => {
       generateMessageId,
       callChatbotAPI,
       currentSectionId,
-      section,
-      notifyWarning,
+      dispatch,
     ]
   );
 
@@ -309,7 +331,13 @@ export const useChatLogic = (collectionId) => {
     setConversationContext(null);
     setAnimatedMessageIds(new Set());
     setLatestMessageId(null);
+    setIsNewMessage(false); // **THÊM: Reset flag**
   }, []);
+
+  // Refresh sections
+  const refreshSections = useCallback(() => {
+    dispatch(getAllSectionsChat());
+  }, [dispatch]);
 
   // Auto-scroll to bottom when new messages arrive
   const scrollToBottom = useCallback(() => {
@@ -375,9 +403,8 @@ export const useChatLogic = (collectionId) => {
     setAnimatedMessageIds,
     selectedCollectionId,
     setSelectedCollectionId,
-    currentSectionId, // Export currentSectionId
-    setCurrentSectionId, // Export setter
     loading,
+    isNewMessage, // **THÊM: Export flag**
 
     // Refs
     containerRef,
@@ -390,6 +417,7 @@ export const useChatLogic = (collectionId) => {
     handleKeyPress,
     handleTextareaResize,
     scrollToBottom,
+    refreshSections,
 
     // Utilities
     generateMessageId,

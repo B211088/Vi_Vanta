@@ -191,6 +191,12 @@ const nav = [
         name: "Kiểm thử dữ liệu",
         icon: "fa-solid fa-square-binary",
       },
+      {
+        id: "cleaning",
+        path: "cleaning",
+        name: "Làm sạch dữ liệu",
+        icon: "fa-solid fa-square-binary",
+      },
     ],
   },
   {

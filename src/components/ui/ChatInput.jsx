@@ -97,7 +97,7 @@ const ChatInput = ({
 
         <div className="flex items-center gap-[10px]">
           <select
-            className="outline-none text-sm border-1 border-dark-800 p-[5px] rounded-md"
+            className="outline-none text-[0.8rem] text-dark-300 border-1 border-dark-800 p-[5px] rounded-md"
             value={selectedAiModel?._id || ""}
             onChange={handleModelChange}
             disabled={isSubmitting}

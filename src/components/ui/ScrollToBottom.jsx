@@ -81,7 +81,7 @@ const ScrollToBottom = ({ containerRef, messagesEndRef }) => {
       onClick={scrollToBottom}
       disabled={isScrolling}
       className={`
-        fixed bottom-36 left-[48%] transform -translate-x-1/2 z-10
+        fixed bottom-36 left-[53%] transform -translate-x-1/2 z-10
         w-[28px] h-[28px] bg-white border border-gray-300 rounded-full shadow-lg
         flex items-center justify-center
         hover:bg-gray-50 hover:shadow-xl
