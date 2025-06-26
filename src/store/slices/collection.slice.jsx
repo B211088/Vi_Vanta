@@ -122,6 +122,10 @@ const collectionSlice = createSlice({
       state.loading = false;
       state.error = action.payload;
     },
+    clearCollection: (state, action) => {
+      state.loading = false;
+      state.collection = null;
+    },
   },
 });
 
@@ -151,6 +155,7 @@ export const {
   addDocumentStart,
   addDocumentSuccess,
   addDocumentFailure,
+  clearCollection,
 } = collectionSlice.actions;
 
 export default collectionSlice.reducer;

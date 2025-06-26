@@ -57,15 +57,15 @@ const chatbotSlice = createSlice({
       state.sections = state.sections.map((sec) =>
         sec._id === action.payload._id ? action.payload : sec
       );
-      if (state.section && state.section._id === action.payload._id) {
+      if (state.section && state.section._id === action.payload) {
         state.section = action.payload;
       }
     },
     deleteSection: (state, action) => {
       state.sections = state.sections.filter(
-        (sec) => sec._id !== action.payload
+        (sec) => sec._id !== action.payload._id
       );
-      if (state.section && state.section._id === action.payload) {
+      if (state.section && state.section._id === action.payload._id) {
         state.section = null;
       }
     },

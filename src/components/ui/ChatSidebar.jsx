@@ -8,6 +8,7 @@ import {
 import { formatDateDDMMYYHHMMSS } from "../../utils/formatDate";
 import { useNotify } from "../../hook/useNotify";
 import { useSearchParams } from "react-router-dom";
+import { useTheme } from "../../hook/useTheme";
 
 const ChatSidebar = ({
   collectionName,
@@ -31,6 +32,7 @@ const ChatSidebar = ({
   setCollectionId,
 }) => {
   const dispatch = useDispatch();
+  const { isDarkMode } = useTheme();
   const [searchParams] = useSearchParams();
   const collectionIdParams = searchParams.get("id");
   const { collections, collection } = useSelector((state) => state.collection);
@@ -129,6 +131,7 @@ const ChatSidebar = ({
     ) {
       const firstCollection = collections[0];
       setCollectionId(firstCollection._id);
+
       hasInitialized.current = true;
     }
   }, [collections, collectionId, setCollectionId]);
@@ -222,18 +225,15 @@ const ChatSidebar = ({
     }
   };
 
-  console.log({
-    collection,
-    selectedCollectionId,
-    collectionId,
-    collectionIdParams,
-  });
-
   return (
     <div className="w-3/12 h-full items-center p-[10px]">
       <div className="w-full h-full flex flex-col gap-[20px] border-[1px] border-dark-800 rounded-md p-4 overflow-y-auto">
         {/* Information Section */}
-        <div className="text-sm text-gray-600">
+        <div
+          className={`text-sm ${
+            isDarkMode ? "text-light-800 " : "text-light-50"
+          }`}
+        >
           <h3 className="font-semibold mb-2">Thông tin phiên chat</h3>
 
           <div className="space-y-1">
@@ -243,7 +243,7 @@ const ChatSidebar = ({
                 <div className="flex items-center gap-[5px]">
                   <p className="font-medium">Collection:</p>
                   {collections?.length === 0 ? (
-                    <p className="text-gray-500">Đang tải...</p>
+                    <p className="text-gray-300">Đang tải...</p>
                   ) : (
                     <select
                       disabled={loading}

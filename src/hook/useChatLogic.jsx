@@ -11,7 +11,7 @@ import { updateCollection } from "../services/collection.service";
 export const useChatLogic = (collectionId, currentSectionId) => {
   const { loading, section } = useSelector((state) => state.chatbot);
   const dispatch = useDispatch();
-  const { notifyError, notifySuccess } = useNotify();
+  const { notifyError, notifySuccess, notifyWarning } = useNotify();
 
   // Refs
   const textareaRef = useRef(null);
@@ -48,14 +48,6 @@ export const useChatLogic = (collectionId, currentSectionId) => {
   useEffect(() => {
     setSelectedCollectionId(collectionId);
   }, [collectionId]);
-
-  console.log({
-    prompt,
-    temperature,
-    maxToken,
-    chunkLimit,
-    similarityThreshold,
-  });
 
   // **UPDATED: Load messages when section changes**
   useEffect(() => {
@@ -132,6 +124,10 @@ export const useChatLogic = (collectionId, currentSectionId) => {
   const callChatbotAPI = useCallback(
     async (question) => {
       try {
+        if (!selectedCollectionId || !collectionId) {
+          notifyWarning("Vui lòng chọn bộ dữ liệu!");
+          return;
+        }
         const payload = {
           collectionId: selectedCollectionId,
           question,

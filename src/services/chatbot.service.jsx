@@ -3,6 +3,8 @@ import { API_URL } from "../config/api.config";
 import {
   addSection,
   clearCurrentSection,
+  clearSection,
+  deleteSection,
   fetchModelsFailure,
   fetchModelsStart,
   fetchModelsSuccess,
@@ -52,6 +54,27 @@ export const getSectionChat = (id) => async (dispatch) => {
   } catch (error) {
     const errorMessage =
       error.response?.data?.message || "Không thể tải section";
+    dispatch(fetchSectionFailure(errorMessage));
+    throw error;
+  }
+};
+
+export const deleteSectionChatHandle = (id) => async (dispatch) => {
+  try {
+    // Bắt đầu loading
+    dispatch(fetchSectionStart());
+    // Clear section hiện tại trước
+    dispatch(clearSection());
+
+    const response = await api.delete(`/api/v1/openai-chat-bot/sections/${id}`);
+
+    // Dispatch success với data mới
+    dispatch(deleteSection(response.data.section));
+
+    return response.data;
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message || "Không thể xoá section";
     dispatch(fetchSectionFailure(errorMessage));
     throw error;
   }

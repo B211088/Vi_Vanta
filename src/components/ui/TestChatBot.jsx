@@ -7,13 +7,19 @@ import ChatSidebar from "./ChatSidebar";
 import ScrollToBottom from "./ScrollToBottom";
 import { useChatLogic } from "../../hook/useChatLogic";
 import {
+  deleteSectionChatHandle,
   getAllSectionsChat,
   getSectionChat,
 } from "../../services/chatbot.service";
 import { clearCurrentSection } from "../../store/slices/chatbot.slice";
+import { useTheme } from "../../hook/useTheme";
+import { clearCollection } from "../../store/slices/collection.slice";
+import { useNotify } from "../../hook/useNotify";
 
 const TestChatBot = () => {
   const dispatch = useDispatch();
+  const { isDarkMode } = useTheme();
+  const { notifySuccess, notifyWarning, notifyError } = useNotify();
   const { loading, sections, section } = useSelector((state) => state.chatbot);
   const [searchParams] = useSearchParams();
   const collectionId = searchParams.get("id");
@@ -141,13 +147,29 @@ const TestChatBot = () => {
     }
   };
 
+  const handleRemoveSection = async (id) => {
+    console.log(id);
+    try {
+      const response = await dispatch(deleteSectionChatHandle(id));
+      if (response.success) {
+        notifySuccess("Xoá phiên chat thành công!");
+      }
+    } catch (error) {
+      notifyError("Lỗi khi xóa phiên chat", error?.response?.message);
+    }
+  };
+
   return (
     <div
       style={{ height: "calc(100vh - 95px)" }}
       className="w-full min-h-full flex rounded-md overflow-hidden"
     >
       {/* Sidebar trái - Danh sách sections */}
-      <div className="w-[200px] flex flex-col bg-light-50 text-sm">
+      <div
+        className={`w-[200px] flex flex-col  text-sm ${
+          isDarkMode ? "bg-light-50 text-dark-50" : "bg-dark-200 text-light-50"
+        }`}
+      >
         {/* Nút tạo cuộc trò chuyện mới */}
         <div className="w-full p-[10px] border-b border-gray-300">
           <button
@@ -159,8 +181,8 @@ const TestChatBot = () => {
         </div>
 
         {/* Header */}
-        <div className="w-full p-[10px] border-b border-gray-300">
-          <span className="font-semibold text-gray-700">Lịch sử chat</span>
+        <div className="w-full px-[15px] py-[10px] border-b border-gray-300">
+          <span className="font-semibold ">Lịch sử chat</span>
           {/* **THÊM: Nút refresh thủ công** */}
           <button
             onClick={refreshSections}
@@ -175,7 +197,7 @@ const TestChatBot = () => {
         <div className="flex-1 overflow-y-auto">
           <div className="w-full flex flex-col gap-[5px] p-[10px]">
             {loading && sections.length === 0 ? (
-              <div className="text-center text-gray-500 text-xs">
+              <div className="text-center text-gray-300 text-xs">
                 Đang tải...
               </div>
             ) : sections.length > 0 ? (
@@ -183,16 +205,29 @@ const TestChatBot = () => {
                 <div
                   key={sectionItem._id}
                   onClick={() => handleSelectSection(sectionItem._id)}
-                  className={`w-full px-[8px] py-[10px] border border-gray-300 rounded-md hover:shadow-sm cursor-pointer truncate transition-all ${
+                  className={`w-full flex items-center gap-[5px] justify-between px-[8px] py-[10px] border border-gray-300 rounded-md hover:shadow-sm cursor-pointer truncate transition-all ${
                     currentSectionId === sectionItem._id
-                      ? "bg-blue-100 border-blue-500 shadow-sm"
-                      : "hover:bg-gray-50"
+                      ? "bg-blue-100 border-blue-500 shadow-sm "
+                      : "hover:bg-gray-300"
                   }`}
                   title={sectionItem.title}
                 >
-                  <div className="text-xs font-medium text-gray-800 line-clamp-2">
+                  <div className="text-xs font-medium  line-clamp-2">
                     {sectionItem.title}
                   </div>
+                  <button
+                    className={` flex justify-center items-center cursor-pointer hover:bg-gray-200 rounded mr-2 ${
+                      loading ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      console.log({ sectionItem });
+                      handleRemoveSection(sectionItem._id);
+                    }}
+                    disabled={loading}
+                  >
+                    <i className="fa-regular fa-square-minus text-red-500"></i>
+                  </button>
                 </div>
               ))
             ) : (
