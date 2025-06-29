@@ -147,7 +147,7 @@ export const uploadAvatar = async (req, res) => {
   try {
     const userId = req.user.userId;
     const file = req.file;
-
+    console.log("avatar", file);
     if (!file) {
       return res.status(400).json({ message: "Vui lòng chọn ảnh!" });
     }

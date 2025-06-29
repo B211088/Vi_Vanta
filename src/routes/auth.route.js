@@ -1,5 +1,8 @@
 import express from "express";
-import upload from "../middlewares/uploadMiddleware.js";
+import upload, {
+  handleMulterError,
+  uploadImage,
+} from "../middlewares/uploadMiddleware.js";
 import verifyToken from "../middlewares/verifyToken.js";
 import { sanitizeInputMiddleware } from "../middlewares/sanitizeInput.js";
 import { authorizeRoles } from "../middlewares/authorizeRoles.js";
@@ -71,7 +74,8 @@ router.put(
   "/upload_avatar",
   sanitizeInputMiddleware,
   verifyToken,
-  upload.single("avatar"),
+  uploadImage.single("avatar"),
+  handleMulterError,
   uploadAvatar
 );
 

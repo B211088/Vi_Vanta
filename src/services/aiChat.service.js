@@ -209,7 +209,6 @@ class AIChatService {
    * Xóa một section và tất cả messages liên quan
    */
   async deleteSection(sectionId) {
-    console.log({ sectionId });
     const section = await Section.findById(sectionId).populate("messages");
 
     if (!section) {
@@ -222,7 +221,7 @@ class AIChatService {
     // Xóa section
     await Section.findByIdAndDelete(sectionId);
 
-    return section;
+    return true;
   }
 
   /**

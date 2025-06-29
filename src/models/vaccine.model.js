@@ -53,13 +53,6 @@ const vaccineSchema = new Schema(
       type: String, // Nhiệt độ bảo quản (ví dụ: "2-8°C")
       required: true,
     },
-    targetDiseases: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Disease", // Tham chiếu đến mô hình Disease
-        required: true,
-      },
-    ],
     sideEffects: [
       {
         type: String, // Các tác dụng phụ có thể xảy ra

@@ -5,7 +5,7 @@ const referenceSchema = new Schema(
   {
     name: { type: String, required: true, trim: true },
     authors: [{ type: String, trim: true }],
-    source: { type: String, trim: true }, // Tên tạp chí, sách, website...
+    source: { type: String, trim: true },
     url: { type: String, trim: true },
     publicationDate: { type: Date },
     type: {
@@ -14,7 +14,6 @@ const referenceSchema = new Schema(
       default: "journal",
     },
     description: { type: String, trim: true },
-
     status: {
       type: String,
       enum: ["active", "inactive", "draft"],

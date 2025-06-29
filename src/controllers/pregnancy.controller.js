@@ -13,7 +13,6 @@ import {
 
 import { uploads } from "../utils/uploadImagesToCloud.js";
 
-// Lấy tất cả thông tin thai kỳ
 export const getAllInfoPregnancies = async (req, res) => {
   const userId = req.user.userId;
 
@@ -95,106 +94,6 @@ export const deletePregnancy = async (req, res) => {
   try {
     const result = await deleteInfoPregnancyHandle(req.params.id);
     res.status(200).json(result);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Lấy danh sách các lần khám thai
-export const getPregnancyVisits = async (req, res) => {
-  const { pregnancyId } = req.params;
-
-  if (!pregnancyId) {
-    return res.status(400).json({ message: "Không xác định được thai kỳ!" });
-  }
-
-  try {
-    const visits = await getPregnancyVisitsHandle(pregnancyId);
-    res.status(200).json({
-      message: "Lấy danh sách lần khám thai thành công!",
-      visits,
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Tạo một lần khám thai mới
-export const createPregnancyVisit = async (req, res) => {
-  const userId = req.user.userId;
-  const payload = req.body;
-  const files = req.files;
-
-  if (!payload) {
-    return res.status(400).json({ message: "Vui lòng nhập đầy đủ thông tin!" });
-  }
-
-  const imageUrls = await Promise.all(
-    files.map((file) => uploads(file, userId, "PregnancyVisits"))
-  );
-
-  payload.imageUrls = imageUrls;
-
-  try {
-    const newVisit = await createPregnancyVisitHandle(payload);
-    res.status(201).json({
-      message: "Tạo lần khám thai thành công!",
-      newVisit,
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Cập nhật thông tin một lần khám thai
-export const updatePregnancyVisit = async (req, res) => {
-  const userId = req.user.userId;
-  const { visitId } = req.params;
-  const payload = req.body;
-  const files = req.files;
-
-  if (!visitId) {
-    return res
-      .status(400)
-      .json({ message: "Không xác định được lần khám thai!" });
-  }
-
-  if (!payload) {
-    return res.status(400).json({ message: "Vui lòng nhập đầy đủ thông tin!" });
-  }
-
-  const imageUrls = await Promise.all(
-    files.map((file) => uploads(file, userId, "PregnancyVisits"))
-  );
-
-  payload.imageUrls = imageUrls;
-
-  try {
-    const updatedVisit = await updatePregnancyVisitHandle(visitId, payload);
-    res.status(200).json({
-      message: "Cập nhật lần khám thai thành công!",
-      updatedVisit,
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Xóa một lần khám thai
-export const deletePregnancyVisit = async (req, res) => {
-  const { visitId } = req.params;
-
-  if (!visitId) {
-    return res
-      .status(400)
-      .json({ message: "Không xác định được lần khám thai!" });
-  }
-
-  try {
-    await deletePregnancyVisitHandle(visitId);
-    res.status(200).json({
-      message: "Xóa lần khám thai thành công!",
-    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

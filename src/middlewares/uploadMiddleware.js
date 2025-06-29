@@ -2,29 +2,32 @@ import multer from "multer";
 import fs from "fs";
 import path from "path";
 
-const uploadDir = path.join(process.cwd(), "uploads");
+// Tạo thư mục upload cho từng loại file
+const uploadsDir = path.join(process.cwd(), "uploads");
+const imagesDir = path.join(uploadsDir, "images");
+const documentsDir = path.join(uploadsDir, "documents");
 
-// Ensure upload directory exists
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-  console.log(`Created upload directory: ${uploadDir}`);
-}
+// Ensure upload directories exist
+[uploadsDir, imagesDir, documentsDir].forEach((dir) => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+    console.log(`Created directory: ${dir}`);
+  }
+});
 
 // Utility function để decode tên file tiếng Việt
 const decodeVietnameseFilename = (filename) => {
   try {
-    // Thử các cách decode khác nhau
     const methods = [
       () => Buffer.from(filename, "latin1").toString("utf8"),
       () => decodeURIComponent(filename),
       () => decodeURIComponent(escape(filename)),
-      () => filename, // Giữ nguyên nếu không decode được
+      () => filename,
     ];
 
     for (const method of methods) {
       try {
         const decoded = method();
-        // Kiểm tra xem có decode thành công không (không còn ký tự lỗi)
         if (
           !decoded.includes("Ã") &&
           !decoded.includes("â€") &&
@@ -48,50 +51,50 @@ const decodeVietnameseFilename = (filename) => {
   }
 };
 
-// Configure multer storage
-const storage = multer.diskStorage({
+// Generate safe filename
+const generateSafeFilename = (originalName) => {
+  const decodedName = decodeVietnameseFilename(originalName);
+  const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+  const extension = path.extname(decodedName);
+  const baseName = path.basename(decodedName, extension);
+
+  const safeName = baseName.replace(
+    /[^\w\s-áàảãạăắằẳẵặâấầẩẫậéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵđĐ]/gi,
+    ""
+  );
+
+  return `${safeName}-${uniqueSuffix}${extension}`;
+};
+
+// CÁCH 1: Tạo 2 middleware riêng biệt
+
+// Config cho upload ảnh
+const imageStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadDir);
+    cb(null, imagesDir);
   },
   filename: (req, file, cb) => {
-    // Decode tên file tiếng Việt
-    const decodedName = decodeVietnameseFilename(file.originalname);
-
-    // Generate unique filename with timestamp and decoded name
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const extension = path.extname(decodedName);
-    const baseName = path.basename(decodedName, extension);
-
-    // Tạo tên file an toàn (loại bỏ ký tự đặc biệt nếu cần)
-    const safeName = baseName.replace(
-      /[^\w\s-áàảãạăắằẳẵặâấầẩẫậéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵđĐ]/gi,
-      ""
-    );
-
-    const finalFilename = `${safeName}-${uniqueSuffix}${extension}`;
-    console.log(`Generated filename: ${finalFilename}`);
-
+    const finalFilename = generateSafeFilename(file.originalname);
+    console.log(`Generated image filename: ${finalFilename}`);
     cb(null, finalFilename);
   },
 });
 
-// File filter to validate file types và decode tên file
-const fileFilter = (req, file, cb) => {
-  // Decode tên file trước khi validate
+const imageFilter = (req, file, cb) => {
   const decodedName = decodeVietnameseFilename(file.originalname);
-  file.originalname = decodedName; // Cập nhật lại tên file đã decode
+  file.originalname = decodedName;
 
-  const allowedTypes = [".pdf", ".txt", ".md", ".json"];
+  const allowedImageTypes = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"];
   const fileExtension = path.extname(decodedName).toLowerCase();
 
-  console.log(`Processing file: ${decodedName} (extension: ${fileExtension})`);
+  console.log(`Processing image: ${decodedName} (extension: ${fileExtension})`);
 
-  if (allowedTypes.includes(fileExtension)) {
+  if (allowedImageTypes.includes(fileExtension)) {
     cb(null, true);
   } else {
     cb(
       new Error(
-        `File type ${fileExtension} not supported. Allowed types: ${allowedTypes.join(
+        `Image type ${fileExtension} not supported. Allowed types: ${allowedImageTypes.join(
           ", "
         )}`
       ),
@@ -100,23 +103,155 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Configure multer with limits and file filter
-const upload = multer({
-  storage: storage,
-  fileFilter: fileFilter,
-  limits: {
-    fileSize: 500 * 1024 * 1024, // 500MB limit (sửa comment cho đúng)
-    files: 1, // Only one file at a time
+// Config cho upload tài liệu
+const documentStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, documentsDir);
+  },
+  filename: (req, file, cb) => {
+    const finalFilename = generateSafeFilename(file.originalname);
+    console.log(`Generated document filename: ${finalFilename}`);
+    cb(null, finalFilename);
   },
 });
 
-// Error handling middleware for multer
+const documentFilter = (req, file, cb) => {
+  const decodedName = decodeVietnameseFilename(file.originalname);
+  file.originalname = decodedName;
+
+  const allowedDocumentTypes = [
+    ".pdf",
+    ".txt",
+    ".md",
+    ".json",
+    ".doc",
+    ".docx",
+    ".xls",
+    ".xlsx",
+  ];
+  const fileExtension = path.extname(decodedName).toLowerCase();
+
+  console.log(
+    `Processing document: ${decodedName} (extension: ${fileExtension})`
+  );
+
+  if (allowedDocumentTypes.includes(fileExtension)) {
+    cb(null, true);
+  } else {
+    cb(
+      new Error(
+        `Document type ${fileExtension} not supported. Allowed types: ${allowedDocumentTypes.join(
+          ", "
+        )}`
+      ),
+      false
+    );
+  }
+};
+
+// Middleware cho upload ảnh
+export const uploadImage = multer({
+  storage: imageStorage,
+  fileFilter: imageFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB cho ảnh
+    files: 1,
+    fieldSize: 25 * 1024 * 1024, // 25MB cho field
+  },
+});
+
+// Middleware cho upload tài liệu
+export const uploadDocument = multer({
+  storage: documentStorage,
+  fileFilter: documentFilter,
+  limits: {
+    fileSize: 500 * 1024 * 1024, // 500MB cho tài liệu
+    files: 1,
+    fieldSize: 25 * 1024 * 1024, // 25MB cho field
+  },
+});
+
+// CÁCH 2: Middleware linh hoạt dựa trên type parameter
+
+const flexibleStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadType = req.query.type || req.body.type || "document";
+    const destinationDir = uploadType === "image" ? imagesDir : documentsDir;
+    cb(null, destinationDir);
+  },
+  filename: (req, file, cb) => {
+    const finalFilename = generateSafeFilename(file.originalname);
+    console.log(`Generated filename: ${finalFilename}`);
+    cb(null, finalFilename);
+  },
+});
+
+const flexibleFilter = (req, file, cb) => {
+  const decodedName = decodeVietnameseFilename(file.originalname);
+  file.originalname = decodedName;
+
+  const uploadType = req.query.type || req.body.type || "document";
+  const fileExtension = path.extname(decodedName).toLowerCase();
+
+  let allowedTypes = [];
+  let maxSize = 500 * 1024 * 1024; // Default 500MB
+
+  if (uploadType === "image") {
+    allowedTypes = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"];
+    maxSize = 10 * 1024 * 1024; // 10MB for images
+  } else {
+    allowedTypes = [
+      ".pdf",
+      ".txt",
+      ".md",
+      ".json",
+      ".doc",
+      ".docx",
+      ".xls",
+      ".xlsx",
+    ];
+  }
+
+  console.log(
+    `Processing ${uploadType}: ${decodedName} (extension: ${fileExtension})`
+  );
+
+  if (allowedTypes.includes(fileExtension)) {
+    // Set dynamic file size limit
+    req.fileSizeLimit = maxSize;
+    cb(null, true);
+  } else {
+    cb(
+      new Error(
+        `${uploadType} type ${fileExtension} not supported. Allowed types: ${allowedTypes.join(
+          ", "
+        )}`
+      ),
+      false
+    );
+  }
+};
+
+// Middleware linh hoạt
+export const uploadFlexible = multer({
+  storage: flexibleStorage,
+  fileFilter: flexibleFilter,
+  limits: {
+    fileSize: 500 * 1024 * 1024, // Max limit, sẽ được check trong filter
+    files: 1,
+    fieldSize: 25 * 1024 * 1024, // 25MB cho field
+  },
+});
+
+// Error handling middleware
 export const handleMulterError = (error, req, res, next) => {
   if (error instanceof multer.MulterError) {
     if (error.code === "LIMIT_FILE_SIZE") {
+      const uploadType = req.query.type || req.body.type || "document";
+      const maxSize = uploadType === "image" ? "10MB" : "500MB";
       return res.status(400).json({
         error: "File too large",
-        message: "File size must be less than 500MB", // Sửa message cho đúng
+        message: `File size must be less than ${maxSize}`,
       });
     }
     if (error.code === "LIMIT_FILE_COUNT") {
@@ -127,7 +262,10 @@ export const handleMulterError = (error, req, res, next) => {
     }
   }
 
-  if (error.message.includes("File type")) {
+  if (
+    error.message.includes("type") &&
+    error.message.includes("not supported")
+  ) {
     return res.status(400).json({
       error: "Invalid file type",
       message: error.message,
@@ -137,7 +275,7 @@ export const handleMulterError = (error, req, res, next) => {
   next(error);
 };
 
-// Middleware để decode tên file sau khi upload (backup solution)
+// Middleware để decode tên file sau khi upload
 export const decodeFilename = (req, res, next) => {
   if (req.file && req.file.originalname) {
     const decodedName = decodeVietnameseFilename(req.file.originalname);
@@ -147,4 +285,5 @@ export const decodeFilename = (req, res, next) => {
   next();
 };
 
-export default upload;
+// Export default (giữ tương thích với code cũ - sẽ upload như document)
+export default uploadDocument;

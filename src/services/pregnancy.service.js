@@ -1,9 +1,4 @@
-import {
-  Pregnancy,
-  PregnancyVisit,
-  PregnancyWeek,
-  PregnancyVisitAddress,
-} from "../models/index.js";
+import { Pregnancy, PregnancyWeek } from "../models/index.js";
 
 // Tính toán ngày dự sinh từ các thông tin đầu vào
 const calculatePregnancyDates = (payload) => {
@@ -186,98 +181,6 @@ export const deleteInfoPregnancyHandle = async (pregnancyId) => {
     return { message: "Xóa thông tin thai kỳ thành công" };
   } catch (error) {
     throw new Error("Lỗi khi xóa thông tin thai kỳ");
-  }
-};
-
-// Lấy danh sách các lần khám thai theo ID thai kỳ
-export const getPregnancyVisitsHandle = async (pregnancyId) => {
-  try {
-    const visits = await PregnancyVisit.find({ pregnancyId })
-      .populate("visitTypeId", "name week description")
-      .select("-__v -createdAt -updatedAt");
-    return visits;
-  } catch (error) {
-    console.error("Lỗi khi lấy danh sách lần khám thai:", error.message);
-    throw new Error("Lỗi khi lấy danh sách lần khám thai");
-  }
-};
-
-// Tạo một lần khám thai mới
-export const createPregnancyVisitHandle = async (payload) => {
-  try {
-    const {
-      pregnancyId,
-      visitTypeId,
-      title,
-      date,
-      result,
-      note,
-      imageUrls,
-      status,
-    } = payload;
-
-    const newVisit = new PregnancyVisit({
-      pregnancyId,
-      visitTypeId,
-      title,
-      date,
-      result,
-      note,
-      imageUrls,
-      status,
-    });
-
-    await newVisit.save();
-    return newVisit;
-  } catch (error) {
-    console.error("Lỗi khi tạo lần khám thai:", error.message);
-    throw new Error("Lỗi khi tạo lần khám thai");
-  }
-};
-
-// Cập nhật thông tin một lần khám thai
-export const updatePregnancyVisitHandle = async (visitId, payload) => {
-  try {
-    const { title, date, result, note, imageUrls, status } = payload;
-
-    const updatedVisit = await PregnancyVisit.findByIdAndUpdate(
-      visitId,
-      {
-        $set: {
-          title,
-          date,
-          result,
-          note,
-          imageUrls,
-          status,
-        },
-      },
-      { new: true }
-    ).select("-__v -createdAt -updatedAt");
-
-    if (!updatedVisit) {
-      throw new Error("Không tìm thấy lần khám thai để cập nhật");
-    }
-
-    return updatedVisit;
-  } catch (error) {
-    console.error("Lỗi khi cập nhật lần khám thai:", error.message);
-    throw new Error("Lỗi khi cập nhật lần khám thai");
-  }
-};
-
-export const deletePregnancyVisitHandle = async (visitId) => {
-  try {
-    const deletedVisit = await PregnancyVisit.findByIdAndDelete(visitId);
-
-    if (!deletedVisit) {
-      throw new Error("Không tìm thấy lần khám thai để xóa");
-    }
-
-    return { message: "Xóa lần khám thai thành công" };
-  } catch (error) {
-    console.error("Lỗi khi xóa lần khám thai:", error.message);
-    throw new Error("Lỗi khi xóa lần khám thai");
   }
 };
 

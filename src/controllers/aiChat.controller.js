@@ -161,11 +161,10 @@ export async function searchSections(req, res) {
 export async function deleteSection(req, res) {
   try {
     const { sectionId } = req.params;
-    const section = await chatService.deleteSection(sectionId);
+    await chatService.deleteSection(sectionId);
 
     res.json({
-      section,
-      success: true,
+      status: "success",
       message: "Section deleted successfully",
     });
   } catch (error) {

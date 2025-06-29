@@ -42,13 +42,12 @@ export async function uploadAndIndex(req, res, next) {
     if (!payload || typeof payload !== "object")
       throw new Error("Payload không hợp lệ");
 
-    // Generate unique document ID
     const documentId = req.body.id || `doc_${uuidv4()}`;
 
     console.log(`Processing file: ${fileName} at ${filePath}`);
     console.log(`Document ID: ${documentId}`);
 
-    // Validate file exists
+    // Validate file tồn tại
     if (!fs.existsSync(filePath)) {
       return res.status(400).json({
         error: "File not found",
@@ -57,7 +56,7 @@ export async function uploadAndIndex(req, res, next) {
     }
     // lấy collectiojn name
     const collection = await getCollectionByIdHandle(collectionId);
-    // Index the file
+    // Index file
     const count = await service.indexFile(
       documentId,
       filePath,
@@ -88,7 +87,6 @@ export async function uploadAndIndex(req, res, next) {
   } catch (error) {
     console.error("Error in uploadAndIndex:", error);
 
-    // Clean up file if error occurs
     if (req.file && req.file.path && fs.existsSync(req.file.path)) {
       try {
         fs.unlinkSync(req.file.path);
@@ -550,9 +548,9 @@ export async function testingCollectionDataChatBot(req, res) {
     );
 
     // Set up system prompt
-    const systemPrompt =
-      prompt ||
-      `Bạn là một bác sĩ chuyên khoa với kinh nghiệm lâm sàng. 
+    const systemPrompt = prompt
+      ? prompt
+      : `Bạn là một bác sĩ chuyên khoa với kinh nghiệm lâm sàng. 
         QUAN TRỌNG: 
         - Chỉ trả lời dựa trên thông tin được cung cấp trong context và tài liệu.
         - Sử dụng thông tin từ cuộc trò chuyện trước để đưa ra câu trả lời liên kết và phù hợp.
@@ -723,7 +721,7 @@ export async function deleteDocumentAndChunks(req, res) {
       );
     }
 
-    // Delete all chunks with this documentId
+    // Xóa tất cả các chunk cùng với documents ids
     const deleteData = await chromadbService.deleteDocuments(
       collection.name,
       processedIds

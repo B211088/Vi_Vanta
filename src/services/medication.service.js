@@ -1,5 +1,3 @@
-import { searchDisease } from "../controllers/diseases.controller.js";
-import Disease from "../models/disease.model.js";
 import Medication from "../models/medication.model.js";
 import { deleteFromCloudinary } from "../utils/uploadImagesToCloud.js";
 
