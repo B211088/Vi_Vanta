@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  getAllDiseaseCategoriesHandle,
-  getChildrenDiseaseCategoriesHandle,
-} from "../../../services/disease.service";
+
 import { useDispatch, useSelector } from "react-redux";
 import Modal from "../../layout/Modal";
 import Pagination from "../../features/Pagination";
@@ -28,28 +25,28 @@ const SelectDiseaseCategoryModal = ({
 
   console.log({ categoryBefore });
 
-  const loadRootCategories = async () => {
-    try {
-      await dispatch(getAllDiseaseCategoriesHandle(pageRoot, limitRoot));
-    } catch (error) {
-      notifyWarning(error.message || "Không thể tải danh sách phân loại!");
-    }
-  };
+  //   const loadRootCategories = async () => {
+  //     try {
+  //       await dispatch(getAllDiseaseCategoriesHandle(pageRoot, limitRoot));
+  //     } catch (error) {
+  //       notifyWarning(error.message || "Không thể tải danh sách phân loại!");
+  //     }
+  //   };
 
-  useEffect(() => {
-    loadRootCategories();
-  }, [pageRoot]);
+  //   useEffect(() => {
+  //     loadRootCategories();
+  //   }, [pageRoot]);
 
-  const handleGetDiseaseCategoriesChildren = async (id) => {
-    try {
-      await dispatch(
-        getChildrenDiseaseCategoriesHandle(pageChilren, limitChilren, id)
-      );
-      notifySuccess("Lấy danh mục con thành công!");
-    } catch (error) {
-      notifyWarning(error.message || "Không thể tải danh sách phân loại con!");
-    }
-  };
+  //   const handleGetDiseaseCategoriesChildren = async (id) => {
+  //     try {
+  //       await dispatch(
+  //         getChildrenDiseaseCategoriesHandle(pageChilren, limitChilren, id)
+  //       );
+  //       notifySuccess("Lấy danh mục con thành công!");
+  //     } catch (error) {
+  //       notifyWarning(error.message || "Không thể tải danh sách phân loại con!");
+  //     }
+  //   };
 
   useEffect(() => {
     if (currentSelected && currentSelected.length > 0) {
@@ -74,12 +71,12 @@ const SelectDiseaseCategoryModal = ({
     closeModal();
   };
 
-  const handleBreadcrumbClick = async (index) => {
-    const clickedCategory = categoryPath[index];
-    setCategoryBefore(clickedCategory);
-    setCategoryPath(categoryPath.slice(0, index + 1));
-    await handleGetDiseaseCategoriesChildren(clickedCategory._id);
-  };
+  //   const handleBreadcrumbClick = async (index) => {
+  //     const clickedCategory = categoryPath[index];
+  //     setCategoryBefore(clickedCategory);
+  //     setCategoryPath(categoryPath.slice(0, index + 1));
+  //     await handleGetDiseaseCategoriesChildren(clickedCategory._id);
+  //   };
 
   const pagination = categories.pagination || { currentPage: 1, totalPages: 1 };
 
@@ -92,7 +89,6 @@ const SelectDiseaseCategoryModal = ({
               setCategoryBefore(null);
               setCategoryPath([]);
               setPageRoot(1);
-              loadRootCategories();
             }}
             className="w-[32px] h-[32px] flex items-center justify-center rounded-full border-[1px] border-dark-700 text-sm cursor-pointer hover:bg-gray-50"
           >
@@ -101,10 +97,7 @@ const SelectDiseaseCategoryModal = ({
           {categoryPath.map((cat, idx) => (
             <React.Fragment key={cat._id}>
               <span className="">/</span>
-              <span
-                className="cursor-pointer hover:underline text-blue-600"
-                onClick={() => handleBreadcrumbClick(idx)}
-              >
+              <span className="cursor-pointer hover:underline text-blue-600">
                 {cat.name}
               </span>
             </React.Fragment>
@@ -140,7 +133,6 @@ const SelectDiseaseCategoryModal = ({
                       } else if (!isSelected && category.hasChildren) {
                         setCategoryBefore(category);
                         setCategoryPath((prev) => [...prev, category]);
-                        handleGetDiseaseCategoriesChildren(category._id);
                       }
                     }}
                   >
@@ -201,7 +193,7 @@ const SelectDiseaseCategoryModal = ({
         <div className="w-full flex flex-col gap-[10px]">
           <button
             onClick={handleSelect}
-            className={`w-full flex justify-center items-center rounded-sm py-[8px] text-sm text-light-50 font-bold 
+            className={`w-full flex justify-center items-center rounded-sm py-[8px] text-sm text-light-50 font-bold
             bg-green-500 hover:bg-dark-600
                transition-colors cursor-pointer`}
           >

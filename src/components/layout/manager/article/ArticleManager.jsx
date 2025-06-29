@@ -1,7 +1,6 @@
-import React from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 
-const LibraryDiseaseManager = () => {
+const ArticleManager = () => {
   const location = useLocation();
   return (
     <div className="flex-1 flex flex-col  gap-[10px] overflow-hidden ">
@@ -26,7 +25,8 @@ const LibraryDiseaseManager = () => {
     </div>
   );
 };
-export default LibraryDiseaseManager;
+
+export default ArticleManager;
 
 const routes = [
   {
@@ -39,36 +39,12 @@ const routes = [
     id: "add-disease",
     icon: null,
     path: "add-disease",
-    name: "Thêm bệnh",
+    name: "Thêm thực phẩm",
   },
   {
     id: "disease-categories",
     icon: null,
     path: "disease-categories",
-    name: "Phân loại bệnh",
-  },
-  {
-    id: "prvention",
-    icon: null,
-    path: "prvention",
-    name: "Phòng ngừa",
-  },
-  {
-    id: "symptom",
-    icon: null,
-    path: "symptom",
-    name: "Triệu chứng",
-  },
-  {
-    id: "treatment",
-    icon: null,
-    path: "treatment",
-    name: "Chữa trị",
-  },
-  {
-    id: "cause",
-    icon: null,
-    path: "cause",
-    name: "Nguyên nhân",
+    name: "Phân loại thực phẩm",
   },
 ];

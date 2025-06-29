@@ -2,12 +2,11 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useTheme } from "../../../hook/useTheme";
 import { useNotify } from "../../../hook/useNotify";
-import { updateDiseaseCategoryHandle } from "../../../services/disease.service";
 import SubmitButton from "../../common/buttons/SubmitButton";
 import CancelButton from "../../common/buttons/CancelButton";
 import Modal from "../../layout/Modal";
 
-const UpdateDiseaseCategoryModal = ({ closeModal, currentData }) => {
+const UpdateTopicModal = ({ closeModal, currentData }) => {
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.disease);
   const { isDarkMode } = useTheme();
@@ -35,12 +34,12 @@ const UpdateDiseaseCategoryModal = ({ closeModal, currentData }) => {
         notifyWarning("Chưa có mô tả phân loại!");
         return;
       }
-      const data = await dispatch(updateDiseaseCategoryHandle(_id, formData));
-      console.log({ data });
-      if (data) {
-        notifySuccess("Cập nhật phân loại thành công thành công!");
-        closeModal();
-      }
+      // const data = await dispatch(updateDiseaseCategoryHandle(_id, formData));
+      // console.log({ data });
+      // if (data) {
+      //   notifySuccess("Cập nhật phân loại thành công thành công!");
+      //   closeModal();
+      // }
     } catch (error) {
       notifyError(
         error.response?.data?.message || "Không thể cập nhật phân loại !"
@@ -109,4 +108,4 @@ const UpdateDiseaseCategoryModal = ({ closeModal, currentData }) => {
   );
 };
 
-export default UpdateDiseaseCategoryModal;
+export default UpdateTopicModal;

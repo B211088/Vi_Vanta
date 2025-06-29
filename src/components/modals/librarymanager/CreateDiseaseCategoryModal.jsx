@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useTheme } from "../../../hook/useTheme";
 import { useDispatch, useSelector } from "react-redux";
-import { createDiseaseCategoryHandle } from "../../../services/disease.service";
 import { useNotify } from "../../../hook/useNotify";
 import Modal from "../../layout/Modal";
 import SubmitButton from "../../common/buttons/SubmitButton";
@@ -23,29 +22,29 @@ const CreateDiseaseCategoryModal = ({ closeModal, parent }) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const { name, description } = formData;
-      if (!name) {
-        notifyWarning("Chưa có tên phân loại!");
-        return;
-      }
-      if (!description) {
-        notifyWarning("Chưa có mô tả phân loại!");
-        return;
-      }
-      const data = await dispatch(createDiseaseCategoryHandle(formData));
-      if (data) {
-        notifySuccess("Tạo phân loại mới thành công!");
-        closeModal();
-      }
-    } catch (error) {
-      notifyError(
-        error.response?.data?.message || "Không thể tạo phân loại mới!"
-      );
-    }
-  };
+  //   const handleSubmit = async (e) => {
+  //     e.preventDefault();
+  //     try {
+  //       const { name, description } = formData;
+  //       if (!name) {
+  //         notifyWarning("Chưa có tên phân loại!");
+  //         return;
+  //       }
+  //       if (!description) {
+  //         notifyWarning("Chưa có mô tả phân loại!");
+  //         return;
+  //       }
+  //       const data = await dispatch(createDiseaseCategoryHandle(formData));
+  //       if (data) {
+  //         notifySuccess("Tạo phân loại mới thành công!");
+  //         closeModal();
+  //       }
+  //     } catch (error) {
+  //       notifyError(
+  //         error.response?.data?.message || "Không thể tạo phân loại mới!"
+  //       );
+  //     }
+  //   };
   return (
     <Modal closeModal={closeModal}>
       <div
@@ -60,7 +59,7 @@ const CreateDiseaseCategoryModal = ({ closeModal, parent }) => {
           )}
         </h1>
         <form
-          onSubmit={handleSubmit}
+          //   onSubmit={handleSubmit}
           className="w-full flex flex-col gap-[25px]"
         >
           <div className="w-full flex flex-col">

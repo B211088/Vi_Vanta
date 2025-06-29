@@ -6,15 +6,11 @@ import ErrorPage from "../pages/errorPage";
 import ProtectedRoute from "./ProtectedRoute";
 import AuthRoute from "./AuthRoute";
 import Dashboard from "../pages/Dashboard";
-import LibraryDiseaseManager from "../components/layout/manager/diseases/LibraryDiseaseManager";
-import ListAllDisease from "../components/layout/manager/diseases/ListAllDisease";
+
 import LibraryManager from "../pages/manager/LibraryManager";
-import DiseaseDetail from "../components/layout/manager/diseases/DiseaseDetail";
-import CreateDisease from "../components/layout/manager/diseases/CreateDisease";
-import DiseaseCategory from "../components/layout/manager/diseases/DiseaseCategory";
+
 import UserManager from "../components/layout/manager/users/UserManager";
-import LibraryMedicationManager from "../components/layout/manager/medications/LibraryMedicationManager";
-import LibraryFoodManager from "../components/layout/manager/medications/LibraryFoodManager";
+
 import AIManager from "../pages/manager/AIManager";
 import DataManager from "../components/layout/manager/ai/DataManager";
 import Collection from "../components/layout/manager/ai/Collection";
@@ -22,6 +18,10 @@ import DataCollection from "../components/layout/manager/ai/DataCollection";
 import DetailCollection from "../components/layout/manager/ai/DetailCollection";
 import TestChatBot from "../components/ui/TestChatBot";
 import DataCleaningFlow from "../components/modals/ai/DataCleaningFlow";
+import ArticleManager from "../pages/manager/ArticleManager";
+import TopicManager from "../components/layout/manager/article/TopicManager";
+import ListAllTopics from "../components/ui/articles/ListAllTopics";
+import TopicDetail from "../components/ui/articles/TopicDetail";
 
 const Home = lazy(() => import("../pages/Home"));
 const Auth = lazy(() => import("../pages/auth/Auth"));
@@ -99,16 +99,32 @@ const router = createBrowserRouter([
             <LibraryManager />
           </Suspense>
         ),
+
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "article-manager",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <ArticleManager />
+          </Suspense>
+        ),
         children: [
           {
-            index: true,
-            element: <Navigate to="disease" replace />,
-          },
-          {
-            path: "diseases",
+            path: "articles",
             element: (
               <Suspense fallback={<Loading />}>
-                <LibraryDiseaseManager />
+                <ArticleManager />
+              </Suspense>
+            ),
+            children: [],
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "topics",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <TopicManager />
               </Suspense>
             ),
             children: [
@@ -120,60 +136,21 @@ const router = createBrowserRouter([
                 path: "list-all",
                 element: (
                   <Suspense fallback={<Loading />}>
-                    <ListAllDisease />
-                  </Suspense>
-                ),
-                children: [
-                  {
-                    path: ":id",
-                    element: (
-                      <Suspense fallback={<Loading />}>
-                        <DiseaseDetail />
-                      </Suspense>
-                    ),
-                    errorElement: <ErrorPage />,
-                  },
-                ],
-                errorElement: <ErrorPage />,
-              },
-              {
-                path: "disease-categories",
-                element: (
-                  <Suspense fallback={<Loading />}>
-                    <DiseaseCategory />
+                    <ListAllTopics />
                   </Suspense>
                 ),
                 errorElement: <ErrorPage />,
               },
               {
-                path: "add-disease",
+                path: "detail",
                 element: (
                   <Suspense fallback={<Loading />}>
-                    <CreateDisease />
+                    <TopicDetail />
                   </Suspense>
                 ),
+                errorElement: <ErrorPage />,
               },
             ],
-            errorElement: <ErrorPage />,
-          },
-          {
-            path: "medications",
-            element: (
-              <Suspense fallback={<Loading />}>
-                <LibraryMedicationManager />
-              </Suspense>
-            ),
-            children: [],
-            errorElement: <ErrorPage />,
-          },
-          {
-            path: "foods",
-            element: (
-              <Suspense fallback={<Loading />}>
-                <LibraryFoodManager />
-              </Suspense>
-            ),
-            children: [],
             errorElement: <ErrorPage />,
           },
         ],

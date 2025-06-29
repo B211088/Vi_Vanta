@@ -25,7 +25,7 @@ import { API_URL } from "../config/api.config";
 
 const api = axios.create({
   baseURL: API_URL,
-  timeout: 5000,
+  timeout: 20000,
   withCredentials: true,
 });
 
@@ -105,10 +105,14 @@ export const updateUserProfile = (userData) => async (dispatch) => {
 };
 
 export const uploadUserAvatar = (avatarFile) => async (dispatch) => {
+  console.log({ avatarFile });
   try {
     dispatch(loadingStart());
     const formData = new FormData();
-    formData.append("avatar", avatarFile);
+    const file = new File([avatarFile], "avatar.jpg", {
+      type: avatarFile.type || "image/jpeg",
+    });
+    formData.append("avatar", file);
     const response = await api.put("/api/v1/user/upload_avatar", formData);
     dispatch(uploadUserAvatarSuccess({ user: response.data.user }));
     return { success: true, message: "Cập nhật avatar thành công!" };
