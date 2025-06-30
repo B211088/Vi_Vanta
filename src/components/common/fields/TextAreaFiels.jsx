@@ -8,6 +8,8 @@ const TextAreaFiels = ({
   placeholder,
   onChange,
   disabled,
+  height,
+  value,
 }) => {
   const { isDarkMode } = useTheme();
   return (
@@ -21,12 +23,17 @@ const TextAreaFiels = ({
           <span className="text-sm font-bold pb-[5px]">{label}</span>
         </div>
         <textarea
-          className="flex-1 min-h-[300px] max-h-[500px]  text-sm px-[10px] py-[8px] outline-none border-t-[1px] border-dashed border-dark-800"
+          style={{
+            minHeight: `${height}px`,
+            maxHeight: `${height + 120}px`,
+          }}
+          className={`flex-1 text-[0.84rem] px-[10px] py-[8px] text-justify outline-none border-t-[1px] border-dashed border-dark-800`}
           name={name}
           type={type}
           placeholder={placeholder}
           onChange={onChange}
           disabled={disabled}
+          value={value}
         />
       </div>
     </div>

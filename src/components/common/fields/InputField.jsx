@@ -1,7 +1,15 @@
 import React from "react";
 import { useTheme } from "../../../hook/useTheme";
 
-const InputField = ({ label, name, type, placeholder, onChange, disabled }) => {
+const InputField = ({
+  label,
+  name,
+  type,
+  placeholder,
+  onChange,
+  disabled,
+  value,
+}) => {
   const { isDarkMode } = useTheme();
   return (
     <div className="w-full flex flex-col">
@@ -11,12 +19,13 @@ const InputField = ({ label, name, type, placeholder, onChange, disabled }) => {
         }  rounded-sm`}
       >
         <div className="w-full flex justify-between py-[5px] px-[10px] border-b-[1px] border-dashed border-dark-800 ">
-          <span className="text-sm font-bold pb-[5px]">{label}</span>
+          <span className="text-sm font-bold ">{label}</span>
         </div>
         <input
-          className="flex-1  text-sm px-[10px] py-[12px] outline-none"
+          className="flex-1  text-[0.84rem] px-[10px] py-[8px] outline-none"
           name={name}
           type={type}
+          value={value}
           placeholder={placeholder}
           onChange={onChange}
           disabled={disabled}

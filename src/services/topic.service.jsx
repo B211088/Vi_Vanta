@@ -7,6 +7,16 @@ import {
   fetchTopicFailer,
   fetchTopicSuccess,
   deleteSoftTopicSuccess,
+  createTopicSuccess,
+  createTopicStart,
+  createTopicFailure,
+  createTopicChildrenSuccess,
+  updateTopicFailure,
+  updateTopicSuccess,
+  updateTopicStart,
+  deleteTopicSuccess,
+  deleteTopicStart,
+  deleteTopicFailure,
 } from "../store/slices/topic.slice";
 import {
   createCollectionFailure,
@@ -43,6 +53,21 @@ export const fetchAllTopics =
       throw error;
     }
   };
+export const searchTopics =
+  (page, limit, sortBy, sortOrder, search) => async (dispatch) => {
+    try {
+      dispatch(fetchStart());
+      const response = await api.get(
+        `api/v1/topics/search?q=${search}&page=${page}&?limit=${limit}&sortby=${sortBy}&sortOrder=${sortOrder}`
+      );
+      dispatch(fetchTopicsSuccess(response.data.data));
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "Không thể tải danh sách bệnh!";
+      dispatch(fetchTopicsFailer(errorMessage));
+      throw error;
+    }
+  };
 export const fetchDetailTopic = (id) => async (dispatch) => {
   try {
     dispatch(fetchStart());
@@ -58,28 +83,31 @@ export const fetchDetailTopic = (id) => async (dispatch) => {
 
 export const createTopic = (payload) => async (dispatch) => {
   try {
-    dispatch(createCollectionStart());
+    dispatch(createTopicStart());
     const response = await api.post(`api/v1/topics`, payload);
-    dispatch(createCollectionSuccess(response.data.data));
+    if (!payload.parent) {
+      dispatch(createTopicSuccess(response.data.data));
+    }
+    dispatch(createTopicChildrenSuccess(response.data.data));
     return response.data;
   } catch (error) {
     const errorMessage =
       error.response?.data?.message || "Không thể tải danh sách bệnh!";
-    dispatch(createCollectionFailure(errorMessage));
+    dispatch(createTopicFailure(errorMessage));
     throw error;
   }
 };
 
 export const updateTopic = (id, payload) => async (dispatch) => {
   try {
-    dispatch(updateCollectionStart());
+    dispatch(updateTopicStart());
     const response = await api.put(`api/v1/topics/${id}`, payload);
-    dispatch(updateCollectionSuccess(response.data.data));
+    dispatch(updateTopicSuccess(response.data.data));
     return response.data;
   } catch (error) {
     const errorMessage =
       error.response?.data?.message || "Không thể tải danh sách bệnh!";
-    dispatch(updateCollectionFailure(errorMessage));
+    dispatch(updateTopicFailure(errorMessage));
     throw error;
   }
 };
@@ -87,17 +115,17 @@ export const deleteTopic =
   (id, hard = false) =>
   async (dispatch) => {
     try {
-      dispatch(deleteCollectionStart());
+      dispatch(deleteTopicStart());
       const response = await api.delete(`api/v1/topics/${id}?hard=${hard}`);
       if (hard) {
-        dispatch(deleteCollectionSuccess(response.data.data));
+        dispatch(deleteTopicSuccess(response.data.data));
       }
       dispatch(deleteSoftTopicSuccess(response.data.data));
       return response.data;
     } catch (error) {
       const errorMessage =
         error.response?.data?.message || "Không thể tải danh sách bệnh!";
-      dispatch(deleteCollectionFailure(errorMessage));
+      dispatch(deleteTopicFailure(errorMessage));
       throw error;
     }
   };

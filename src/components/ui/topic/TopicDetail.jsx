@@ -1,8 +1,10 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { fetchDetailTopic } from "../../../services/topic.service";
 import { formatDateDDMMYYHHMMSS } from "../../../utils/formatDate";
+import CreateTopicForm from "../../modals/topic/CreateTopicForm";
+import UpdateTopicModal from "../../modals/topic/UpdateTopicModal";
 
 const TopicDetail = () => {
   const dispatch = useDispatch();
@@ -10,13 +12,16 @@ const TopicDetail = () => {
   const { loading, error, topic } = useSelector((state) => state.topic);
   const [searchParams] = useSearchParams();
   const id = searchParams.get("id");
-  console.log({ topic });
-
+  const [showCreateTopicModal, setShowCreateTopicModal] = useState(false);
+  const [showUpdateTopicModal, setShowUpdateTopicModal] = useState(false);
   useEffect(() => {
     dispatch(fetchDetailTopic(id));
   }, [id]);
   return (
     <div className="w-full flex flex-col gap-[10px] font-nunito ">
+      {showUpdateTopicModal && (
+        <UpdateTopicModal closeModal={() => setShowUpdateTopicModal(false)} />
+      )}
       <div className="w-full flex  px-[20px] py-[10px]">
         <div
           onClick={() => navigate(-1)}
@@ -39,14 +44,19 @@ const TopicDetail = () => {
             <div className="flex items-center gap-[5px]">
               <h1 className="font-bold text-lg">{topic?.name}</h1>{" "}
               {topic?.status === "active" ? (
-                <div className="px-3 py-[2px] rounded-full bg-light-50 text-sm text-green-600">
-                  <i className="fa-solid fa-circle-check text-green-600 mr-[3px]"></i>
+                <div className="px-3 py-[2px] rounded-full bg-green-100 text-sm text-green-600">
+                  <i className="fa-solid fa-circle-check  mr-[3px]"></i>
                   <span>hoạt động</span>
                 </div>
-              ) : (
-                <div className="px-3 py-[2px] rounded-full bg-light-50 text-sm text-red-600">
+              ) : topic?.status === "deleted" ? (
+                <div className="px-3 py-[2px] rounded-full bg-red-100 text-sm text-red-600">
                   <i className="fa-solid fa-circle-xmark  mr-[3px]"></i>
                   <span>đã ẩn</span>
+                </div>
+              ) : (
+                <div className="px-3 py-[2px] rounded-full bg-orange-100 text-sm text-orange-400">
+                  <i className="fa-solid fa-clock  mr-[3px]"></i>
+                  <span>Chờ duyệt</span>
                 </div>
               )}
             </div>
@@ -60,7 +70,22 @@ const TopicDetail = () => {
           </p>
         </div>
         <div className="w-full flex flex-col gap-2 py-3">
-          <h1 className="font-bold">Chủ đề con</h1>
+          <h1 className="font-bold">Chủ đề con</h1>{" "}
+          {showCreateTopicModal && (
+            <CreateTopicForm
+              parent={topic}
+              closeModal={() => setShowCreateTopicModal(false)}
+            />
+          )}
+          <div className="w-6/12 flex items-center gap-[5px]">
+            <button
+              onClick={() => setShowCreateTopicModal(true)}
+              className="flex items-center gap-[3px] px-[10px] py-[6px] bg-blue-500 text-light-50 rounded-md text-sm cursor-pointer"
+            >
+              <i className="fa-regular fa-square-plus"></i>
+              <span>Thêm chuyên mục</span>
+            </button>
+          </div>
           <div className="w-full max-h-[300px] overflow-y-auto flex flex-col gap-[10px] py-[5px]  text-sm font-semibold text-dark-300">
             {topic?.children?.length > 0 ? (
               topic?.children?.map((topic) => (
@@ -90,19 +115,22 @@ const TopicDetail = () => {
                           {formatDateDDMMYYHHMMSS(topic?.createdAt)}
                         </span>
                       </div>
-                      <div className="px-3 py-[2px] rounded-full bg-green-100 text-[0.8rem] text-green-600">
-                        {topic?.status === "active" ? (
-                          <div className="">
-                            <i className="fa-solid fa-circle-check text-green-600 mr-[3px]"></i>
-                            <span>hoạt động</span>
-                          </div>
-                        ) : (
-                          <div className="px-3 py-[2px] rounded-full bg-red-100 text-sm text-red-600">
-                            <i className="fa-solid fa-circle-xmark text-red-600 mr-[3px]"></i>
-                            <span>đã ẩn</span>
-                          </div>
-                        )}
-                      </div>
+                      {topic?.status === "active" ? (
+                        <div className="px-3 py-[2px] rounded-full bg-green-100 text-sm text-green-600">
+                          <i className="fa-solid fa-circle-check  mr-[3px]"></i>
+                          <span>hoạt động</span>
+                        </div>
+                      ) : topic?.status === "deleted" ? (
+                        <div className="px-3 py-[2px] rounded-full bg-red-100 text-sm text-red-600">
+                          <i className="fa-solid fa-circle-xmark  mr-[3px]"></i>
+                          <span>đã ẩn</span>
+                        </div>
+                      ) : (
+                        <div className="px-3 py-[2px] rounded-full bg-orange-100 text-sm text-orange-400">
+                          <i className="fa-solid fa-clock  mr-[3px]"></i>
+                          <span>Chờ duyệt</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </Link>
@@ -178,7 +206,10 @@ const TopicDetail = () => {
         </div>{" "}
         <div className="mt-6 pt-6 border-t border-gray-200">
           <div className="flex flex-col gap-2">
-            <button className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center gap-2">
+            <button
+              onClick={() => setShowUpdateTopicModal(true)}
+              className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center gap-2"
+            >
               <i className="fa-solid fa-pen-to-square mt-[2px]"></i>
               Chỉnh sửa
             </button>

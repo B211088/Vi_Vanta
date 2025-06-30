@@ -20,8 +20,8 @@ import TestChatBot from "../components/ui/TestChatBot";
 import DataCleaningFlow from "../components/modals/ai/DataCleaningFlow";
 import ArticleManager from "../pages/manager/ArticleManager";
 import TopicManager from "../components/layout/manager/article/TopicManager";
-import ListAllTopics from "../components/ui/articles/ListAllTopics";
-import TopicDetail from "../components/ui/articles/TopicDetail";
+import ListAllTopics from "../components/ui/topic/ListAllTopics";
+import TopicDetail from "../components/ui/topic/TopicDetail";
 
 const Home = lazy(() => import("../pages/Home"));
 const Auth = lazy(() => import("../pages/auth/Auth"));

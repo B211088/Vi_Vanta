@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllTopics } from "../../../services/topic.service";
+import { fetchAllTopics, searchTopics } from "../../../services/topic.service";
 import { formatDateDDMMYYHHMMSS } from "../../../utils/formatDate";
 import { Link } from "react-router-dom";
+import CreateTopicForm from "../../modals/topic/CreateTopicForm";
 
 const ListAllTopics = () => {
   const dispatch = useDispatch();
@@ -13,18 +14,92 @@ const ListAllTopics = () => {
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState("desc");
   const [status, setStatus] = useState(null);
+  const [showCreateTopicModal, setShowCreateTopicModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const debounceTimeout = useRef(null);
 
   useEffect(() => {
-    dispatch(fetchAllTopics(page, limit, sortBy, sortOrder, status));
-  }, []);
+    if (!isSearching) {
+      dispatch(fetchAllTopics(page, limit, sortBy, sortOrder, status));
+    }
+  }, [page, limit, sortBy, sortOrder, status, isSearching]);
+
+  const handleSearchTopic = async (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current);
+    }
+
+    debounceTimeout.current = setTimeout(async () => {
+      try {
+        if (!value || value.trim() === "") {
+          setIsSearching(false);
+        } else {
+          setIsSearching(true);
+          await dispatch(searchTopics(1, 10, sortBy, sortOrder, value));
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }, 500);
+  };
 
   return (
-    <div className="w-full  flex flex-col gap-[10px]  px-[20px] py-[12px]">
+    <div className="w-full  flex flex-col gap-[10px]  px-[10px] py-[12px]">
+      <div className="w-full flex items-center justify-end gap-[5px]  rounded-md">
+        {showCreateTopicModal && (
+          <CreateTopicForm closeModal={() => setShowCreateTopicModal(false)} />
+        )}
+        <div className="w-6/12 flex items-center gap-[5px]">
+          <button
+            onClick={() => setShowCreateTopicModal(true)}
+            className="flex items-center gap-[3px] px-[10px] py-[6px] bg-blue-500 text-light-50 rounded-md text-sm cursor-pointer"
+          >
+            <i className="fa-regular fa-square-plus"></i>
+            <span>Thêm chuyên mục</span>
+          </button>
+        </div>
+        <div className="w-6/12 flex items-center gap-[5px]">
+          <div className="w-8/12 flex items-center gap-[5px] border-1 rounded-md border-dark-600 px-[5px] py-[5px] cursor-pointer">
+            <i className="fa-solid fa-magnifying-glass"></i>
+            <input
+              type="text"
+              className="flex-1 outline-none border-none text-[0.8rem] "
+              placeholder="Tìm kiếm chuyên mục..."
+              value={searchTerm}
+              onChange={handleSearchTopic}
+            />
+          </div>
+          <div className="w-4/12 flex items-center gap-[5px] border-1 rounded-md border-dark-600 px-[5px] py-[5px]">
+            <i className="fa-regular fa-chart-bar"></i>
+            <select
+              className="flex-1 outline-none border-none text-[0.8rem] cursor-pointer"
+              onChange={(e) => setStatus(e.target.value)}
+            >
+              <option id="all" value="">
+                Tất cả
+              </option>{" "}
+              <option id="pending" value="pending">
+                Chờ duyệt
+              </option>
+              <option id="active" value="active">
+                Hoạt động
+              </option>
+              <option id="deleted" value="deleted">
+                Đã xóa
+              </option>
+            </select>
+          </div>
+        </div>
+      </div>
       <div className="w-full flex items-center gap-[10px] py-[8px] border-[1px] border-transparent bg-dark-900 px-[10px] text-sm font-semibold text-dark-300 rounded-sm">
         <div className="w-2/12">Tên </div>
         <div className="w-1/12">Trạng thái</div>
         <div className="w-5/12">Mô tả</div>
-        <div className="w-2/12">Ngày tạo</div>{" "}
+        <div className="w-2/12">Ngày tạo</div>
         <div className="w-2/12">Hành động</div>
       </div>
       <div className="w-full flex flex-col gap-[10px] py-[5px]  text-sm font-semibold text-dark-300">
@@ -40,7 +115,7 @@ const ListAllTopics = () => {
         ) : topics.length > 0 ? (
           topics?.map((topic) => (
             <div
-              key={topic.topicId}
+              key={topic._id}
               className="w-full flex items-center  gap-[10px] border-[1px] rounded-sm border-dark-900 py-[8px] px-[10px]  "
             >
               <Link
@@ -55,10 +130,15 @@ const ListAllTopics = () => {
                     <i className="fa-solid fa-circle-check text-green-600 mr-[3px]"></i>
                     <span>hoạt động</span>
                   </div>
-                ) : (
+                ) : topic?.status === "deleted" ? (
                   <div className="">
                     <i className="fa-solid fa-circle-xmark text-red-600 mr-[3px]"></i>
                     <span>đã ẩn</span>
+                  </div>
+                ) : (
+                  <div className="">
+                    <i className="fa-solid fa-clock text-orange-400 mr-[3px]"></i>
+                    <span>Chờ duyệt</span>
                   </div>
                 )}
               </div>
@@ -84,7 +164,7 @@ const ListAllTopics = () => {
           ))
         ) : (
           <div className="w-full flex items-center justify-center  gap-[10px] border-[1px] rounded-sm border-dark-900 py-[8px] px-[10px]  ">
-            <span>Chưa có tài liệu nào</span>
+            <span>Chưa có chuyên mục nào</span>
           </div>
         )}
       </div>

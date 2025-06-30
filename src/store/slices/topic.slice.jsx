@@ -43,6 +43,13 @@ const topicSlice = createSlice({
       state.loading = false;
       state.topics.push(action.payload);
     },
+    createTopicChildrenSuccess: (state, action) => {
+      state.loading = false;
+      state.topic = {
+        ...state.topic,
+        children: [...state.topic.children, action.payload],
+      };
+    },
     createTopicFailure: (state, action) => {
       state.loading = false;
       state.error = action.payload;
@@ -56,9 +63,7 @@ const topicSlice = createSlice({
       state.topics = state.topics.map((top) =>
         top._id === action.payload._id ? action.payload : top
       );
-      if (state.topic && state.topic._id === action.payload) {
-        state.topic = action.payload;
-      }
+      state.topic = action.payload;
     },
     updateTopicFailure: (state, action) => {
       state.loading = false;
@@ -71,9 +76,6 @@ const topicSlice = createSlice({
     deleteTopicSuccess: (state, action) => {
       state.loading = false;
       state.topics = state.topics.filter((top) => top._id !== action.payload);
-      if (state.topic && state.topic._id === action.payload) {
-        state.topic = null;
-      }
     },
     deleteSoftTopicSuccess: (state, action) => {
       state.loading = false;
@@ -114,6 +116,7 @@ export const {
   deleteTopicSuccess,
   deleteTopicFailure,
   deleteSoftTopicSuccess,
+  createTopicChildrenSuccess,
 } = topicSlice.actions;
 
 export default topicSlice.reducer;
