@@ -110,7 +110,6 @@ export class TopicService {
       // Execute query with pagination
       const [topics, total] = await Promise.all([
         Topic.find({ ...query, parent: null })
-
           .sort(sort)
           .skip(skip)
           .limit(parseInt(limit))
@@ -230,7 +229,7 @@ export class TopicService {
       if (!existingTopic) {
         throw new NotFoundError(`Topic with ID ${id} not found`);
       }
-
+      const topicChildren = await Topic.find({ parent: id });
       // Kiểm tra trùng tên (nếu có thay đổi tên)
       if (
         payload.name &&
@@ -276,10 +275,11 @@ export class TopicService {
           runValidators: true,
         }
       );
-
+      const topicPlain = updatedTopic.toObject();
+      const topic = { ...topicPlain, children: topicChildren };
       return {
         success: true,
-        data: updatedTopic,
+        data: topic,
         message: "Topic updated successfully",
       };
     } catch (error) {
