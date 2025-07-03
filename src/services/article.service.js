@@ -112,7 +112,9 @@ class ArticleService {
     if (!article) {
       throw new ApiError(404, "Không tìm thấy bài viết");
     }
-
+    if (article.views >= 10) {
+      article.isFeatured = true;
+    }
     article.views++;
     article.save();
     return article;
