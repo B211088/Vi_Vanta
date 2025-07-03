@@ -154,9 +154,9 @@ export const uploadImage = multer({
   storage: imageStorage,
   fileFilter: imageFilter,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB cho ảnh
-    files: 1,
+    fileSize: 10 * 1024 * 1024, // 10MB cho từng ảnh
     fieldSize: 25 * 1024 * 1024, // 25MB cho field
+    // XÓA files: 1 ở đây để array hoạt động
   },
 });
 

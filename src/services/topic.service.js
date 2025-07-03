@@ -321,14 +321,14 @@ export class TopicService {
         await deleteFromCloudinary(topic.public_id);
         return {
           success: true,
-          message: "Topic permanently deleted",
+          message: "Đã xóa vĩnh viên chuyên mục!",
         };
       } else {
         // Soft delete - mark as deleted
         const deletedTopic = await Topic.findByIdAndUpdate(
           id,
           {
-            status: "deleted",
+            status: "hidden",
             deletedAt: new Date(),
           },
           { new: true }
@@ -337,7 +337,7 @@ export class TopicService {
         return {
           success: true,
           data: deletedTopic,
-          message: "Topic deleted successfully",
+          message: "Ẩn chuyên mục thành công!",
         };
       }
     } catch (error) {
@@ -359,7 +359,7 @@ export class TopicService {
         throw new NotFoundError(`Topic with ID ${id} not found`);
       }
 
-      if (topic.status !== "deleted") {
+      if (topic.status !== "hidden") {
         throw new ValidationError("Topic is not deleted");
       }
 

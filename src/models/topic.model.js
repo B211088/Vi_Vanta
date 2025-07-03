@@ -46,7 +46,7 @@ const topicSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["active", "deleted", "pending"],
+      enum: ["active", "pending", "hidden"],
       default: "active",
     },
   },

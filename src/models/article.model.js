@@ -6,7 +6,17 @@ const articleSchema = new Schema(
     author: { type: Schema.Types.ObjectId, ref: "User" },
     title: { type: String, required: true, trim: true },
     slug: { type: String, unique: true, trim: true },
+    thumbnail: {
+      url: { type: String, trim: true, default: "" },
+      public_id: { type: String, trim: true, default: "" },
+    },
     summary: { type: String, trim: true },
+    topics: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Topic",
+      },
+    ],
     sections: [
       {
         heading: { type: String, trim: true, required: true },
@@ -19,11 +29,15 @@ const articleSchema = new Schema(
       },
     ],
     publishedAt: { type: Date },
+    reviewingBy: { type: Schema.Types.ObjectId, ref: "User" },
+    publihBy: { type: Schema.Types.ObjectId, ref: "User" },
     createdBy: { type: Schema.Types.ObjectId, ref: "User" },
     updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
     views: { type: Number, default: 0 },
     isFeatured: { type: Boolean, default: false },
-    references: [{ type: Schema.Types.ObjectId, ref: "Reference" }],
+    references: {
+      type: [String],
+    },
     status: {
       type: String,
       enum: ["draft", "pending", "published", "archived"],

@@ -154,6 +154,191 @@ class AIChatService {
       .select("-__v -context ");
     return section;
   }
+
+  /**
+   * Lấy lịch sử chat với nhiều tùy chọn
+   * @param {string} userId - ID của user
+   * @param {Object} options - Các tùy chọn cho việc lấy lịch sử
+   * @param {number} options.page - Trang hiện tại (default: 1)
+   * @param {number} options.limit - Số lượng section trên mỗi trang (default: 10)
+   * @param {Date} options.fromDate - Lấy từ ngày (optional)
+   * @param {Date} options.toDate - Lấy đến ngày (optional)
+   * @param {boolean} options.includeMessages - Có include messages không (default: true)
+   * @param {boolean} options.includeContext - Có include context không (default: false)
+   * @param {string} options.sortBy - Sắp xếp theo ('updatedAt', 'createdAt') (default: 'updatedAt')
+   * @param {string} options.sortOrder - Thứ tự sắp xếp ('asc', 'desc') (default: 'desc')
+   * @param {boolean} options.activeOnly - Chỉ lấy các section active (default: true)
+   * @returns {Object} Kết quả chứa sections và thông tin phân trang
+   */
+  async getChatHistory(userId, options = {}) {
+    const {
+      page = 1,
+      limit = 10,
+      fromDate,
+      toDate,
+      includeMessages = true,
+      includeContext = false,
+      sortBy = "updatedAt",
+      sortOrder = "desc",
+      activeOnly = true,
+    } = options;
+
+    try {
+      // Xây dựng query
+      const query = { userId };
+
+      // Thêm điều kiện active
+      if (activeOnly) {
+        query.isActive = true;
+      }
+
+      // Thêm điều kiện ngày tháng
+      if (fromDate || toDate) {
+        query[sortBy] = {};
+        if (fromDate) {
+          query[sortBy].$gte = new Date(fromDate);
+        }
+        if (toDate) {
+          query[sortBy].$lte = new Date(toDate);
+        }
+      }
+
+      // Xây dựng sort object
+      const sortObject = {};
+      sortObject[sortBy] = sortOrder === "desc" ? -1 : 1;
+
+      // Xây dựng select fields
+      let selectFields = "_id title createdAt updatedAt";
+      if (!includeContext) {
+        selectFields += " -context";
+      }
+
+      // Query cơ bản
+      let sectionsQuery = Section.find(query)
+        .sort(sortObject)
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .select(selectFields);
+
+      // Populate messages nếu cần
+      if (includeMessages) {
+        sectionsQuery = sectionsQuery.populate({
+          path: "messages",
+          select: "role content timestamp",
+          options: { sort: { timestamp: 1 } },
+        });
+      }
+
+      // Thực hiện query
+      const sections = await sectionsQuery.exec();
+
+      // Đếm tổng số documents
+      const total = await Section.countDocuments(query);
+
+      // Tính toán thống kê
+      const stats = await this._getChatHistoryStats(userId, query);
+
+      return {
+        success: true,
+        data: {
+          sections,
+          pagination: {
+            page: parseInt(page),
+            limit: parseInt(limit),
+            total,
+            totalPages: Math.ceil(total / limit),
+            hasNext: page < Math.ceil(total / limit),
+            hasPrev: page > 1,
+          },
+          stats,
+          filters: {
+            fromDate,
+            toDate,
+            includeMessages,
+            includeContext,
+            sortBy,
+            sortOrder,
+            activeOnly,
+          },
+        },
+      };
+    } catch (error) {
+      console.error("Lỗi khi lấy chat history:", error);
+      return {
+        success: false,
+        error: "Không thể lấy lịch sử chat",
+        details: error.message,
+      };
+    }
+  }
+
+  /**
+   * Lấy thống kê cho chat history
+   * @private
+   */
+  async _getChatHistoryStats(userId, baseQuery) {
+    try {
+      const [totalSections, activeSections, totalMessages] = await Promise.all([
+        Section.countDocuments({ userId }),
+        Section.countDocuments({ userId, isActive: true }),
+        Section.aggregate([
+          { $match: { userId: mongoose.Types.ObjectId(userId) } },
+          { $project: { messageCount: { $size: "$messages" } } },
+          { $group: { _id: null, total: { $sum: "$messageCount" } } },
+        ]),
+      ]);
+
+      // Lấy ngày của section đầu tiên và cuối cùng
+      const [firstSection, lastSection] = await Promise.all([
+        Section.findOne({ userId }).sort({ createdAt: 1 }).select("createdAt"),
+        Section.findOne({ userId }).sort({ createdAt: -1 }).select("createdAt"),
+      ]);
+
+      return {
+        totalSections,
+        activeSections,
+        inactiveSections: totalSections - activeSections,
+        totalMessages: totalMessages[0]?.total || 0,
+        firstChatDate: firstSection?.createdAt || null,
+        lastChatDate: lastSection?.createdAt || null,
+      };
+    } catch (error) {
+      console.error("Lỗi khi tính thống kê:", error);
+      return {
+        totalSections: 0,
+        activeSections: 0,
+        inactiveSections: 0,
+        totalMessages: 0,
+        firstChatDate: null,
+        lastChatDate: null,
+      };
+    }
+  }
+
+  /**
+   * Lấy lịch sử chat theo khoảng thời gian cụ thể
+   */
+  async getChatHistoryByDateRange(userId, startDate, endDate, options = {}) {
+    return this.getChatHistory(userId, {
+      ...options,
+      fromDate: startDate,
+      toDate: endDate,
+    });
+  }
+
+  /**
+   * Lấy các cuộc trò chuyện gần đây nhất
+   */
+  async getRecentChats(userId, limit = 5) {
+    return this.getChatHistory(userId, {
+      limit,
+      page: 1,
+      includeMessages: true,
+      sortBy: "updatedAt",
+      sortOrder: "desc",
+    });
+  }
+
   /**
    * Lấy danh sách section của user
    */

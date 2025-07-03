@@ -1,4 +1,3 @@
-// src/services/embedService.js
 import fs from "fs";
 import path from "path";
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
@@ -206,9 +205,6 @@ export class EmbedService {
       const embedded = await this.embedChunksBatch(chunks);
       console.log(`🔢 Generated embeddings for ${embedded.length} chunks`);
 
-      // Ensure ChromaDB client is initialized
-      await chromaService.initialize();
-
       // Get or create collection (won't delete other documents)
       await chromaService.getOrCreateCollection(collectionName, {
         description: `Document embeddings collection`,
@@ -282,8 +278,6 @@ export class EmbedService {
         `🔢 Generated query embedding with dimension: ${queryVector.length}`
       );
 
-      await chromaService.initialize();
-
       // Query documents with embeddings
       const results = await chromaService.queryDocuments(
         collectionName,
@@ -320,8 +314,6 @@ export class EmbedService {
   async listDocuments(collectionName) {
     try {
       console.log(`📋 Listing all documents of ${collectionName}`);
-
-      await chromaService.initialize();
 
       const result = await chromaService.listAllDocuments(collectionName, 1000);
 
@@ -361,8 +353,6 @@ export class EmbedService {
   async getStats(collectionName) {
     try {
       console.log(`📊 Getting collection statistics...`);
-
-      await chromaService.initialize();
 
       const stats = await chromaService.getCollectionStats(collectionName);
 

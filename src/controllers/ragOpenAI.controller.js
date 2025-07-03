@@ -21,212 +21,50 @@ const chatService = new AIChatService();
 
 const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 
-/**
- * Upload and index a document
- */
-export async function uploadAndIndex(req, res, next) {
-  try {
-    if (!req.file) {
-      return res.status(400).json({
-        error: "No file uploaded",
-        message: "Please upload a file to index",
-      });
-    }
-    const userId = req.user.userId;
-    const payload = req.body;
-    const { collectionId, source } = req.body;
-    const filePath = req.file.path;
+// Cache để lưu trữ kết quả tạm thời
+const contextCache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 phút
 
-    const fileName = req.file.originalname;
-    if (!collectionId) throw new Error("Thiếu collectionId");
-    if (!payload || typeof payload !== "object")
-      throw new Error("Payload không hợp lệ");
-
-    const documentId = req.body.id || `doc_${uuidv4()}`;
-
-    console.log(`Processing file: ${fileName} at ${filePath}`);
-    console.log(`Document ID: ${documentId}`);
-
-    // Validate file tồn tại
-    if (!fs.existsSync(filePath)) {
-      return res.status(400).json({
-        error: "File not found",
-        message: "Uploaded file could not be located",
-      });
-    }
-    // lấy collectiojn name
-    const collection = await getCollectionByIdHandle(collectionId);
-    // Index file
-    const count = await service.indexFile(
-      documentId,
-      filePath,
-      fileName,
-      collection.name,
-      userId,
-      source
-    );
-
-    try {
-      fs.unlinkSync(filePath);
-      console.log(`Cleaned up temporary file: ${filePath}`);
-    } catch (cleanupError) {
-      console.warn(`Could not cleanup file ${filePath}:`, cleanupError.message);
-    }
-
-    res.json({
-      status: "success",
-      message: "Document indexed successfully",
-      document: {
-        documentId: documentId,
-        fileName: fileName,
-        chunks: count,
-        indexedAt: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-      },
-    });
-  } catch (error) {
-    console.error("Error in uploadAndIndex:", error);
-
-    if (req.file && req.file.path && fs.existsSync(req.file.path)) {
-      try {
-        fs.unlinkSync(req.file.path);
-      } catch (cleanupError) {
-        console.warn(
-          `Could not cleanup file after error:`,
-          cleanupError.message
-        );
-      }
-    }
-
-    res.status(500).json({
-      error: "Indexing failed",
-      message: error.message || "An error occurred while indexing the document",
-      details: process.env.NODE_ENV === "development" ? error.stack : undefined,
-    });
-  }
-}
-
-/**
- * Get collection statistics
- */
-export async function getStats(req, res, next) {
-  try {
-    const stats = await service.getStats();
-
-    res.json({
-      status: "success",
-      ...stats,
-      retrievedAt: new Date().toISOString(),
-    });
-  } catch (error) {
-    console.error("Error in getStats:", error);
-
-    res.status(500).json({
-      error: "Failed to get statistics",
-      message: error.message || "An error occurred while retrieving statistics",
-      details: process.env.NODE_ENV === "development" ? error.stack : undefined,
-    });
-  }
-}
-
-/**
- * List all documents
- */
-export async function listDocuments(req, res, next) {
-  try {
-    const { collectionId } = req.body;
-
-    const collection = await getCollectionByIdHandle(collectionId);
-    const documents = await service.listDocuments(collection.name);
-
-    res.json({
-      status: "success",
-      documents: documents,
-      totalCount: documents.length,
-      retrievedAt: new Date().toISOString(),
-    });
-  } catch (error) {
-    console.error("Error in listDocuments:", error);
-
-    res.status(500).json({
-      error: "Failed to list documents",
-      message: error.message || "An error occurred while listing documents",
-      details: process.env.NODE_ENV === "development" ? error.stack : undefined,
-    });
-  }
-}
-
-/**
- * Health check endpoint
- */
-export async function healthCheck(req, res, next) {
-  try {
-    const { collectionId } = req.body;
-
-    const collection = await getCollectionByIdHandle(collectionId);
-    const stats = await service.getStats(collection.name);
-
-    res.json({
-      status: "healthy",
-      service: "RAG Service",
-      timestamp: new Date().toISOString(),
-      stats: stats,
-    });
-  } catch (error) {
-    console.error("Health check failed:", error);
-
-    res.status(503).json({
-      status: "unhealthy",
-      service: "RAG Service",
-      error: error.message,
-      timestamp: new Date().toISOString(),
-    });
-  }
+// Utility function để tạo cache key
+function createCacheKey(sectionId, limit) {
+  return `${sectionId}_${limit}`;
 }
 
 async function generateConversationContext(question, answer) {
+  // Tối ưu: Giảm max_tokens và temperature để tăng tốc
   const completion = await openai.chat.completions.create({
     model: DEFAULT_MODEL,
     messages: [
       {
         role: "system",
-        content: `Là một trợ lý AI, nhiệm vụ của bạn là tóm tắt cuộc trò chuyện và trích xuất các điểm chính.
-        Hãy phân tích câu hỏi và câu trả lời sau, sau đó:
-        1. Hãy ghi lại ý chính của cuộc trò chuyện người dùng và chat bot đang bàn luận về vấn đề gì
-        2. Tạo một tóm tắt ngắn gọn (2-3 câu)
-        3. Liệt kê 2-3 điểm chính quan trọng nhất
-        4. Tạo một context ngắn gọn cho câu hỏi tiếp theo
+        content: `Tóm tắt cuộc trò chuyện và trích xuất điểm chính:
+        1. Ý chính cuộc trò chuyện
+        2. Tóm tắt ngắn gọn (2-3 câu)
+        3. 2-3 điểm chính
+        4. Context cho câu hỏi tiếp theo
         
-        Format phản hồi:
-        {
-          "summary": "tóm tắt ngắn gọn ở đây",
-          "keyPoints": ["điểm 1", "điểm 2", "điểm 3"],
-          "lastContext": "context cho câu hỏi tiếp theo"
-        }`,
+        Format JSON:
+        {"summary": "...", "keyPoints": ["..."], "lastContext": "..."}`,
       },
       {
         role: "user",
-        content: `Câu hỏi: ${question}\n\nCâu trả lời: ${answer}`,
+        content: `Q: ${question}\nA: ${answer}`,
       },
     ],
-    temperature: 0.3,
-    max_tokens: 500,
+    temperature: 0.1, // Giảm từ 0.3 xuống 0.1 để tăng tốc
+    max_tokens: 300, // Giảm từ 500 xuống 300
   });
 
   try {
     return JSON.parse(completion.choices[0].message.content);
   } catch (error) {
-    console.error("Error parsing context generation response:", error);
-    return {
-      summary: "",
-      keyPoints: [],
-      lastContext: "",
-    };
+    console.error("Error parsing context:", error);
+    return { summary: "", keyPoints: [], lastContext: "" };
   }
 }
 
 /**
- * Build comprehensive conversation context from chat history
+ * Optimized conversation context builder với caching
  */
 async function buildConversationContext(
   sectionId,
@@ -234,86 +72,104 @@ async function buildConversationContext(
 ) {
   if (!sectionId) return "";
 
+  const cacheKey = createCacheKey(sectionId, limit);
+  const cached = contextCache.get(cacheKey);
+
+  // Kiểm tra cache
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    console.log("📋 Using cached conversation context");
+    return cached.data;
+  }
+
   try {
-    // Lấy lịch sử chat gần nhất
     const chatHistory = await chatService.getChatHistory(sectionId, limit);
 
-    if (!chatHistory || chatHistory.length === 0) {
-      return "";
-    }
+    if (!chatHistory?.length) return "";
 
-    // Tạo context từ lịch sử chat
+    // Tối ưu: Xử lý song song và giảm độ phức tạp
     const contextMessages = chatHistory
-      .slice(-limit) // Lấy N tin nhắn gần nhất
-      .map((msg, index) => {
-        const role = msg.role === "user" ? "Người dùng" : "Trợ lý";
-        return `${role}: ${msg.content}`;
-      })
+      .slice(-limit)
+      .map((msg) => `${msg.role === "user" ? "U" : "A"}: ${msg.content}`)
       .join("\n");
 
-    // Tóm tắt context nếu quá dài
-    if (contextMessages.length > 1000) {
+    let result = contextMessages;
+
+    // Chỉ tóm tắt nếu thực sự cần thiết (> 1500 chars thay vì 1000)
+    if (contextMessages.length > 1500) {
       const summaryCompletion = await openai.chat.completions.create({
         model: DEFAULT_MODEL,
         messages: [
           {
             role: "system",
-            content: `Hãy tóm tắt cuộc trò chuyện sau thành một đoạn context ngắn gọn (tối đa 200 từ) 
-            để giúp hiểu bối cảnh cho câu hỏi tiếp theo. Tập trung vào:
-            1. Chủ đề chính đang được thảo luận
-            2. Thông tin quan trọng đã được đề cập
-            3. Câu hỏi hoặc vấn đề chưa được giải quyết hoàn toàn`,
+            content: `Tóm tắt cuộc trò chuyện thành context ngắn gọn (<200 từ):
+            1. Chủ đề chính
+            2. Thông tin quan trọng
+            3. Vấn đề chưa giải quyết`,
           },
-          {
-            role: "user",
-            content: `Cuộc trò chuyện:\n${contextMessages}`,
-          },
+          { role: "user", content: contextMessages },
         ],
-        temperature: 0.3,
-        max_tokens: 300,
+        temperature: 0.1, // Giảm temperature
+        max_tokens: 250, // Giảm max_tokens
       });
 
-      return summaryCompletion.choices[0].message.content;
+      result = summaryCompletion.choices[0].message.content;
     }
 
-    return contextMessages;
+    // Lưu vào cache
+    contextCache.set(cacheKey, {
+      data: result,
+      timestamp: Date.now(),
+    });
+
+    return result;
   } catch (error) {
-    console.error("Error building conversation context:", error);
+    console.error("Error building context:", error);
     return "";
   }
 }
+
+// Tối ưu simplifyQuery với caching
+const queryCache = new Map();
+
 export const simplifyQuery = async (userQuestion, context = "") => {
+  const cacheKey = `${userQuestion}_${context}`.substring(0, 100);
+  const cached = queryCache.get(cacheKey);
+
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data;
+  }
+
   const completion = await openai.chat.completions.create({
     model: DEFAULT_MODEL,
     messages: [
       {
         role: "system",
-        content: `Bạn là một chuyên gia y tế đang hỗ trợ hệ thống truy vấn kiến thức. 
-          Đây là bối cảnh cuộc trò chuyện giữa người dùng và hệ thống: ${context}
-          Nếu có bối cảnh thì hãy tạo mô tả theo bối cảnh trò chuyện, 
-          Nếu không có bối cảnh thì đây là cuộc trò chuyện mới và cứ xây dựng bối cảnh theo câu hỏi
-          Nhiệm vụ của bạn là: 
-          1. Nhận câu hỏi từ người dùng có thể mơ hồ, trừu tượng, có thể sai chính tả.
-          2. Chuyển đổi nó thành một đoạn văn mô tả cụ thể về tình trạng sức khỏe, để hệ thống vector database có thể tìm kiếm chính xác hơn.
-          3. Hạn chế dùng từ chung chung, hãy viết như đang mô tả triệu chứng để bác sĩ dễ hiểu.`,
+        content: `Chuyên gia y tế hỗ trợ truy vấn. Context: ${context}
+        Chuyển đổi câu hỏi thành mô tả cụ thể về tình trạng sức khỏe.
+        Tập trung vào triệu chứng cụ thể, tránh từ chung chung.`,
       },
-      {
-        role: "user",
-        content: userQuestion,
-      },
+      { role: "user", content: userQuestion },
     ],
-    temperature: 0.5,
-    max_tokens: 300,
+    temperature: 0.3,
+    max_tokens: 200, // Giảm từ 300 xuống 200
   });
 
-  return completion.choices[0].message.content;
+  const result = completion.choices[0].message.content;
+
+  // Cache kết quả
+  queryCache.set(cacheKey, {
+    data: result,
+    timestamp: Date.now(),
+  });
+
+  return result;
 };
 
 /**
- * Validate and process similarity results
+ * Tối ưu processSimilarityResults - không thay đổi logic
  */
 function processSimilarityResults(similarDocs, similarityThreshold) {
-  if (!similarDocs?.results || similarDocs.results.length === 0) {
+  if (!similarDocs?.results?.length) {
     return {
       success: false,
       relevantDocs: [],
@@ -323,21 +179,15 @@ function processSimilarityResults(similarDocs, similarityThreshold) {
     };
   }
 
-  // Lọc kết quả theo ngưỡng similarity
+  // Tối ưu: Tính toán song song với map
   const relevantDocs = similarDocs.results.filter((doc) => {
     const similarity = 1 - doc.distance;
-    console.log(`📊 Similarity score for chunk: ${similarity.toFixed(3)}`);
     return similarity >= similarityThreshold;
   });
 
-  if (relevantDocs.length === 0) {
+  if (!relevantDocs.length) {
     const highestSimilarity =
       1 - Math.min(...similarDocs.results.map((doc) => doc.distance));
-    console.log(
-      `⚠️ No relevant documents found. Highest similarity: ${highestSimilarity.toFixed(
-        3
-      )}`
-    );
 
     return {
       success: false,
@@ -345,7 +195,7 @@ function processSimilarityResults(similarDocs, similarityThreshold) {
       reason: "low_similarity",
       highestSimilarity: highestSimilarity.toFixed(3),
       message:
-        "Xin lỗi, hiện tại hệ thống chưa có thông tin phù hợp để trả lời câu hỏi này. Dữ liệu hiện có không liên quan đến chủ đề bạn đang hỏi.",
+        "Xin lỗi, hiện tại hệ thống chưa có thông tin phù hợp để trả lời câu hỏi này.",
     };
   }
 
@@ -358,19 +208,20 @@ function processSimilarityResults(similarDocs, similarityThreshold) {
 }
 
 /**
- * Build context string from relevant documents
+ * Tối ưu buildDocumentContext
  */
 function buildDocumentContext(relevantDocs) {
+  // Tối ưu: Sử dụng map với template literals
   return relevantDocs
-    .map((doc, i) => {
-      const similarity = (1 - doc.distance).toFixed(3);
-      return `[Đoạn ${i + 1}] (Độ liên quan: ${similarity}): ${doc.content}`;
-    })
+    .map(
+      (doc, i) =>
+        `[${i + 1}] (${(1 - doc.distance).toFixed(3)}): ${doc.content}`
+    )
     .join("\n\n");
 }
 
 /**
- * Generate AI response using OpenAI
+ * Tối ưu generateAIResponse
  */
 async function generateAIResponse({
   question,
@@ -381,39 +232,30 @@ async function generateAIResponse({
   temperature,
   maxToken,
 }) {
-  const messages = [
-    {
-      role: "system",
-      content: systemPrompt,
-    },
-  ];
+  const messages = [{ role: "system", content: systemPrompt }];
 
-  // Thêm context từ cuộc trò chuyện trước nếu có
-  if (conversationContext) {
+  // Tối ưu: Chỉ thêm context nếu có và không trống
+  if (conversationContext?.trim()) {
     messages.push({
       role: "system",
-      content: `Context từ cuộc trò chuyện trước:\n${conversationContext}`,
+      content: `Context: ${conversationContext}`,
     });
   }
 
-  // Thêm câu hỏi và context tài liệu
   messages.push({
     role: "user",
-    content: `Dựa vào các đoạn thông tin sau đây (với độ liên quan đã được kiểm tra):
+    content: `Thông tin tham khảo:
+${documentContext}
 
-    ${documentContext}
+Câu hỏi: "${question}"
 
-    Hãy trả lời câu hỏi sau một cách chi tiết dựa HOÀN TOÀN trên thông tin được cung cấp: "${question}"
-
-    LƯU Ý: 
-    - Nếu thông tin trên không đủ để trả lời đầy đủ câu hỏi. thì hãy thẳng thắng nói rằng hệ thống không có đủ thông tin đó.
-    - Kết hợp với context từ cuộc trò chuyện trước để đưa ra câu trả lời phù hợp và liên kết.`,
+Trả lời dựa trên thông tin trên. Nếu không đủ thông tin, hãy nói thẳng.`,
   });
 
   const completion = await openai.chat.completions.create({
     model: modelData?.name || DEFAULT_MODEL,
     messages,
-    temperature: temperature || DEFAULT_TEMPERATURE,
+    temperature: temperature || 0.3,
     max_tokens: maxToken || DEFAULT_MAX_TOKEN,
     presence_penalty: 0.1,
     frequency_penalty: 0.1,
@@ -423,13 +265,13 @@ async function generateAIResponse({
 }
 
 /**
- * Main chat bot function - refactored version
+ * Main optimized chatbot function
  */
 export async function testingCollectionDataChatBot(req, res) {
   const userId = req.user.userId;
+  const startTime = Date.now();
 
   try {
-    // Extract and validate parameters
     const {
       collectionId,
       question,
@@ -443,38 +285,30 @@ export async function testingCollectionDataChatBot(req, res) {
       similarityThreshold = DEFAULT_SIMILARITY_THRESHOLD,
     } = req.body;
 
-    console.log({ sectionId });
-    // Validate input
-    if (
-      !question ||
-      typeof question !== "string" ||
-      question.trim().length === 0
-    ) {
+    // Validation nhanh
+    if (!question?.trim()) {
       return res.status(400).json({
         error: "Invalid question",
         message: "Question must be a non-empty string",
       });
     }
 
-    console.log(`🤔 Processing question: "${question}"`);
-    console.log(
-      `📊 Parameters: k=${k}, threshold=${similarityThreshold}, model=${modelId}`
-    );
-
-    if (
-      !collectionId ||
-      typeof collectionId !== "string" ||
-      collectionId.trim().length === 0
-    ) {
+    if (!collectionId?.trim()) {
       return res.status(400).json({
         error: "Invalid collectionId",
         message: "collectionId must be a non-empty string",
       });
     }
 
-    const [collection, modelData] = await Promise.all([
+    console.log(`🤔 Processing: "${question}" (${Date.now() - startTime}ms)`);
+
+    // Tối ưu: Thực hiện các tác vụ song song
+    const [collection, modelData, contextData] = await Promise.all([
       getCollectionByIdHandle(collectionId),
-      modelId ? getAIModelByIdHandle(modelId) : Promise.resolve(null),
+      modelId ? getAIModelByIdHandle(modelId) : null,
+      sectionId
+        ? chatService.getconversationContextSectionById(sectionId)
+        : null,
     ]);
 
     if (!collection) {
@@ -484,22 +318,18 @@ export async function testingCollectionDataChatBot(req, res) {
       });
     }
 
+    const queryConversationContext = contextData?.lastContext || "";
+
+    // Song song: Simplify query và build conversation context
+    const [questionSimify, conversationContext] = await Promise.all([
+      simplifyQuery(question.trim(), queryConversationContext),
+      buildConversationContext(sectionId),
+    ]);
+
+    console.log(`📝 Context prepared (${Date.now() - startTime}ms)`);
+
+    // Query documents
     const filters = documentId ? { documentId } : {};
-    let queryConversationContext = "";
-
-    if (sectionId) {
-      const contextData = await chatService.getconversationContextSectionById(
-        sectionId
-      );
-      queryConversationContext = contextData.lastContext || "";
-      console.log("📝 Last context:", queryConversationContext);
-    }
-
-    const questionSimify = await simplifyQuery(
-      question.trim(),
-      queryConversationContext
-    );
-
     const similarDocs = await service.querySimilar(
       collection.name,
       questionSimify,
@@ -507,7 +337,6 @@ export async function testingCollectionDataChatBot(req, res) {
       filters
     );
 
-    // Process similarity results
     const similarityResult = processSimilarityResults(
       similarDocs,
       similarityThreshold
@@ -523,6 +352,7 @@ export async function testingCollectionDataChatBot(req, res) {
             processedAt: new Date().toISOString(),
             model: modelData?.name || DEFAULT_MODEL,
             reason: similarityResult.reason,
+            processingTime: Date.now() - startTime,
             ...(similarityResult.highestSimilarity && {
               highestSimilarity: similarityResult.highestSimilarity,
             }),
@@ -533,30 +363,16 @@ export async function testingCollectionDataChatBot(req, res) {
     }
 
     const { relevantDocs, totalFound, relevantCount } = similarityResult;
+    const documentContext = buildDocumentContext(relevantDocs);
 
-    // Build contexts
-    const [documentContext, conversationContext] = await Promise.all([
-      Promise.resolve(buildDocumentContext(relevantDocs)),
-      buildConversationContext(sectionId),
-    ]);
+    console.log(`✅ Documents processed (${Date.now() - startTime}ms)`);
 
-    console.log(
-      `✅ Using ${relevantCount} relevant documents out of ${totalFound} found`
-    );
-    console.log(
-      `📝 Conversation context length: ${conversationContext.length} characters`
-    );
-
-    // Set up system prompt
-    const systemPrompt = prompt
-      ? prompt
-      : `Bạn là một bác sĩ chuyên khoa với kinh nghiệm lâm sàng. 
-        QUAN TRỌNG: 
-        - Chỉ trả lời dựa trên thông tin được cung cấp trong context và tài liệu.
-        - Sử dụng thông tin từ cuộc trò chuyện trước để đưa ra câu trả lời liên kết và phù hợp.
-        - Nếu thông tin không đủ để trả lời câu hỏi, hãy thẳng thắn nói rằng bạn không có đủ thông tin.
-        - Không bịa đặt hoặc suy đoán thông tin không có trong context.
-        - Khi trả lời, hãy tham khảo và liên kết với những gì đã thảo luận trước đó nếu có liên quan.`;
+    const systemPrompt =
+      prompt ||
+      `Bạn là bác sĩ chuyên khoa. 
+    Chỉ trả lời dựa trên thông tin được cung cấp.
+    Sử dụng context cuộc trò chuyện để đưa ra câu trả lời liên kết.
+    Nếu thiếu thông tin, hãy nói thẳng.`;
 
     // Generate AI response
     const answer = await generateAIResponse({
@@ -569,10 +385,13 @@ export async function testingCollectionDataChatBot(req, res) {
       maxToken,
     });
 
-    // Generate new conversation context
-    const newContext = await generateConversationContext(question, answer);
+    console.log(`🤖 AI response generated (${Date.now() - startTime}ms)`);
 
-    // Prepare chat context
+    // Song song: Generate context và prepare chat context
+    const [newContext] = await Promise.all([
+      generateConversationContext(question, answer),
+    ]);
+
     const chatContext = {
       documentIds: relevantDocs.map((doc) => doc.metadata.documentId),
       relevantChunks: relevantDocs.map((doc) => ({
@@ -588,17 +407,19 @@ export async function testingCollectionDataChatBot(req, res) {
         totalDocumentsFound: totalFound,
         relevantDocumentsUsed: relevantCount,
         conversationContextUsed: conversationContext.length > 0,
+        processingTime: Date.now() - startTime,
       },
     };
 
     let section;
     if (sectionId) {
-      // CÁCH 1: Tuần tự để đảm bảo thứ tự
+      // Tuần tự để đảm bảo thứ tự message
       await chatService.addMessage(sectionId, "user", question);
       await chatService.addMessage(sectionId, "assistant", answer);
 
-      // Cập nhật context song song
-      await Promise.all([
+      // Song song: Update contexts
+      const [updatedSection] = await Promise.all([
+        chatService.getSectionById(sectionId),
         chatService.updateSectionContext(sectionId, {
           ...chatContext,
           updatedAt: new Date().toISOString(),
@@ -606,9 +427,8 @@ export async function testingCollectionDataChatBot(req, res) {
         chatService.updateConversationContext(sectionId, newContext),
       ]);
 
-      section = await chatService.getSectionById(sectionId);
+      section = updatedSection;
     } else {
-      // Initialize new chat section
       section = await chatService.initializeChat(
         userId,
         question,
@@ -618,7 +438,14 @@ export async function testingCollectionDataChatBot(req, res) {
       );
     }
 
-    // Return successful response
+    console.log(`✨ Completed (${Date.now() - startTime}ms)`);
+
+    // Clear old cache entries periodically
+    if (Math.random() < 0.1) {
+      // 10% chance
+      clearExpiredCache();
+    }
+
     res.json({
       success: true,
       data: {
@@ -638,18 +465,35 @@ export async function testingCollectionDataChatBot(req, res) {
           relevantDocumentsUsed: relevantCount,
           conversationContextUsed: conversationContext.length > 0,
           conversationContextLength: conversationContext.length,
+          processingTime: Date.now() - startTime,
         },
       },
     });
   } catch (error) {
-    console.error("❌ Error processing question:", error);
+    console.error(`❌ Error (${Date.now() - startTime}ms):`, error);
 
     res.status(500).json({
       error: "Question processing failed",
       message:
         error.message || "An error occurred while processing your question",
+      processingTime: Date.now() - startTime,
       details: process.env.NODE_ENV === "development" ? error.stack : undefined,
     });
+  }
+}
+
+// Utility function để clear expired cache
+function clearExpiredCache() {
+  const now = Date.now();
+  for (const [key, value] of contextCache.entries()) {
+    if (now - value.timestamp > CACHE_TTL) {
+      contextCache.delete(key);
+    }
+  }
+  for (const [key, value] of queryCache.entries()) {
+    if (now - value.timestamp > CACHE_TTL) {
+      queryCache.delete(key);
+    }
   }
 }
 
@@ -771,6 +615,169 @@ export async function getAllCollections(req, res) {
       error: "Delete failed",
       message:
         error.message || "An error occurred while get all the collections",
+    });
+  }
+}
+
+/**
+ * Upload and index a document
+ */
+export async function uploadAndIndex(req, res, next) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        error: "No file uploaded",
+        message: "Please upload a file to index",
+      });
+    }
+    const userId = req.user.userId;
+    const payload = req.body;
+    const { collectionId, source } = req.body;
+    const filePath = req.file.path;
+
+    const fileName = req.file.originalname;
+    if (!collectionId) throw new Error("Thiếu collectionId");
+    if (!payload || typeof payload !== "object")
+      throw new Error("Payload không hợp lệ");
+
+    const documentId = req.body.id || `doc_${uuidv4()}`;
+
+    console.log(`Processing file: ${fileName} at ${filePath}`);
+    console.log(`Document ID: ${documentId}`);
+
+    // Validate file tồn tại
+    if (!fs.existsSync(filePath)) {
+      return res.status(400).json({
+        error: "File not found",
+        message: "Uploaded file could not be located",
+      });
+    }
+    // lấy collectiojn name
+    const collection = await getCollectionByIdHandle(collectionId);
+    // Index file
+    const count = await service.indexFile(
+      documentId,
+      filePath,
+      fileName,
+      collection.name,
+      userId,
+      source
+    );
+
+    try {
+      fs.unlinkSync(filePath);
+      console.log(`Cleaned up temporary file: ${filePath}`);
+    } catch (cleanupError) {
+      console.warn(`Could not cleanup file ${filePath}:`, cleanupError.message);
+    }
+
+    res.json({
+      status: "success",
+      message: "Document indexed successfully",
+      document: {
+        documentId: documentId,
+        fileName: fileName,
+        chunks: count,
+        indexedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+      },
+    });
+  } catch (error) {
+    console.error("Error in uploadAndIndex:", error);
+
+    if (req.file && req.file.path && fs.existsSync(req.file.path)) {
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (cleanupError) {
+        console.warn(
+          `Could not cleanup file after error:`,
+          cleanupError.message
+        );
+      }
+    }
+
+    res.status(500).json({
+      error: "Indexing failed",
+      message: error.message || "An error occurred while indexing the document",
+      details: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    });
+  }
+}
+
+/**
+ * List all documents
+ */
+export async function listDocuments(req, res, next) {
+  try {
+    const { collectionId } = req.body;
+
+    const collection = await getCollectionByIdHandle(collectionId);
+    const documents = await service.listDocuments(collection.name);
+
+    res.json({
+      status: "success",
+      documents: documents,
+      totalCount: documents.length,
+      retrievedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("Error in listDocuments:", error);
+
+    res.status(500).json({
+      error: "Failed to list documents",
+      message: error.message || "An error occurred while listing documents",
+      details: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    });
+  }
+}
+
+/**
+ * Health check endpoint
+ */
+export async function healthCheck(req, res, next) {
+  try {
+    const { collectionId } = req.body;
+
+    const collection = await getCollectionByIdHandle(collectionId);
+    const stats = await service.getStats(collection.name);
+
+    res.json({
+      status: "healthy",
+      service: "RAG Service",
+      timestamp: new Date().toISOString(),
+      stats: stats,
+    });
+  } catch (error) {
+    console.error("Health check failed:", error);
+
+    res.status(503).json({
+      status: "unhealthy",
+      service: "RAG Service",
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    });
+  }
+}
+
+/**
+ * Get collection statistics
+ */
+export async function getStats(req, res, next) {
+  try {
+    const stats = await service.getStats();
+
+    res.json({
+      status: "success",
+      ...stats,
+      retrievedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("Error in getStats:", error);
+
+    res.status(500).json({
+      error: "Failed to get statistics",
+      message: error.message || "An error occurred while retrieving statistics",
+      details: process.env.NODE_ENV === "development" ? error.stack : undefined,
     });
   }
 }
