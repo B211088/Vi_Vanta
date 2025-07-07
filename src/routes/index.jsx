@@ -19,9 +19,13 @@ import DetailCollection from "../components/layout/manager/ai/DetailCollection";
 import TestChatBot from "../components/ui/TestChatBot";
 import DataCleaningFlow from "../components/modals/ai/DataCleaningFlow";
 import ArticleManager from "../pages/manager/ArticleManager";
-import TopicManager from "../components/layout/manager/article/TopicManager";
 import ListAllTopics from "../components/ui/topic/ListAllTopics";
 import TopicDetail from "../components/ui/topic/TopicDetail";
+import Topics from "../components/layout/manager/article/Topics";
+import Articles from "../components/layout/manager/article/Articles";
+import ListAllArticle from "../components/ui/article/ListAllArticle";
+import ArticleDetail from "../components/ui/article/ArticleDetail";
+import CreateArticle from "../components/ui/article/CreateArticle";
 
 const Home = lazy(() => import("../pages/Home"));
 const Auth = lazy(() => import("../pages/auth/Auth"));
@@ -114,17 +118,50 @@ const router = createBrowserRouter([
             path: "articles",
             element: (
               <Suspense fallback={<Loading />}>
-                <ArticleManager />
+                <Articles />
               </Suspense>
             ),
-            children: [],
+            children: [
+              {
+                index: true,
+                element: <Navigate to="list-all" replace />,
+              },
+              {
+                path: "list-all",
+                element: (
+                  <Suspense fallback={<Loading />}>
+                    <ListAllArticle />
+                  </Suspense>
+                ),
+                children: [],
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "detail",
+                element: (
+                  <Suspense fallback={<Loading />}>
+                    <ArticleDetail />
+                  </Suspense>
+                ),
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "create",
+                element: (
+                  <Suspense fallback={<Loading />}>
+                    <CreateArticle />
+                  </Suspense>
+                ),
+                errorElement: <ErrorPage />,
+              },
+            ],
             errorElement: <ErrorPage />,
           },
           {
             path: "topics",
             element: (
               <Suspense fallback={<Loading />}>
-                <TopicManager />
+                <Topics />
               </Suspense>
             ),
             children: [

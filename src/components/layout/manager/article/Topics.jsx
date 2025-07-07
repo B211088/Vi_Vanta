@@ -1,10 +1,11 @@
+import React from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 
-const ArticleManager = () => {
+const Topics = () => {
   const location = useLocation();
   return (
     <div className="flex-1 flex flex-col  gap-[10px] overflow-hidden ">
-      <div className="  flex items-center  gap-[10px]  px-[0px]">
+      <div className="  flex items-center  gap-[10px]  px-[10px]">
         {routes.map((item) => (
           <Link
             key={item.id}
@@ -26,7 +27,7 @@ const ArticleManager = () => {
   );
 };
 
-export default ArticleManager;
+export default Topics;
 
 const routes = [
   {
@@ -36,15 +37,9 @@ const routes = [
     name: "Tất cả",
   },
   {
-    id: "add-disease",
-    icon: null,
-    path: "add-disease",
-    name: "Thêm thực phẩm",
-  },
-  {
-    id: "disease-categories",
-    icon: null,
-    path: "disease-categories",
-    name: "Phân loại thực phẩm",
+    id: "deleted",
+    icon: "fa-solid fa-calendar-xmark",
+    path: "deleted",
+    name: "Đã xóa",
   },
 ];

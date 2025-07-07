@@ -12,7 +12,8 @@ import { createTopic, updateTopic } from "../../../services/topic.service";
 const UpdateTopicModal = ({ closeModal, parent }) => {
   const dispatch = useDispatch();
   const { loading, error, topic } = useSelector((state) => state.topic);
-  const { notifySuccess, notifyWarning, notifyError } = useNotify();
+  const { notifySuccess, notifyWarning, notifyError, notifyConfirm } =
+    useNotify();
   const [status, setStatus] = useState(null);
   const [parentId, setParentId] = useState(parent?._id || null);
 
@@ -126,10 +127,14 @@ const UpdateTopicModal = ({ closeModal, parent }) => {
         data.append("image", file);
       }
 
-      // Gửi dữ liệu
-      const response = await dispatch(updateTopic(formData?.id, data));
-      notifySuccess(response.message);
-      closeModal();
+      const confirm = await notifyConfirm(
+        "bạn có chắc chắn muốn chỉnh sửa chuyên mục này!"
+      );
+      if (confirm) {
+        const response = await dispatch(updateTopic(formData?.id, data));
+        notifySuccess(response.message);
+        closeModal();
+      }
     } catch (error) {
       console.log(error);
       notifyError("Lõi khi tạo chuyên mục:", error.message);
@@ -194,8 +199,8 @@ const UpdateTopicModal = ({ closeModal, parent }) => {
                   <option id="active" value="active">
                     Hoạt động
                   </option>
-                  <option id="deleted" value="deleted">
-                    Đã xóa
+                  <option id="hidden" value="hidden">
+                    Đã ẩn
                   </option>
                 </select>
               </div>

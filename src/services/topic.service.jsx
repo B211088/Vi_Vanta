@@ -17,18 +17,8 @@ import {
   deleteTopicSuccess,
   deleteTopicStart,
   deleteTopicFailure,
+  restoreSuccess,
 } from "../store/slices/topic.slice";
-import {
-  createCollectionFailure,
-  createCollectionStart,
-  createCollectionSuccess,
-  deleteCollectionFailure,
-  deleteCollectionStart,
-  deleteCollectionSuccess,
-  updateCollectionFailure,
-  updateCollectionStart,
-  updateCollectionSuccess,
-} from "../store/slices/collection.slice";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -111,21 +101,36 @@ export const updateTopic = (id, payload) => async (dispatch) => {
     throw error;
   }
 };
-export const deleteTopic =
-  (id, hard = false) =>
-  async (dispatch) => {
-    try {
-      dispatch(deleteTopicStart());
-      const response = await api.delete(`api/v1/topics/${id}?hard=${hard}`);
-      if (hard) {
-        dispatch(deleteTopicSuccess(response.data.data));
-      }
+export const deleteTopic = (id, hard) => async (dispatch) => {
+  console.log({ hard });
+  try {
+    dispatch(deleteTopicStart());
+    const response = await api.delete(`api/v1/topics/${id}?hard=${hard}`);
+    if (hard === false) {
       dispatch(deleteSoftTopicSuccess(response.data.data));
       return response.data;
-    } catch (error) {
-      const errorMessage =
-        error.response?.data?.message || "Không thể tải danh sách bệnh!";
-      dispatch(deleteTopicFailure(errorMessage));
-      throw error;
     }
-  };
+    dispatch(deleteTopicSuccess(response.data.data));
+    return response.data;
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message || "Không thể tải danh sách bệnh!";
+    dispatch(deleteTopicFailure(errorMessage));
+    throw error;
+  }
+};
+
+export const restoreTopic = (id) => async (dispatch) => {
+  try {
+    dispatch(deleteTopicStart());
+    const response = await api.post(`api/v1/topics/${id}/restore`);
+    // ❌ Sai action, nên dùng restoreSuccess thay vì deleteSoftTopicSuccess
+    dispatch(restoreSuccess(response.data.data));
+    return response.data;
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message || "Không thể khôi phục chuyên mục!";
+    dispatch(deleteTopicFailure(errorMessage));
+    throw error;
+  }
+};

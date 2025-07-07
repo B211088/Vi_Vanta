@@ -1,22 +1,57 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { fetchDetailTopic } from "../../../services/topic.service";
+import {
+  deleteTopic,
+  fetchDetailTopic,
+  restoreTopic,
+} from "../../../services/topic.service";
 import { formatDateDDMMYYHHMMSS } from "../../../utils/formatDate";
 import CreateTopicForm from "../../modals/topic/CreateTopicForm";
 import UpdateTopicModal from "../../modals/topic/UpdateTopicModal";
+import { useNotify } from "../../../hook/useNotify";
 
 const TopicDetail = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { loading, error, topic } = useSelector((state) => state.topic);
+  const { notifySuccess, notifyWarning, notifyError, notifyConfirm } =
+    useNotify();
   const [searchParams] = useSearchParams();
   const id = searchParams.get("id");
   const [showCreateTopicModal, setShowCreateTopicModal] = useState(false);
   const [showUpdateTopicModal, setShowUpdateTopicModal] = useState(false);
+
   useEffect(() => {
     dispatch(fetchDetailTopic(id));
   }, [id]);
+
+  const handleHiddenTopic = async () => {
+    try {
+      const confirm = await notifyConfirm(
+        "Bạn có chắc muốn ẩn chuyên mục này không!"
+      );
+      if (confirm) {
+        const response = await dispatch(deleteTopic(topic?._id, false));
+        notifySuccess(response.message);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const handleRestoreTopic = async () => {
+    try {
+      const confirm = await notifyConfirm(
+        "Bạn có chắc muốn phục hồi chuyên mục này không!"
+      );
+      if (confirm) {
+        const response = await dispatch(restoreTopic(topic?._id));
+        notifySuccess(response.message);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
   return (
     <div className="w-full flex flex-col gap-[10px] font-nunito ">
       {showUpdateTopicModal && (
@@ -46,12 +81,12 @@ const TopicDetail = () => {
               {topic?.status === "active" ? (
                 <div className="px-3 py-[2px] rounded-full bg-green-100 text-sm text-green-600">
                   <i className="fa-solid fa-circle-check  mr-[3px]"></i>
-                  <span>hoạt động</span>
+                  <span>Hoạt động</span>
                 </div>
-              ) : topic?.status === "deleted" ? (
-                <div className="px-3 py-[2px] rounded-full bg-red-100 text-sm text-red-600">
-                  <i className="fa-solid fa-circle-xmark  mr-[3px]"></i>
-                  <span>đã ẩn</span>
+              ) : topic?.status === "hidden" ? (
+                <div className="px-3 py-[2px] rounded-full bg-gray-100 text-sm text-gray-600">
+                  <i className="fa-solid fa-eye-low-vision  mr-[3px]"></i>
+                  <span>Đã ẩn</span>
                 </div>
               ) : (
                 <div className="px-3 py-[2px] rounded-full bg-orange-100 text-sm text-orange-400">
@@ -62,6 +97,45 @@ const TopicDetail = () => {
             </div>
             <p className="  text-sm ">ID: {topic?._id}</p>
           </div>
+        </div>
+        <div className="w-full flex  gap-3 py-3">
+          <div
+            onClick={() => setShowUpdateTopicModal(true)}
+            className="w-[28px] h-[28px] border-[1px] rounded-sm border-dark-600 flex items-center justify-center cursor-pointer hover:border-green-600 hover:text-green-600 relative group"
+          >
+            <i className="fa-solid fa-pen-to-square "></i>{" "}
+            <div className="group-hover:block hidden absolute top-[120%] font-bold text-[0.8rem] text-light-50 bg-[#00000078] px-2 py-1   rounded-md text-nowrap">
+              Chỉnh sửa
+            </div>
+          </div>
+          <div
+            onClick={handleHiddenTopic}
+            className="w-[28px] h-[28px] border-[1px] rounded-sm border-dark-600 flex items-center justify-center cursor-pointer hover:border-green-600 hover:text-green-600 relative group"
+          >
+            <i className="fa-solid fa-eye-low-vision"></i>
+            <div className="group-hover:block hidden absolute top-[120%] font-bold text-[0.8rem] text-light-50 bg-[#00000078] px-2 py-1   rounded-md text-nowrap">
+              Ẩn chuyên mục
+            </div>
+          </div>
+          <div className="w-[28px] h-[28px] border-[1px] rounded-sm border-dark-600 flex items-center justify-center cursor-pointer hover:border-red-600 hover:text-red-600 relative group">
+            <i className="fa-solid fa-trash-can-arrow-up"></i>
+            <div className="group-hover:block hidden absolute top-[120%] font-bold text-[0.8rem] text-light-50 bg-[#00000078] px-2 py-1   rounded-md text-nowrap">
+              Xóa
+            </div>
+          </div>
+
+          {topic?.status === "deleted" ||
+            (topic?.status === "hidden" && (
+              <div
+                onClick={handleRestoreTopic}
+                className="w-[28px] h-[28px] border-[1px] rounded-sm border-dark-600 flex items-center justify-center cursor-pointer hover:border-yellow-600 hover:text-yellow-600 relative group "
+              >
+                <i className="fa-solid fa-arrow-rotate-left mt-[2px]"></i>
+                <div className="group-hover:block hidden absolute top-[120%] font-bold text-[0.8rem] text-light-50 bg-[#00000078] px-2 py-1   rounded-md text-nowrap">
+                  Hoàn tác
+                </div>
+              </div>
+            ))}
         </div>
         <div className="w-full flex flex-col gap-2 py-3">
           <h1 className="font-bold">Mô tả</h1>
@@ -120,10 +194,10 @@ const TopicDetail = () => {
                           <i className="fa-solid fa-circle-check  mr-[3px]"></i>
                           <span>hoạt động</span>
                         </div>
-                      ) : topic?.status === "deleted" ? (
-                        <div className="px-3 py-[2px] rounded-full bg-red-100 text-sm text-red-600">
-                          <i className="fa-solid fa-circle-xmark  mr-[3px]"></i>
-                          <span>đã ẩn</span>
+                      ) : topic?.status === "hidden" ? (
+                        <div className="px-3 py-[2px] rounded-full bg-gray-100 text-sm text-gray-600">
+                          <i className="fa-solid fa-eye-low-vision  mr-[3px]"></i>
+                          <span>Đã ẩn</span>
                         </div>
                       ) : (
                         <div className="px-3 py-[2px] rounded-full bg-orange-100 text-sm text-orange-400">
@@ -201,23 +275,6 @@ const TopicDetail = () => {
                   </p>
                 </div>
               </div>
-            )}
-          </div>
-        </div>{" "}
-        <div className="mt-6 pt-6 border-t border-gray-200">
-          <div className="flex flex-col gap-2">
-            <button
-              onClick={() => setShowUpdateTopicModal(true)}
-              className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center gap-2"
-            >
-              <i className="fa-solid fa-pen-to-square mt-[2px]"></i>
-              Chỉnh sửa
-            </button>
-            {!topic?.status === "deleted" && (
-              <button className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors duration-200 flex items-center justify-center gap-2">
-                <i className="fa-solid fa-trash-can-arrow-up mt-[2px]"></i>
-                Xóa chủ đề
-              </button>
             )}
           </div>
         </div>

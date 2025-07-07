@@ -12,7 +12,8 @@ import { createTopic } from "../../../services/topic.service";
 const CreateTopicForm = ({ closeModal, parent }) => {
   const dispatch = useDispatch();
   const { loading, error, topics } = useSelector((state) => state.topic);
-  const { notifySuccess, notifyWarning, notifyError } = useNotify();
+  const { notifySuccess, notifyWarning, notifyError, notifyConfirm } =
+    useNotify();
   const [status, setStatus] = useState(null);
   const [parentId, setParentId] = useState(parent?._id || null);
 
@@ -115,10 +116,14 @@ const CreateTopicForm = ({ closeModal, parent }) => {
         data.append("image", file);
       }
 
-      // Gửi dữ liệu
-      const response = await dispatch(createTopic(data));
-      notifySuccess(response.message);
-      closeModal();
+      const confirm = await notifyConfirm(
+        "bạn có chắc chắn muốn tạo chuyên mục này!"
+      );
+      if (confirm) {
+        const response = await dispatch(createTopic(data));
+        notifySuccess(response.message);
+        closeModal();
+      }
     } catch (error) {
       console.log(error);
       notifyError("Lõi khi tạo chuyên mục:", error.message);
@@ -181,8 +186,8 @@ const CreateTopicForm = ({ closeModal, parent }) => {
                   <option id="active" value="active">
                     Hoạt động
                   </option>
-                  <option id="deleted" value="deleted">
-                    Đã xóa
+                  <option id="hidden" value="hidden">
+                    Đã ẩn
                   </option>
                 </select>
               </div>

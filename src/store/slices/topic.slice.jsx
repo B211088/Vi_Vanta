@@ -75,17 +75,46 @@ const topicSlice = createSlice({
     },
     deleteTopicSuccess: (state, action) => {
       state.loading = false;
-      state.topics = state.topics.filter((top) => top._id !== action.payload);
+
+      // Cập nhật topics array
+      state.topics = state.topics.map((top) =>
+        top._id === action.payload._id
+          ? { ...top, status: action.payload.status }
+          : top
+      );
+
+      // Cập nhật topic detail nếu có
+      if (state.topic && state.topic._id === action.payload._id) {
+        state.topic = { ...state.topic, status: action.payload.status };
+      }
     },
     deleteSoftTopicSuccess: (state, action) => {
       state.loading = false;
 
       state.topics = state.topics.map((top) =>
-        top._id === action.payload ? { ...top, status: "deleted" } : top
+        top._id === action.payload._id
+          ? { ...top, status: action.payload.status }
+          : top
       );
 
-      if (state.topic && state.topic._id === action.payload) {
-        state.topic = { ...state.topic, status: "deleted" };
+      // Cập nhật topic detail
+      if (state.topic && state.topic._id === action.payload._id) {
+        state.topic = { ...state.topic, status: action.payload.status };
+      }
+    },
+
+    restoreSuccess: (state, action) => {
+      state.loading = false;
+
+      state.topics = state.topics.map((top) =>
+        top._id === action.payload._id
+          ? { ...top, status: action.payload.status }
+          : top
+      );
+
+      // Cập nhật topic detail
+      if (state.topic && state.topic._id === action.payload._id) {
+        state.topic = { ...state.topic, status: action.payload.status };
       }
     },
     deleteTopicFailure: (state, action) => {
@@ -117,6 +146,7 @@ export const {
   deleteTopicFailure,
   deleteSoftTopicSuccess,
   createTopicChildrenSuccess,
+  restoreSuccess,
 } = topicSlice.actions;
 
 export default topicSlice.reducer;

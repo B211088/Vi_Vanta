@@ -109,7 +109,7 @@ export const uploadUserAvatar = (avatarFile) => async (dispatch) => {
   try {
     dispatch(loadingStart());
     const formData = new FormData();
-    const file = new File([avatarFile], "avatar.jpg", {
+    const file = new File([avatarFile], "avatar", {
       type: avatarFile.type || "image/jpeg",
     });
     formData.append("avatar", file);

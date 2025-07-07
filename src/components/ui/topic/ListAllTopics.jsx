@@ -1,14 +1,21 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllTopics, searchTopics } from "../../../services/topic.service";
+import {
+  deleteTopic,
+  fetchAllTopics,
+  restoreTopic,
+  searchTopics,
+} from "../../../services/topic.service";
 import { formatDateDDMMYYHHMMSS } from "../../../utils/formatDate";
 import { Link } from "react-router-dom";
 import CreateTopicForm from "../../modals/topic/CreateTopicForm";
+import { useNotify } from "../../../hook/useNotify";
 
 const ListAllTopics = () => {
   const dispatch = useDispatch();
   const { loading, error, topics } = useSelector((state) => state.topic);
-
+  const { notifySuccess, notifyWarning, notifyError, notifyConfirm } =
+    useNotify();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [sortBy, setSortBy] = useState("createdAt");
@@ -45,6 +52,33 @@ const ListAllTopics = () => {
         console.log(error);
       }
     }, 500);
+  };
+
+  const handleHiddenTopic = async (id) => {
+    try {
+      const confirm = await notifyConfirm(
+        "Bạn có chắc muốn ẩn chuyên mục này không!"
+      );
+      if (confirm) {
+        const response = await dispatch(deleteTopic(id, false));
+        notifySuccess(response.message);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const handleRestoreTopic = async (id) => {
+    try {
+      const confirm = await notifyConfirm(
+        "Bạn có chắc muốn phục hồi chuyên mục này không!"
+      );
+      if (confirm) {
+        const response = await dispatch(restoreTopic(id));
+        notifySuccess(response.message);
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
@@ -130,9 +164,9 @@ const ListAllTopics = () => {
                     <i className="fa-solid fa-circle-check text-green-600 mr-[3px]"></i>
                     <span>hoạt động</span>
                   </div>
-                ) : topic?.status === "deleted" ? (
+                ) : topic?.status === "hidden" ? (
                   <div className="">
-                    <i className="fa-solid fa-circle-xmark text-red-600 mr-[3px]"></i>
+                    <i className="fa-solid fa-circle-xmark text-gay-600 mr-[3px]"></i>
                     <span>đã ẩn</span>
                   </div>
                 ) : (
@@ -148,15 +182,30 @@ const ListAllTopics = () => {
                 {formatDateDDMMYYHHMMSS(topic.createdAt)}
               </div>
               <div className="w-2/12 flex items-center gap-[10px] text-[0.8rem]">
-                <div className="w-[28px] h-[28px] border-[1px] rounded-sm border-dark-600 flex items-center justify-center cursor-pointer hover:border-red-600 hover:text-red-600">
-                  <i className="fa-solid fa-trash-can-arrow-up mt-[2px]"></i>
+                <div className="w-[28px] h-[28px] border-[1px] rounded-sm border-dark-600 flex items-center justify-center cursor-pointer hover:border-green-600 hover:text-green-600 relative group">
+                  <i className="fa-solid fa-pen-to-square mt-[2px]"></i>{" "}
+                  <div className="group-hover:block hidden absolute top-[120%] font-bold text-[0.8rem] text-light-50 bg-[#00000078] px-2 py-1   rounded-md text-nowrap">
+                    Chỉnh sửa
+                  </div>
                 </div>
-                <div className="w-[28px] h-[28px] border-[1px] rounded-sm border-dark-600 flex items-center justify-center cursor-pointer hover:border-green-600 hover:text-green-600">
-                  <i className="fa-solid fa-pen-to-square mt-[2px]"></i>
+                <div
+                  onClick={() => handleHiddenTopic(topic?._id)}
+                  className="w-[28px] h-[28px] border-[1px] rounded-sm border-dark-600 flex items-center justify-center cursor-pointer hover:border-green-600 hover:text-green-600 relative group"
+                >
+                  <i className="fa-solid fa-eye-low-vision"></i>
+                  <div className="group-hover:block hidden absolute top-[120%] font-bold text-[0.8rem] text-light-50 bg-[#00000078] px-2 py-1   rounded-md text-nowrap">
+                    Ẩn chuyên mục
+                  </div>
                 </div>
-                {topic?.status === "deleted" && (
-                  <div className="w-[28px] h-[28px] border-[1px] rounded-sm border-dark-600 flex items-center justify-center cursor-pointer hover:border-yellow-600 hover:text-yellow-600">
+                {topic?.status === "hidden" && (
+                  <div
+                    onClick={() => handleRestoreTopic(topic?._id)}
+                    className="w-[28px] h-[28px] border-[1px] rounded-sm border-dark-600 flex items-center justify-center cursor-pointer hover:border-green-600 hover:text-green-600 relative group"
+                  >
                     <i className="fa-solid fa-arrow-rotate-left mt-[2px]"></i>
+                    <div className="group-hover:block hidden absolute top-[120%] font-bold text-[0.8rem] text-light-50 bg-[#00000078] px-2 py-1   rounded-md text-nowrap">
+                      Hoàn tác
+                    </div>
                   </div>
                 )}{" "}
               </div>
