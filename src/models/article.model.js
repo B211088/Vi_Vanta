@@ -30,7 +30,7 @@ const articleSchema = new Schema(
     ],
     publishedAt: { type: Date },
     reviewingBy: { type: Schema.Types.ObjectId, ref: "User" },
-    publihBy: { type: Schema.Types.ObjectId, ref: "User" },
+    publishedBy: { type: Schema.Types.ObjectId, ref: "User" },
     createdBy: { type: Schema.Types.ObjectId, ref: "User" },
     updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
     views: { type: Number, default: 0 },

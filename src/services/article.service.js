@@ -60,10 +60,10 @@ class ArticleService {
 
     const [articles, total] = await Promise.all([
       Article.find(filter)
-        .populate("author", "name email avatar")
+        .populate("author", "fullName email ")
         .populate("topics", "name slug")
-        .populate("createdBy", "name email")
-        .populate("updatedBy", "name email")
+        .populate("createdBy", "fullName  email")
+        .populate("updatedBy", "fullName email")
         .sort(sortOptions)
         .skip(skip)
         .limit(parseInt(limit))
@@ -85,10 +85,10 @@ class ArticleService {
   // Lấy bài viết theo ID
   async getArticleById(id) {
     const article = await Article.findById(id)
-      .populate("author", "name email avatar")
+      .populate("author", "fullName email ")
       .populate("topics", "name slug")
-      .populate("createdBy", "name email")
-      .populate("updatedBy", "name email");
+      .populate("createdBy", "fullName  email")
+      .populate("updatedBy", "fullName email");
 
     if (!article) {
       throw new ApiError(404, "Không tìm thấy bài viết");
@@ -104,10 +104,10 @@ class ArticleService {
   // Lấy bài viết theo slug
   async getArticleBySlug(slug) {
     const article = await Article.findOne({ slug })
-      .populate("author", "name email avatar")
+      .populate("author", "fullName email avatar")
       .populate("topics", "name slug")
-      .populate("createdBy", "name email")
-      .populate("updatedBy", "name email");
+      .populate("createdBy", "fullName  email")
+      .populate("updatedBy", "fullName email");
 
     if (!article) {
       throw new ApiError(404, "Không tìm thấy bài viết");

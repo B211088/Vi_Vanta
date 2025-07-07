@@ -13,36 +13,39 @@ const asyncHandler = (fn) => (req, res, next) => {
 class ArticleController {
   // Tạo bài viết mới
   createArticle = asyncHandler(async (req, res) => {
-    const { images, thumbnail } = req.files;
+    const { images, thumbnail: thumbnailFiles } = req.files;
     const userId = req.user.userId;
 
     console.log({
       images: images ? images.map((f) => f.originalname) : [],
-      thumbnail: thumbnail ? thumbnail.map((f) => f.originalname) : [],
+      thumbnail: thumbnailFiles
+        ? thumbnailFiles.map((f) => f.originalname)
+        : [],
     });
 
-    const { sections: rawSections, ...otherFields } = req.body;
-    let sectionsData = [];
+    const thumbnailFile = thumbnailFiles?.[0];
 
-    // Xử lý thumbnail
-    let thumbnailData = { url: "", public_id: "" };
-    if (thumbnail && thumbnail.length > 0) {
-      const uploadedThumb = await uploads(
-        thumbnail[0],
-        userId,
-        "article_thumbnail"
-      );
-      thumbnailData = {
-        url: uploadedThumb.url,
-        public_id: uploadedThumb.public_id,
-      };
-    } else {
+    if (!thumbnailFile) {
       throw new ApiError(400, "Thiếu ảnh thumbnail");
     }
 
-    // Xử lý sections
+    const { sections: rawSections, ...otherFields } = req.body;
+
+    // Upload thumbnail
+    const uploadedThumb = await uploads(
+      thumbnailFile,
+      userId,
+      "article_thumbnail"
+    );
+    const thumbnailData = {
+      url: uploadedThumb.url,
+      public_id: uploadedThumb.public_id,
+    };
+
+    // Parse sections
+    let sections;
     try {
-      const sections =
+      sections =
         typeof rawSections === "string" ? JSON.parse(rawSections) : rawSections;
 
       if (!Array.isArray(sections) || sections.length === 0) {
@@ -55,37 +58,52 @@ class ArticleController {
           "Số lượng ảnh sections phải bằng số lượng section"
         );
       }
-
-      sectionsData = await Promise.all(
-        sections.map(async (section, index) => {
-          const file = images[index];
-          if (!file) {
-            throw new ApiError(400, `Section ${index + 1} thiếu ảnh`);
-          }
-
-          const uploadedImage = await uploads(file, userId, "article_section");
-
-          return {
-            heading: section.heading,
-            content: section.content,
-            image: {
-              url: uploadedImage.url,
-              public_id: uploadedImage.public_id,
-              description: section.imageDescription || "",
-            },
-          };
-        })
-      );
     } catch (err) {
-      throw new ApiError(400, "Xử lý section thất bại", err.message);
+      throw new ApiError(400, `Xử lý section thất bại: ${err.message}`);
     }
 
-    // Tạo article
+    // Upload section images + build sectionsData
+    const sectionsData = await Promise.all(
+      sections.map(async (section, index) => {
+        const file = images[index];
+        if (!file) {
+          throw new ApiError(400, `Section ${index + 1} thiếu ảnh`);
+        }
+
+        const uploadedImage = await uploads(file, userId, "article_section");
+
+        return {
+          heading: section.heading,
+          content: section.content,
+          image: {
+            url: uploadedImage.url,
+            public_id: uploadedImage.public_id,
+            description: section.imageDescription || "",
+          },
+        };
+      })
+    );
+    let { topics } = req.body;
+
+    if (typeof topics === "string") {
+      try {
+        topics = JSON.parse(topics);
+      } catch (err) {
+        throw new ApiError(400, "Topics không hợp lệ");
+      }
+    }
+
+    // Đảm bảo topics là array
+    if (!Array.isArray(topics)) {
+      throw new ApiError(400, "Topics phải là một mảng");
+    }
+    // Create article
     const article = await articleService.createArticle(
       {
         ...otherFields,
         thumbnail: thumbnailData,
         sections: sectionsData,
+        topics: topics,
       },
       userId
     );

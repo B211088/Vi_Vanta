@@ -7,7 +7,7 @@ import {
   uploadImage,
 } from "../middlewares/uploadMiddleware.js";
 const router = Router();
-
+import upload from "../middlewares/uploadImageMiddleware.js";
 // Public routes - Không cần xác thực
 router.get("/", verifyToken, articleController.getArticles);
 router.get("/search", articleController.searchArticles);
@@ -32,7 +32,7 @@ router.post(
   "/",
   verifyToken,
   authorizeRoles("admin"),
-  uploadImage.fields([
+  upload.fields([
     {
       name: "images",
       maxCount: 10,
