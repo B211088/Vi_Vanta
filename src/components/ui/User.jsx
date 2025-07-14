@@ -55,11 +55,10 @@ const User = () => {
         </div>
       </div>
       <div className=" flex items-center gap-[5px]  group relative">
-        <p className="truncate text-sm font-semibold">{user.fullName}</p>
         <div className="w-[38px] h-[38px]  flex items-center justify-center bg-dark-800 rounded-full  overflow-hidden relative cursor-pointer">
           <img
             className="w-full h-full object-cover aspect-square rounded-full"
-            src={user.avatar.url}
+            src={user?.avatar?.url}
             alt=""
           />
           <div
@@ -71,7 +70,7 @@ const User = () => {
           </div>
         </div>
         <div
-          className={` absolute  hidden group-hover:flex group-hover:flex-col top-[100%] right-[0%]  ${
+          className={` absolute  hidden group-hover:flex group-hover:flex-col top-[100%] right-[0%]  z-20 ${
             isDarkMode ? "bg-light-50" : "bg-dark-400"
           } rounded-sm shadow-md `}
         >

@@ -29,4 +29,65 @@
   --color-dark-800: #e5e7eb;
   --color-dark-900: #f3f4f6;
   --color-dark-1000: #f9fafb;
+
+  /* vivanta brand colors - teal palette */
+  --color-vivanta-50: #f0fdfa;
+  --color-vivanta-100: #ccfbf1;
+  --color-vivanta-200: #99f6e4;
+  --color-vivanta-300: #5eead4;
+  --color-vivanta-400: #2dd4bf;
+  --color-vivanta-500: #14b8a6;
+  --color-vivanta-600: #0d9488;
+  --color-vivanta-700: #0f766e;
+  --color-vivanta-800: #115e59;
+  --color-vivanta-900: #134e4a;
+  --color-vivanta-950: #042f2e;
+
+  /* vivanta brand colors - emerald palette */
+  --color-vivanta-emerald-50: #ecfdf5;
+  --color-vivanta-emerald-100: #d1fae5;
+  --color-vivanta-emerald-200: #a7f3d0;
+  --color-vivanta-emerald-300: #6ee7b7;
+  --color-vivanta-emerald-400: #34d399;
+  --color-vivanta-emerald-500: #10b981;
+  --color-vivanta-emerald-600: #059669;
+  --color-vivanta-emerald-700: #047857;
+  --color-vivanta-emerald-800: #065f46;
+  --color-vivanta-emerald-900: #064e3b;
+  --color-vivanta-emerald-950: #022c22;
+
+  /* vivanta brand colors - cyan palette */
+  --color-vivanta-cyan-50: #ecfeff;
+  --color-vivanta-cyan-100: #cffafe;
+  --color-vivanta-cyan-200: #a5f3fc;
+  --color-vivanta-cyan-300: #67e8f9;
+  --color-vivanta-cyan-400: #22d3ee;
+  --color-vivanta-cyan-500: #06b6d4;
+  --color-vivanta-cyan-600: #0891b2;
+  --color-vivanta-cyan-700: #0e7490;
+  --color-vivanta-cyan-800: #155e75;
+  --color-vivanta-cyan-900: #164e63;
+  --color-vivanta-cyan-950: #083344;
+
+  /* vivanta semantic colors */
+  --color-vivanta-primary: #14b8a6;
+  --color-vivanta-primary-dark: #0d9488;
+  --color-vivanta-secondary: #10b981;
+  --color-vivanta-secondary-dark: #059669;
+  --color-vivanta-accent: #06b6d4;
+  --color-vivanta-accent-dark: #0891b2;
+
+  /* vivanta background colors */
+  --color-vivanta-bg-primary: #f0fdfa;
+  --color-vivanta-bg-secondary: #ecfdf5;
+  --color-vivanta-bg-accent: #ecfeff;
+  --color-vivanta-bg-gradient-start: #f0fdfa;
+  --color-vivanta-bg-gradient-via: #ecfdf5;
+  --color-vivanta-bg-gradient-end: #ecfeff;
+
+  /* vivanta text colors */
+  --color-vivanta-text-primary: #134e4a;
+  --color-vivanta-text-secondary: #064e3b;
+  --color-vivanta-text-muted: #115e59;
+  --color-vivanta-text-light: #0f766e;
 }

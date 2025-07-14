@@ -5,17 +5,19 @@ import ErrorPage from "../pages/errorPage";
 
 import ProtectedRoute from "./ProtectedRoute";
 import AuthRoute from "./AuthRoute";
-import BodyIndex from "../components/layout/user/BodyIndex";
-import Tools from "../pages/user/Tools";
-import Dashboard from "../pages/user/Dashboard";
-import BmiCalculateForm from "../components/common/forms/BmiCalculateForm";
-import BmiCalculateDetail from "../components/ui/BmiCalculateDetail";
-import EmmCalculateForm from "../components/common/forms/EmmCalculateForm";
-import EmmCalculateDetail from "../components/ui/EmmCalculateDetail";
-import BodyFatCalculateForm from "../components/common/forms/BodyFatCalculateForm";
-import WhrCalculateForm from "../components/common/forms/WhrCalculateForm";
-import WhrCalculateDetail from "../components/ui/WhrCalculateDetail";
-import BodyFatCalculateDetail from "../components/ui/BodyFatCalculateDetail";
+
+import AllTopics from "../components/ui/topic/AllTopics";
+import DetailActicle from "../components/ui/article/DetailActicle";
+import TopicDetail from "../components/ui/topic/TopicDetail";
+import ChatBot from "../components/layout/ai/ChatBot";
+import BookExamination from "../components/layout/examination/BookExamination";
+import BookExaminationDetail from "../components/layout/examination/BookExaminationDetail";
+import AppointmentBookingForm from "../components/layout/examination/AppointmentBookingForm";
+import HealthInfo from "../components/layout/user/HealthInfo";
+import BMICalculator from "../components/ui/healthtool/BMICalculator";
+import Tools from "../components/layout/tools/Tools";
+import AllTools from "../components/ui/healthtool/AllTools";
+import SleepCalculator from "../components/ui/healthtool/SleepCalculator";
 
 const Home = lazy(() => import("../pages/user/Home"));
 const Auth = lazy(() => import("../pages/auth/Auth"));
@@ -38,147 +40,147 @@ const router = createBrowserRouter([
     path: "/",
     element: (
       <Suspense fallback={<Loading />}>
+        <Home />
+      </Suspense>
+    ),
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/book-examination",
+    element: (
+      <Suspense fallback={<Loading />}>
         <ProtectedRoute>
-          <Home />
+          <BookExamination />
+        </ProtectedRoute>
+      </Suspense>
+    ),
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/book-examination/info",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <ProtectedRoute>
+          <BookExaminationDetail />
+        </ProtectedRoute>
+      </Suspense>
+    ),
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/book-examination/confirm",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <ProtectedRoute>
+          <AppointmentBookingForm />
+        </ProtectedRoute>
+      </Suspense>
+    ),
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/vivanta-ai",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <ChatBot />
+      </Suspense>
+    ),
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/topics",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <AllTopics />
+      </Suspense>
+    ),
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/topic",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <TopicDetail />
+      </Suspense>
+    ),
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/article",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <DetailActicle />
+      </Suspense>
+    ),
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/tools",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <Tools />
+      </Suspense>
+    ),
+    children: [
+      {
+        path: "all",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <AllTools />
+          </Suspense>
+        ),
+
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "bmi",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <BMICalculator />
+          </Suspense>
+        ),
+
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "sleep-caculator",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <SleepCalculator />
+          </Suspense>
+        ),
+
+        errorElement: <ErrorPage />,
+      },
+    ],
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "account",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <ProtectedRoute>
+          <Account />
         </ProtectedRoute>
       </Suspense>
     ),
     children: [
       {
-        index: true,
-        element: <Navigate to="dashboard" replace />,
-      },
-      {
-        path: "dashboard",
+        path: "profile",
         element: (
           <Suspense fallback={<Loading />}>
-            <Dashboard />
+            <Profile />
           </Suspense>
         ),
         errorElement: <ErrorPage />,
       },
       {
-        path: "account",
+        path: "health_info",
         element: (
           <Suspense fallback={<Loading />}>
-            <Account />
+            <HealthInfo />
           </Suspense>
         ),
-        children: [
-          {
-            path: "profile",
-            element: (
-              <Suspense fallback={<Loading />}>
-                <Profile />
-              </Suspense>
-            ),
-            errorElement: <ErrorPage />,
-          },
-          {
-            path: "social_info",
-            element: (
-              <Suspense fallback={<Loading />}>
-                <Profile />
-              </Suspense>
-            ),
-            errorElement: <ErrorPage />,
-          },
-        ],
-        errorElement: <ErrorPage />,
-      },
-      {
-        path: "tools",
-        element: (
-          <Suspense fallback={<Loading />}>
-            <Tools />
-          </Suspense>
-        ),
-        children: [
-          {
-            index: true, // 👉 khi người dùng truy cập /tools
-            element: <Navigate to="body-index" replace />,
-          },
-          {
-            path: "body-index",
-            element: (
-              <Suspense fallback={<Loading />}>
-                <BodyIndex />
-              </Suspense>
-            ),
-            children: [
-              {
-                index: true,
-                element: <Navigate to="calculate-bmi" replace />,
-              },
-              {
-                path: "calculate-bmi",
-                element: (
-                  <Suspense fallback={<Loading />}>
-                    <BmiCalculateForm />
-                  </Suspense>
-                ),
-                children: [
-                  {
-                    path: ":id",
-                    element: (
-                      <Suspense fallback={<Loading />}>
-                        <BmiCalculateDetail />
-                      </Suspense>
-                    ),
-                  },
-                ],
-              },
-              {
-                path: "calculate-emm",
-                element: (
-                  <Suspense fallback={<Loading />}>
-                    <EmmCalculateForm />
-                  </Suspense>
-                ),
-                children: [
-                  { path: ":id", element: <EmmCalculateDetail /> }, // nếu có component chi tiết
-                ],
-              },
-              {
-                path: "calculate-body-fat",
-                element: (
-                  <Suspense fallback={<Loading />}>
-                    <BodyFatCalculateForm />
-                  </Suspense>
-                ),
-                children: [
-                  {
-                    path: ":id",
-                    element: (
-                      <Suspense fallback={<Loading />}>
-                        <BodyFatCalculateDetail />
-                      </Suspense>
-                    ),
-                  },
-                ],
-              },
-              {
-                path: "calculate-whr",
-                element: (
-                  <Suspense fallback={<Loading />}>
-                    <WhrCalculateForm />
-                  </Suspense>
-                ),
-                children: [
-                  {
-                    path: ":id",
-                    element: (
-                      <Suspense fallback={<Loading />}>
-                        <WhrCalculateDetail />
-                      </Suspense>
-                    ),
-                  },
-                ],
-              },
-            ],
-            errorElement: <ErrorPage />,
-          },
-        ],
         errorElement: <ErrorPage />,
       },
     ],
@@ -244,15 +246,6 @@ const router = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
     ],
-    errorElement: <ErrorPage />,
-  },
-  {
-    path: "/account",
-    element: (
-      <Suspense fallback={<Loading />}>
-        <Account />
-      </Suspense>
-    ),
     errorElement: <ErrorPage />,
   },
 ]);

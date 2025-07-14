@@ -104,12 +104,21 @@ export const updateUserProfile = (userData) => async (dispatch) => {
   }
 };
 
-export const uploadUserAvatar = (avatarFile) => async (dispatch) => {
+export const uploadUserAvatar = (avatarBlob) => async (dispatch) => {
   try {
     dispatch(loadingStart());
     const formData = new FormData();
-    formData.append("avatar", avatarFile);
-    const response = await api.put("/api/v1/user/upload_avatar", formData);
+    const file = new File([avatarBlob], "avatar.jpg", {
+      type: avatarBlob.type || "image/jpeg",
+    });
+    formData.append("avatar", file);
+
+    const response = await api.put("/api/v1/user/upload_avatar", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
     dispatch(uploadUserAvatarSuccess({ user: response.data.user }));
     return { success: true, message: "Cập nhật avatar thành công!" };
   } catch (error) {

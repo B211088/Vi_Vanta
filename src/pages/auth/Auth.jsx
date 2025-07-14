@@ -88,7 +88,7 @@ const Auth = () => {
             <div className="w-full h-full p-[10px] relative">
               <img
                 src={banner}
-                className="object-cover w-full max-h-full rounded-[10px]"
+                className="object-cover w-full max-h-full rounded-[10px] border-1 border-dark-700"
                 alt=""
               />
             </div>
