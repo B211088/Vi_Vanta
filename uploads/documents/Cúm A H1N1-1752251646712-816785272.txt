@@ -1,0 +1,211 @@
+Cúm A H1N1: Nguyên nhân, triệu chứng, biến chứng và phòng bệnh
+
+Mặc dù đã trải qua nhiều đợt dịch bệnh, từ SARS đến cúm H5N1, nhưng ít ai quên cơn ác mộng của cúm H1N1 năm 2009 tại Việt Nam. Cho đến nay, cúm A H1N1 vẫn là chủng gây bệnh cúm theo mùa cần chủ động phòng ngừa.
+
+Trong bối cảnh biến động không ngừng của dịch bệnh và sự xuất hiện của các biến thể mới, cúm A H1N1 vẫn không nên chủ quan. Bài viết hy vọng sẽ cung cấp thêm cho bạn một số thông tin cơ bản về cúm A H1N1 (hoặc cúm A/H1N1), từ nguồn gốc đến các biến chứng có thể gặp, cách phòng ngừa, điều trị.
+
+Bài viết được tư vấn chuyên môn bởi Trung tâm Thông tin y khoa, Bệnh viện Đa khoa Tâm Anh TP.HCM.
+
+Cúm A H1N1
+
+Cúm A H1N1 là gì?
+Cúm A H1N1, còn được gọi là cúm H1N1, là một bệnh do virus cúm A H1N1 (tên khoa học là virus pdm09 (A)) gây nhiễm trùng đường hô hấp trên và dưới (trong một số trường hợp) ở vật chủ. Cúm A H1N1 từng được gọi là cúm lợn vì trước đây, những người mắc bệnh đều tiếp xúc trực tiếp với lợn. Tuy nhiên, sau đó thì bệnh bắt đầu lây lan những người chưa từng tiếp xúc hay ở gần lợn.
+
+Cúm A H1N1 là một bệnh hô hấp rất dễ lây lan. Sự lây truyền virus cúm A H1N1 từ động vật sang người là không phổ biến. Tuy nhiên, virus có thể lây truyền sang người qua tiếp xúc với lợn bị nhiễm bệnh hoặc từ người sang người thông qua tiếp xúc, môi trường/vật thể nhiễm virus.
+
+Thời gian ủ bệnh cúm A H1N1 dao động từ 1 đến 4 ngày, trung bình là khoảng 2 ngày ở hầu hết các người bệnh. Tuy nhiên, vẫn có một số trường hợp có thời gian ủ bệnh kéo dài tới 7 ngày. Thời kỳ lây nhiễm ở người lớn bắt đầu khoảng 1 ngày trước khi các triệu chứng phát triển và kéo dài khoảng 5 đến 7 ngày sau khi người đó xuất hiện các triệu chứng. Thời gian lây nhiễm có thể dài hơn ở những người có hệ miễn dịch yếu và trẻ em (ví dụ: 10 đến 14 ngày).
+
+Tổ chức Y tế Thế giới (WHO) đã tuyên bố cúm A H1N1 là đại dịch vào tháng 6 năm 2009. Vào thời điểm này, cúm A H1N1 đã lây lan tại 74 quốc gia và vùng lãnh thổ, gây ra khoảng 284.400 ca tử vong trên toàn thế giới. Vào tháng 8 năm 2010, WHO tuyên bố đại dịch đã kết thúc. Nhưng cho đến hiện nay, chủng cúm A H1N1 đã trở thành một trong những chủng gây bệnh cúm theo mùa cần chủ động phòng ngừa.
+
+Cúm A H1N1 từng được gọi là cúm lợn
+Cúm A H1N1 từng được gọi là cúm lợn.
+Cúm A H1N1 xuất hiện đầu tiên ở đâu?
+Năm 1977 là thời điểm bắt đầu xuất hiện virus cúm H1N1. Tuy nhiên, loại virus này là virus cúm động vật, chỉ lây từ lợn sang lợn hoặc sang các loài động vật khác.
+
+Vào khoảng tháng 3 – tháng 4 năm 2009, xuất hiện các trường hợp nhiễm cúm A H1N1. Đây là lúc ghi nhận những ca nhiễm bệnh đầu tiên của loại virus này. Đợt bùng phát cúm A H1N1 năm 2009 được công nhận là một đợt dịch bệnh toàn cầu, phát triển mạnh tại khu vực Bắc Mỹ và nhanh chóng lan rộng sang nhiều quốc gia trên thế giới.
+
+Việt Nam ghi nhận ca nhiễm virus cúm A H1N1 đầu tiên vào khoảng tháng 5 năm 2009 và lây lan nhanh tại hơn 30 tỉnh, thành trên khắp cả nước. Số ca nhiễm thời điểm đó lên đến khoảng 800 ca và đã có trường hợp tử vong.
+
+Việt Nam từng ghi nhận các ca nhiễm virus cúm A H1N1
+Việt Nam từng ghi nhận các ca nhiễm virus cúm A H1N1 vào năm 2009.
+Đặc điểm cấu tạo virus cúm A H1N1
+Virus cúm A H1N1 là một loại virus orthomyxovirus và tạo ra các virion (hạt virus truyền nhiễm) có đường kính từ 80 đến 120 nm, với kích thước bộ gen RNA khoảng 13,5 kb. Bộ gen cúm A H1N1 có 8 vùng khác nhau được phân đoạn và mã hóa 11 loại protein khác nhau:
+
+Protein bao bọc hemagglutinin (HA) và neuraminidase (NA)
+Các polymerase RNA của virus bao gồm PB2, PB1, PB1-F2, PA và PB
+Protein ma trận ngoại bào M1 và M2
+Các protein phi cấu trúc NS1 và NS2 (NEP), rất quan trọng cho quá trình sinh bệnh và nhân lên của virus hiệu quả
+Các glycoprotein bề mặt HA và NA là cách phân biệt chủng H1N1 với các chủng cúm A khác tùy thuộc vào loại kháng nguyên HA hoặc NA được biểu hiện bằng sức mạnh tổng hợp trao đổi chất. Chức năng của hemagglutinin là làm cho các tế bào hồng cầu tập hợp lại với nhau và gắn virus vào tế bào bị nhiễm bệnh. Trong khi đó, neuraminidase giúp di chuyển các hạt virus qua tế bào bị nhiễm bệnh và hỗ trợ các hạt virus phát triển từ tế bào chủ.
+
+Điều quan trọng cần lưu ý là virus cúm A H1N1 không phải là một dạng mới của virus cúm thông thường, mà là sự kết hợp của các đặc điểm gen từ virus cúm lợn, chim và người. Sự kết hợp này dẫn đến sự xuất hiện của một chủng virus mới có khả năng lây nhiễm giữa người và nhanh chóng lan truyền trong cộng đồng.
+
+Năm 2009, đại dịch bắt đầu ở Mexico với chủng H1N1 cho thấy sự kết hợp các phân đoạn của 4 loại virus cúm khác nhau (tái tổ hợp bốn gen): cúm gia cầm có nguồn gốc từ lợn (chiếm 34,4%), cúm có nguồn gốc từ gia cầm của cúm người (chiếm 17,5%), cúm lợn Bắc Mỹ (chiếm 30,6%) và cúm lợn Âu Á (chiếm 17,5%). Do sự đồng nhiễm với virus cúm từ nhiều loài động vật khác nhau, virus có thể tương tác, biến đổi và hình thành các chủng mới có khả năng miễn dịch khác nhau.
+
+Mặc dù virus cúm A H1N1 có nguồn gốc từ lợn nhưng nó có thể lây từ người sang người. Khi bệnh cúm lây từ người sang người, thay vì từ động vật sang người, có thể có những đột biến tiếp theo, khiến việc điều trị khó khăn hơn vì con người không có khả năng miễn dịch tự nhiên.
+
+Đường lây truyền cúm A H1N1
+Đường lây truyền của virus cúm A H1N1 từ người bệnh sang người khác chính là thông qua giọt bắt có chứa virus. Bạn có thể hít phải không khí có chứa virus do người bệnh ho hoặc hắt hơi, nói chuyện. Hoặc bạn cũng có thể bị nhiễm trùng khi chạm vào bề mặt có chứa virus như quần áo, bàn ghế, tay nắm cửa,… và sau đó chạm vào miệng, mũi hoặc mắt mình.
+
+Virus cúm A H1N1 có thể lây truyền qua giọt bắn
+Virus cúm A H1N1 có thể lây truyền qua giọt bắn khi người bệnh ho hoặc hắt hơi.
+Virus cúm A H1N1 tồn tại trong môi trường bao lâu?
+Virus cúm A H1N1 có khả năng tồn tại trong môi trường một khoảng thời gian nhất định tùy thuộc vào điều kiện môi trường cụ thể.
+
+Thời gian trung bình virus cúm A H1N1 có thể tồn tại trên các bề mặt môi trường và có thể lây nhiễm cho một người lên đến 2-8 giờ sau khi lắng đọng trên bề mặt.
+
+Virus cúm A H1N1 có thể sinh sống và phát triển trên da tay và các bề mặt da khác trong một khoảng thời gian ngắn, ước chừng khoảng 5-10 phút. Thời gian virus tồn tại trong không khí thường ngắn hơn và phụ thuộc vào nhiều yếu tố như độ ẩm và nhiệt độ. Với môi trường nước, virus cúm A H1N1 có thể tồn tại lên đến 4 ngày (trường hợp nhiệt độ nước khoảng 22 độ C), vài tuần ở (trường hợp nhiệt độ nước ở mức 0-4 độ C), cả năm (trường hợp nước đông lại, có nhiệt độ -20 độ C).
+
+Một số nghiên cứu về khả năng tồn tại của virus cúm A H1N1 cho thấy, các hạt virus cúm A H1N1 vẫn có khả năng lây nhiễm trong 48 giờ trên bề mặt gỗ, trong 24 giờ trên bề mặt thép không gỉ và nhựa, trong 8 giờ trên bề mặt vải (mặc dù khả năng phục hồi virus từ vải có thể không cao). (1)
+
+Kết quả này cho thấy virus cúm A H1N1 có thể tồn tại trên đồ vật thông thường trong gia đình trong thời gian dài, đòi hỏi mỗi người phải thực hiện việc vệ sinh tốt hơn để phòng tránh bệnh hiệu quả.
+
+Nguyên nhân gây bệnh cúm A H1N1
+Nguyên nhân gây bệnh cúm A H1N1 được biết đến là do một loại virus gây bệnh cúm gây ra. Virus cúm lây nhiễm vào các tế bào ở mũi, họng và phổi của con người.
+
+Virus lây lan qua không khí dưới dạng các giọt bắn ra khi người nhiễm virus ho, hắt hơi, thở hoặc nói chuyện. Virus xâm nhập vào cơ thể khi người đó tiếp xúc gần hoặc hôn, quan hệ tình dục với người đang mắc bệnh và hít phải những giọt bắn này. Ngoài ra, virus cũng có thể xâm nhập vào cơ thể bạn nếu bạn chạm vào bề mặt vật thể có chứa virus và sau đó chạm vào mắt, mũi hoặc miệng.
+
+Triệu chứng nhận biết bệnh cúm A H1N1
+Cúm H1N1 có triệu chứng là gì? Làm sao để biết một người có những dấu hiệu nhiễm cúm A H1N1?
+
+Theo đó, cúm A H1N1 gây ra hầu hết các triệu chứng ở đường hô hấp trên và dưới. Những trường hợp nhẹ thường biểu hiện một vài thay đổi bệnh lý ở đường hô hấp, nhưng những trường hợp nặng có thể biểu hiện rõ ràng những thay đổi giống như một người mắc bệnh viêm phổi.
+
+Các triệu chứng nhiễm cúm A H1N1 thường xuất hiện trong khoảng 1 đến 4 ngày sau khi bạn tiếp xúc với virus.
+
+1. Triệu chứng cúm A H1N1 thông thường
+Các triệu chứng của bệnh cúm A H1N1 thường tương tự như các triệu chứng của các loại cúm do virus khác. Các triệu chứng thường bắt đầu nhanh chóng và có thể bao gồm:
+
+Sốt (tùy trường hợp có thể sốt hoặc không)
+Đau cơ bắp
+Ớn lạnh và đổ mồ hôi
+Ho
+Đau họng
+Chảy nước mũi hoặc nghẹt mũi
+Mắt đỏ, chảy nước
+Đau mắt
+Nhức mỏi cơ thể
+Đau đầu
+Mệt mỏi và cảm thấy uể oải
+Tiêu chảy
+Có cảm giác khó chịu ở bụng, nôn mửa (tình trạng này thường gặp ở trẻ em hơn người lớn)
+Chán ăn
+Khó thở
+Phát ban
+Ho và sốt là triệu chứng phổ biến
+Ho và sốt là triệu chứng phổ biến ở người nhiễm virus cúm A H1N1.
+2. Triệu chứng cúm A H1N1 nguy hiểm
+Nếu một người nghi ngờ hoặc đã được xác định nhiễm virus cúm A H1N1 và có các triệu chứng sau đây, cần đến bệnh viện càng sớm càng tốt:
+
+Xung huyết, phù nề dưới niêm mạc
+Khó thở kéo dài, thở hụt hơi
+Đau ngực
+Có các dấu hiệu mất nước như không đi tiểu dù vẫn bổ sung nước đầy đủ
+Chóng mặt kéo dài
+Co giật
+Suy nhược nghiêm trọng hoặc đau cơ dữ dội
+Lú lẫn, kém tỉnh táo
+Các triệu chứng nguy hiểm ở trẻ em khi nhiễm cúm A H1N1 có thể bao gồm:
+
+Khó thở
+Da, môi hoặc móng tay nhợt nhạt, xám hoặc xanh tùy thuộc vào màu da
+Đau ngực
+Mất nước
+Đau cơ nghiêm trọng
+Co giật
+Lú lẫn, kém tỉnh táo, chìm vào hôn mê
+Biến chứng của cúm A H1N1
+Mặc dù hầu hết những trường hợp nhiễm cúm A H1N1 hiện nay đều tự khỏi bệnh nhưng cần lưu ý rằng, bệnh vẫn có thể dẫn đến những biến chứng nguy hiểm đối với sức khỏe. Một số biến chứng phổ biến của cúm A H1N1 bao gồm:
+
+Làm tăng nặng các bệnh mãn tính, chẳng hạn như bệnh tim và hen suyễn
+Viêm phổi
+Gặp các biến chứng thần kinh như lú lẫn, co giật
+Suy hô hấp
+Viêm phế quản
+Đau cơ
+Các yếu tố rủi ro
+Không phải ai khi vô tình hít phải virus cúm A H1N1 đều mắc bệnh và không phải ai nhiễm virus cúm A H1N1 đều có diễn tiến sức khỏe xấu đi và gặp phải biến chứng nghiêm trọng. Điều này còn thuộc vào việc bạn có các yếu tố có thể làm tăng nguy cơ phát triển của virus cúm A H1N1 hay không.
+
+Một số yếu tố nguy cơ khiến bạn dễ bị nhiễm cúm A H1N1 cũng như làm bệnh trở nên nghiêm trọng hơn bao gồm:
+
+Tuổi tác: Cúm A H1N1 nói riêng và bệnh cúm nói chung có xu hướng gây hậu quả nặng hơn ở trẻ em dưới 2 tuổi và người lớn trên 65 tuổi.
+Điều kiện sống hoặc làm việc: Những người sống hoặc làm việc trong các khu vực có đông cư dân có nhiều khả năng mắc bệnh cúm hơn.
+Hệ thống miễn dịch suy yếu: Đang điều trị ung thư, đang sử dụng thuốc chống thải ghép, sử dụng steroid lâu dài, ghép tạng, ung thư máu hoặc mắc HIV/AIDS có thể làm suy yếu hệ thống miễn dịch. Điều này có thể khiến bạn dễ bị cúm hơn và có thể làm tăng nguy cơ phát triển các biến chứng khi mắc bệnh.
+Bệnh mãn tính: Những người đang mắc các bệnh mãn tính như hen suyễn, bệnh phổi tắc nghẽn mạn tính (COPD), hen phế quản, viêm phổi, tiểu đường, bệnh tim mạch, rối loạn chuyển hóa, bệnh thận, bệnh gan,… thường có nguy cơ gặp các biến chứng cúm A H1N1 cao hơn.
+Sử dụng aspirin dưới 19 tuổi: Những người đang điều trị bệnh bằng aspirin lâu dài và những người dưới 19 tuổi có nguy cơ mắc hội chứng Reye nếu bị nhiễm cúm A H1N1.
+Thai kỳ: Phụ nữ mang thai cũng là nhóm đối tượng có nguy cơ gặp biến chứng nghiêm trọng do cúm A H1N1 gây ra, đặc biệt là trong tam cá nguyệt thứ hai và thứ ba. Nguy cơ này tiếp tục kéo dài đến hai tuần sau khi em bé chào đời.
+Béo phì: Những người có chỉ số khối cơ thể (BMI) từ 40 trở lên có nguy cơ bị biến chứng cúm A H1N1 cao hơn.
+Người có hệ thống miễn dịch suy yếu dễ mắc các biến chứng
+Người có hệ thống miễn dịch suy yếu dễ mắc các biến chứng nghiêm trọng khi nhiễm cúm A H1N1 hơn.
+Cúm A H1N1 có nguy hiểm không?
+Câu trả lời là có! Cúm A H1N1 có thể gây tử vong, đặc biệt đối với những người có nguy cơ cao.
+
+Có những trường hợp nhiễm cúm A H1N1 chỉ xuất hiện triệu chứng cúm nhẹ như ho, chảy mũi, mệt mỏi uể oải,… Nhưng cũng không ít trường hợp gặp phải những triệu chứng hô hấp nặng (và có thể tử vong).
+
+Bệnh cúm A H1N1 khi trở nặng có thể dẫn đến suy hô hấp. Đây cũng chính là là nguyên nhân gây tử vong phổ biến nhất trong những trường hợp nặng.
+
+Các vấn đề khác nguy hiểm đến sức khỏe mà người bệnh nhiễm cúm A H1N1 có thể gặp phải bao gồm các vấn đề về thần kinh như co giật do sốt cao, nhiễm trùng huyết do viêm phổi, mất nước và hạ huyết áp nghiêm trọng do nôn mửa và tiêu chảy, các biến chứng liên quan đến mất cân bằng điện giải và suy thận,… Các trường hợp nghiêm trọng hơn và tử vong xảy ra nhiều hơn ở trẻ em dưới 5 tuổi và bệnh nhân cao tuổi trên 60 tuổi. (2)
+
+Mắc cúm A H1N1 bao lâu thì khỏi?
+Thời gian khỏi bệnh sau khi mắc cúm A H1N1 có thể thay đổi tùy thuộc vào từng người và điều kiện sức khỏe cá nhân. Dựa trên các ca bệnh thực tế, có thể thấy người mắc cúm A H1N1 thường phục hồi hoàn toàn sau khoảng một đến hai tuần tính từ thời điểm có dấu hiệu bệnh mà không cần điều trị phương pháp đặc biệt.
+
+Tuy nhiên, cũng cần lưu ý rằng, có một số yếu tố có thể ảnh hưởng đến thời gian phục hồi ở người nhiễm virus cúm A H1N1, bao gồm:
+
+Tình trạng sức khỏe ban đầu: Người có tình trạng sức khỏe tốt hơn, có sức đề kháng cao hơn thường có thể phục hồi nhanh hơn so với những người mắc bệnh nền, người đang điều trị ung thư, người cao tuổi, trẻ em và phụ nữ mang thai.
+Chế độ dinh dưỡng và chăm sóc: Việc duy trì một chế độ dinh dưỡng lành mạnh, uống nhiều nước và nghỉ ngơi đủ có thể giúp cơ thể phục hồi nhanh chóng.
+Thuốc điều trị: Trong một số trường hợp, bác sĩ có thể kê đơn thuốc chống virus hoặc các loại thuốc khác để giảm các triệu chứng bệnh. Sử dụng đúng thuốc giúp bạn khỏi bệnh nhanh hơn sau khi mắc cúm A H1N1.
+Biến thể của virus: Biến thể của virus cúm A H1N1 cũng có thể ảnh hưởng đến thời gian khỏi bệnh, vì có thể xuất hiện các biến thể mạnh hơn hoặc yếu hơn.
+Các phương pháp xét nghiệm cúm A H1N1
+Các triệu chứng nhiễm cúm A H1N1 tương tự như khi nhiễm các loại virus cúm khác. Theo CDC, các trường hợp nghi ngờ cúm H1N1 gồm có: (3)
+
+Có triệu chứng bệnh hô hấp kèm theo sốt cấp tính trong vòng 7 ngày kể từ ngày tiếp xúc gần gũi với người được xác nhận nhiễm virus cúm A H1N1, hoặc
+Có triệu chứng bệnh hô hấp kèm theo sốt cấp tính trong vòng 7 ngày kể từ ngày đi du lịch đến một địa điểm đang có dịch cúm A H1N1, hoặc
+Có triệu chứng bệnh hô hấp kèm theo sốt cấp tính và đang sống, học tập hoặc làm việc trong cộng đồng có ít nhất một trường hợp nhiễm cúm A H1N1 đã được xác nhận.
+Để chẩn đoán nhiễm virus cúm A H1N1, bác sĩ có thể thực hiện kiểm tra thể chất và hỏi bạn về các triệu chứng của bạn. Sau đó, bạn cần thực hiện xét nghiệm để xác định chính xác có bệnh hay không. Hai phương pháp xét nghiệm chính bao gồm:
+
+Test nhanh: Phương pháp xét nghiệm nhanh, phát hiện cúm A/H1N1 chỉ trong 1 – 1.5 giờ. Tuy nhiên, kết quả của phương pháp này vẫn có khả năng sai lệch.
+Xét nghiệm rRT-PCR (Real time RT-PCR): Phương pháp xét nghiệm rRT-PCR sử dụng dịch ngoáy họng, dịch tỵ hầu, dịch phế quản của người bệnh để kiểm tra. Mặc dù thời gian cho kết quả thường lâu hơn so với test nhanh nhưng kết quả từ xét nghiệm rRT-PCR có độ chính xác cao hơn, được xem như tiêu chuẩn vàng để phát hiện, ghi nhận một người có nhiễm virus cúm A H1N1 hay không.
+>> Xem thêm: Các phương pháp test cúm A
+
+Có thể chẩn đoán nhiễm cúm A H1N1 bằng cách test nhanh
+Có thể chẩn đoán nhiễm cúm A H1N1 bằng cách test nhanh hoặc xét nghiệm rRT-PCR.
+Cách điều trị cúm A H1N1
+Cách điều trị cúm A H1N1 phụ thuộc vào mức độ nghiêm trọng của các triệu chứng cúm là gì. Hầu hết những trường hợp mắc cúm A H1N1 có triệu chứng nhẹ đều không cần dùng thuốc hoặc phương pháp điều trị đặc biệt. Nếu bạn bị nhiễm virus cúm A H1N1, bạn nên nghỉ ngơi tại nhà, giữ khoảng cách với người khác theo tư vấn, uống nhiều nước, xây dựng chế độ dinh dưỡng khoa học.
+
+Ngoài ra, bác sĩ có thể kê đơn một số loại thuốc giảm ho, thuốc kháng histamine trị nghẹt mũi, thuốc hạ sốt và giảm đau (ví dụ như acetaminophen, aspirin, thuốc chống viêm không steroid) để điều trị sốt và đau cơ – các triệu chứng thường gặp khi bị cúm.
+
+Bạn cũng có thể được bác sĩ tư vấn, chỉ định sử dụng các loại thuốc kháng virus (tương tự với nhóm thuốc sử dụng trong điều trị bệnh cúm theo mùa) như Oseltamivir (Tamiflu), Peramivir (Rapivab) và Zanamivir (Relenza),… Những loại thuốc này có thể giúp cơ thể người bệnh khỏe lại nhanh hơn và cảm thấy khỏe khoắn hơn.
+
+Thuốc có tác dụng tốt nhất khi sử dụng trong vòng 48 giờ kể từ khi có triệu chứng cúm đầu tiên. Tuy nhiên, nếu đã qua 48 giờ mới phát hiện bệnh thì người bệnh vẫn có thể sử dụng thuốc để điều trị theo chỉ định. Việc sử dụng thuốc kháng sinh sẽ không giúp ích gì cho bạn vì bạn đang bị cúm là do virus gây ra chứ không phải vi khuẩn.
+
+Lưu ý:
+
+Cần tư vấn bác sĩ, thầy thuốc trước khi sử dụng bất kỳ thuốc gì để điều trị cúm A H1N1.
+Người cao tuổi nên thận trọng trong việc sử dụng các loại thuốc kháng virus bởi thuốc có thể dẫn đến các tác dụng phụ của thuốc như tiêu chảy, chóng mặt, tăng men gan,…
+Các trường hợp trẻ nhỏ dưới 18 tuổi nhiễm virus cúm A H1N1 không dùng aspirin để giảm đau, hạ sốt vì aspirin có thể làm tăng nguy cơ mắc hội chứng Reye. Hãy chắc chắn rằng các loại thuốc cảm lạnh không kê đơn không có aspirin trước khi cho trẻ uống.
+Cách điều trị đối với trường hợp cúm H1N1 nặng, phải nhập viện
+Những trường hợp nhiễm cúm A H1N1 nặng có thể cần nhập viện để theo dõi và điều trị. Trong thời gian nhập viện, người bệnh được truyền dịch qua đường tĩnh mạch, điều chỉnh mất cân bằng điện giải, dùng kháng sinh điều trị các bệnh nhiễm khuẩn đồng thời (nếu có) và các biện pháp hỗ trợ khác song song với việc sử dụng thuốc kháng virus để điều trị hoặc dự phòng.
+
+Trường hợp bệnh nhân mắc hội chứng suy hô hấp cấp tính thứ phát do cúm nên được điều trị bằng thở máy không xâm lấn hoặc xâm lấn. Các trường hợp suy hô hấp cấp tính thứ phát nghiêm trọng do cúm A H1N1 gây ra cần phải sử dụng phương pháp oxy hóa qua màng ngoài cơ thể (ECMO).
+
+Phòng ngừa bệnh cúm A H1N1
+Bước đầu tiên và tốt nhất trong quản lý luôn là phòng ngừa bệnh và tiêm vaccine phòng nhiễm virus cúm đóng vai trò quan trọng. Cụ thể, với việc phòng ngừa cúm A H1N1, cần lưu ý:
+
+Phòng ngừa cúm lợn trên lợn: Mặc dù cúm A H1N1 không lây từ lợn sang người nhưng virus cúm trên lợn khi kết hợp cùng các loại virus cúm theo mùa trên người có thể trở thành các biến chủng cúm A H1N1. Do đó, việc phòng ngừa cần được bắt đầu từ phòng ngừa cúm lợn trên lợn. Các phương pháp phòng ngừa chủ yếu bao gồm tiêm phòng cho lợn, quản lý cơ sở chăn nuôi lợn (sử dụng chất khử trùng và điều chỉnh nhiệt độ để kiểm soát virus trong môi trường chăn nuôi), quản lý đàn (không thêm lợn có khả năng mang cúm vào đàn chưa phơi nhiễm, tách lợn có dấu hiệu nhiễm bệnh ra khỏi đàn và theo dõi các con lợn cùng đàn với lợn có dấu hiệu nhiễm bệnh, không thả lợn nhiễm bệnh ra bên ngoài mà cần thông báo ngay với cơ quan chức năng khi phát hiện,…).
+Phòng ngừa lây truyền virus từ lợn sang người: Vì lợn có thể bị nhiễm các chủng cúm H1N1 ở người và gia cầm, nên chúng là vật chủ chính xảy ra sự thay đổi kháng nguyên có thể gây ra các chủng cúm lợn mới. Sự lây truyền virus cúm từ lợn sang người thường thấy ở những người thường xuyên tiếp xúc với lợn, chẳng hạn như người chăn nuôi lợn, bác sĩ thú y, người làm tại các lò mổ thịt lợn, người chuyên vận chuyển lợn,… Những cá nhân này được khuyến khích đeo khẩu trang và vệ sinh khử khuẩn phù hợp khi tiếp xúc với động vật để ngăn ngừa lây truyền qua các giọt bắn từ đường hô hấp.
+Phòng ngừa lây truyền từ người sang người: Các khuyến nghị hiện tại của CDC nhằm ngăn chặn sự lây lan của virus cúm A H1N1 bao gồm:
+Rửa tay thường xuyên. Nếu có, hãy sử dụng xà phòng và nước, rửa trong ít nhất 20 giây. Hoặc sử dụng chất khử trùng tay chứa cồn có ít nhất 60% cồn.
+Che mũi và miệng bằng khăn giấy hoặc đeo khẩu trang khi bạn hắt hơi hoặc ho. Nếu bạn không có khăn giấy, hãy hắt hơi hoặc ho vào khuỷu tay.
+Tránh chạm vào mắt, mũi hoặc miệng của bạn.
+Không dùng chung các vật dụng cá nhân như cốc, ống hút và đồ dùng.
+Thường xuyên làm sạch và khử trùng các bề mặt mà bạn hay chạm vào như bàn, ghế, nắm mở cửa,… để ngăn ngừa lây nhiễm từ bề mặt có virus sang cơ thể bạn.
+Định kỳ dọn vệ sinh sạch sẽ, khử trùng các khu vực trong gia đình và nơi làm việc bằng nước lau sàn nhà và dung dịch khử trùng pha loãng.
+Bất kỳ ai nghi ngờ bị nhiễm virus cúm A H1N1 hoặc có các triệu chứng giống cúm nên đeo khẩu trang, nghỉ ngơi tại nhà, không tiếp xúc với người khác và đến bệnh viện ngay khi có dấu hiệu trở nặng.
+Nếu bạn biết một người đang nhiễm bệnh hoặc nghi ngờ nhiễm bệnh, nên cách xa, không tiếp xúc gần trong bán kính tối thiểu 50m.
+Tiêm vaccine bảo vệ bản thân khỏi nguy cơ nhiễm virus cúm A H1N1. Trẻ em từ 6 tháng tuổi trở lên đã có thể tiêm ngừa cúm. Vaccine cúm có thể làm giảm nguy cơ mắc bệnh và làm giảm nguy cơ gặp các biến chứng nghiêm trọng khi mắc bệnh. Vaccine cúm thường được tiêm định kỳ 1 lần/năm và có khả năng bảo vệ cơ thể chống lại ba hoặc bốn loại virus cúm. Các nghiên cứu của Viện Y tế Quốc gia Hoa Kỳ (NIH) cho thấy chỉ cần tiêm một liều vaccine duy nhất, trong vòng 10 ngày vaccine sẽ tạo ra đủ kháng thể bảo vệ chống lại virus gây bệnh trong khoảng thời gian gần 365 ngày. Tuy nhiên, chống chỉ định tiêm phòng ở những người trước đây có phản ứng dị ứng nghiêm trọng với việc tiêm phòng cúm. Những người đang bị sốt hoặc đang gặp các vấn đề về sức khỏe nên tiêm vaccine khi hồi phục hoặc không có triệu chứng.
+
+Cúm A H1N1 từng gây ra đại dịch nghiêm trọng trên toàn thế giới. Ngày nay, mặc dù dịch bệnh đã được kiểm soát nhưng nguy cơ mắc bệnh và gặp biến chứng vẫn có thể xảy ra. Do đó, cần tiêm phòng cúm hàng năm để có thể bảo vệ bạn khỏi cúm A H1N1 và các chủng cúm khác. Nếu bạn bị bệnh, hãy đảm bảo nghỉ ngơi nhiều, giữ khoảng cách, uống nhiều nước, dùng thuốc theo tư vấn của bác sĩ và lập tức đến bệnh viện nếu có các dấu hiệu sức khỏe bất thường.
+
+
+ Nguồn tham khảo
+Oxford, J., Berezin, E. N., Courvalin, P., Dwyer, D. E., Exner, M., Jana, L. A., Kaku, M., Lee, C., Letlape, K., Low, D. E., Madani, T. A., Rubino, J. R., Saini, N., Schoub, B. D., Signorelli, C., Tierno, P. M., & Zhong, X. (2014). The survival of influenza A(H1N1)pdm09 virus on 4 household surfaces. American Journal of Infection Control, 42(4), 423–425. https://pubmed.ncbi.nlm.nih.gov/24679569/
+Jilani, T. N. (2022, October 25). H1N1 influenza. StatPearls – NCBI Bookshelf. https://www.ncbi.nlm.nih.gov/books/NBK513241/
+Bronze, M. S., MD. (n.d.). H1N1 influenza (Swine flu): practice essentials, background, epidemiology. https://emedicine.medscape.com/article/1807048-overview

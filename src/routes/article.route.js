@@ -12,6 +12,12 @@ import upload from "../middlewares/uploadImageMiddleware.js";
 router.get("/", verifyToken, articleController.getArticles);
 router.get("/search", articleController.searchArticles);
 router.get("/featured", verifyToken, articleController.getFeaturedArticles);
+router.get(
+  "/most-viewed",
+  verifyToken,
+  articleController.getMostViewedArticles
+);
+router.get("/latest", articleController.getLatestArticles);
 router.get("/stats", articleController.getArticleStats);
 router.get("/slug/:slug", verifyToken, articleController.getArticleBySlug);
 router.get(
@@ -31,7 +37,7 @@ router.get("/:id", verifyToken, articleController.getArticleById);
 router.post(
   "/",
   verifyToken,
-  authorizeRoles("admin"),
+  authorizeRoles("admin", "expert"),
   upload.fields([
     {
       name: "images",
@@ -65,6 +71,13 @@ router.post(
   verifyToken,
   authorizeRoles("admin"),
   articleController.publishArticle
+);
+
+router.post(
+  "/:id/approve",
+  verifyToken,
+  authorizeRoles("admin", "expert"),
+  articleController.approveArticle
 );
 router.patch(
   "/:id/status",

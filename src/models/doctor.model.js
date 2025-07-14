@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 
 const { Schema } = mongoose;
 
@@ -9,26 +9,45 @@ const doctorSchema = new Schema(
       ref: "User",
       required: true,
     },
-    specialty: {
+    name: { type: String, required: true, trim: true },
+    specialty: [{ type: String, trim: true, required: true }],
+    targetPatients: [{ type: String }],
+    highlights: { type: String },
+    info: { type: String },
+    strengths: [{ type: String }],
+    experiences: [{ type: String }],
+    educations: [{ type: String }],
+    languages: [{ type: String }],
+    paymentMethods: {
+      type: [String],
+      enum: ["cash", "transfer"],
+      default: "cash",
+    },
+    services: [
+      {
+        name: { type: String },
+        description: { type: String },
+        price: { type: String },
+      },
+    ],
+    wallet: { type: Number, default: 0 },
+    workingHours: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "workingHour",
+      },
+    ],
+    infoClinic: {
+      clinicName: { type: String, required: true },
+      address: { type: String, required: true },
+      phone: { type: String, required: true, match: /^[0-9]{9,11}$/ },
+    },
+    status: {
       type: String,
-      trim: true,
+      enum: ["pending", "active", "rejected"],
+      default: "pending",
     },
-    hospital: {
-      type: String,
-      trim: true,
-    },
-    licenseNumber: {
-      type: String,
-      unique: true,
-      required: true,
-    },
-    education: {
-      type: String,
-    },
-    experienceYears: {
-      type: Number,
-      min: 0,
-    },
+    rate: { type: Number, default: 5 },
   },
   { timestamps: true }
 );

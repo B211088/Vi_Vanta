@@ -318,7 +318,7 @@ export class TopicService {
       if (hardDelete) {
         // Hard delete - permanently remove from database
         await Topic.findByIdAndDelete(id);
-        await deleteFromCloudinary(topic.public_id);
+        await deleteFromCloudinary(topic.image.public_id);
         return {
           success: true,
           message: "Đã xóa vĩnh viên chuyên mục!",

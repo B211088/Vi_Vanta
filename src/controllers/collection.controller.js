@@ -5,6 +5,8 @@ import {
   updateCollectionHandle,
   deleteCollectionHandle,
   updateConfigCollectionHandle,
+  toggleActiveCollectionHandle,
+  getActiveCollectionHandle,
 } from "../services/collection.service.js";
 import chromaService from "../services/chromadb.service.js";
 import chromadbService from "../services/chromadb.service.js";
@@ -168,6 +170,27 @@ export const deleteCollectionController = async (req, res) => {
       message: "Xoá collection thành công!",
       collection,
     });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+export const getActiveCollection = async (req, res) => {
+  try {
+    const collection = await getActiveCollectionHandle();
+    res.status(200).json({ success: true, data: collection });
+  } catch (error) {
+    res.status(404).json({ success: false, message: error.message });
+  }
+};
+
+export const toggleActiveCollection = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const collection = await toggleActiveCollectionHandle(id);
+
+    res.status(200).json({ success: true, data: collection });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }

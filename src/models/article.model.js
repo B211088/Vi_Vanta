@@ -11,12 +11,10 @@ const articleSchema = new Schema(
       public_id: { type: String, trim: true, default: "" },
     },
     summary: { type: String, trim: true },
-    topics: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Topic",
-      },
-    ],
+    topic: {
+      type: Schema.Types.ObjectId,
+      ref: "Topic",
+    },
     sections: [
       {
         heading: { type: String, trim: true, required: true },
@@ -40,7 +38,7 @@ const articleSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["draft", "pending", "published", "archived"],
+      enum: ["draft", "pending", "published", "archived", "rejected"],
       default: "draft",
     },
   },

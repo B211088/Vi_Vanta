@@ -22,6 +22,17 @@ export const getAllAIModelsHandle = async (filter = {}) => {
   }
 };
 
+export const getAllAIModelsUserUseHandle = async () => {
+  try {
+    const modals = await AIModel.find({ type: "embedding" }).select("-__v");
+    console.log({ modals });
+    return modals;
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách AIModel:", error.message);
+    throw error;
+  }
+};
+
 // Lấy chi tiết model theo id
 export const getAIModelByIdHandle = async (id) => {
   try {

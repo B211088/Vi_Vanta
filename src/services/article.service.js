@@ -35,7 +35,7 @@ class ArticleService {
       limit = 10,
       status,
       author,
-      topics,
+      topic,
       isFeatured,
       search,
       sortBy = "createdAt",
@@ -46,8 +46,7 @@ class ArticleService {
 
     if (status) filter.status = status;
     if (author) filter.author = author;
-    if (topics)
-      filter.topics = { $in: Array.isArray(topics) ? topics : [topics] };
+    if (topic) filter.topic = topic;
     if (isFeatured !== undefined) filter.isFeatured = isFeatured;
 
     // Text search
@@ -60,10 +59,12 @@ class ArticleService {
 
     const [articles, total] = await Promise.all([
       Article.find(filter)
+        .select("-sections -__v")
         .populate("author", "fullName email ")
-        .populate("topics", "name slug")
+        .populate("topic", "name slug")
         .populate("createdBy", "fullName  email")
         .populate("updatedBy", "fullName email")
+        .populate("publishedBy", "fullName email")
         .sort(sortOptions)
         .skip(skip)
         .limit(parseInt(limit))
@@ -86,18 +87,21 @@ class ArticleService {
   async getArticleById(id) {
     const article = await Article.findById(id)
       .populate("author", "fullName email ")
-      .populate("topics", "name slug")
+      .populate({
+        path: "topic",
+        select: "name slug parent",
+        populate: {
+          path: "parent",
+          select: "name",
+        },
+      })
       .populate("createdBy", "fullName  email")
-      .populate("updatedBy", "fullName email");
+      .populate("updatedBy", "fullName email")
+      .populate("publishedBy", "fullName email");
 
     if (!article) {
       throw new ApiError(404, "Không tìm thấy bài viết");
     }
-    if (article.views >= 10) {
-      article.isFeatured = true;
-    }
-    article.views++;
-    article.save();
     return article;
   }
 
@@ -105,18 +109,14 @@ class ArticleService {
   async getArticleBySlug(slug) {
     const article = await Article.findOne({ slug })
       .populate("author", "fullName email avatar")
-      .populate("topics", "name slug")
+      .populate("topic", "name slug")
       .populate("createdBy", "fullName  email")
       .populate("updatedBy", "fullName email");
 
     if (!article) {
       throw new ApiError(404, "Không tìm thấy bài viết");
     }
-    if (article.views >= 10) {
-      article.isFeatured = true;
-    }
-    article.views++;
-    article.save();
+
     return article;
   }
 
@@ -146,7 +146,7 @@ class ArticleService {
     }
 
     await Article.findByIdAndDelete(id);
-    return { message: "Xóa bài viết thành công" };
+    return article;
   }
 
   // Publish bài viết
@@ -158,10 +158,20 @@ class ArticleService {
 
     article.status = "published";
     article.publishedAt = new Date();
-    article.updatedBy = userId;
-    article.publishBy = userId;
+    article.publishedBy = userId;
     await article.save();
 
+    return await this.getArticleById(id);
+  }
+
+  async approveArticle(id, userId) {
+    const article = await Article.findById(id);
+    if (!article) {
+      throw new ApiError(404, "Không tìm thấy bài viết");
+    }
+
+    article.status = "pending";
+    await article.save();
     return await this.getArticleById(id);
   }
 
@@ -176,22 +186,65 @@ class ArticleService {
       isFeatured: true,
       status: "published",
     })
-      .populate("author", "name email avatar")
-      .populate("topics", "name slug")
+      .select("-sections -__v")
+      .populate("author", "fullName email avatar")
+      .populate("topic", "name slug")
       .sort({ publishedAt: -1 })
       .limit(limit)
       .lean();
   }
 
-  // Lấy bài viết liên quan
-  async getRelatedArticles(articleId, topics, limit = 5) {
+  async getMostViewedArticles(limit = 5) {
     return await Article.find({
-      _id: { $ne: articleId },
-      topics: { $in: topics },
       status: "published",
     })
-      .populate("author", "name email avatar")
-      .populate("topics", "name slug")
+      .select("-sections -__v")
+      .populate("author", "fullName email avatar")
+      .populate("topic", "name slug")
+      .sort({ views: -1 }) // Sắp xếp theo lượt xem giảm dần
+      .limit(limit)
+      .lean();
+  }
+
+  async getLatestArticles(limit = 5) {
+    return await Article.find({
+      status: "published",
+    })
+      .select("-sections -__v")
+      .populate("author", "fullName email avatar")
+      .populate("topic", "name slug")
+      .sort({ publishedAt: -1 }) // Mới nhất
+      .limit(limit)
+      .lean();
+  }
+
+  async getArticlesByTopic(topicId, limit = 5) {
+    return await Article.find({
+      status: "published",
+      topic: topicId,
+    })
+      .select("-sections -__v")
+      .populate("author", "fullName email avatar")
+      .populate("topic", "name slug")
+      .sort({ publishedAt: -1 }) // Mới nhất
+      .limit(limit)
+      .lean();
+  }
+
+  // Lấy bài viết liên quan
+  async getRelatedArticles(articleId, limit = 5) {
+    // Lấy bài viết gốc để biết topic
+    const article = await Article.findById(articleId).select("topic");
+    if (!article) throw new ApiError(404, "Không tìm thấy bài viết gốc");
+
+    return await Article.find({
+      _id: { $ne: articleId },
+      topic: article.topic,
+      status: "published",
+    })
+      .select("-sections -__v")
+      .populate("author", "fullName email avatar")
+      .populate("topic", "name slug")
       .sort({ publishedAt: -1 })
       .limit(limit)
       .lean();

@@ -4,9 +4,7 @@ const { Schema } = mongoose;
 const appointmentSchema = new Schema(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true }, // Người đặt lịch
-    clinicId: { type: Schema.Types.ObjectId, ref: "Clinic", required: true }, // Phòng khám
-    staffId: { type: Schema.Types.ObjectId, ref: "ClinicStaff" }, // Bác sĩ hoặc nhân viên phụ trách (nếu có)
-    visitTypeIds: [{ type: Schema.Types.ObjectId, ref: "VisitType" }],
+    doctorId: { type: Schema.Types.ObjectId, ref: "Doctor", required: true }, // Phòng khám
     date: { type: Date, required: true },
     time: { type: String }, // VD: "09:00"
     status: {
@@ -19,6 +17,13 @@ const appointmentSchema = new Schema(
       enum: ["unpaid", "paid", "refunded"],
       default: "unpaid",
     },
+    services: [
+      {
+        name: { type: String },
+        description: { type: String },
+        price: { type: String },
+      },
+    ],
     paymentMethod: {
       type: String,
       enum: ["cash", "momo", "banking"],
@@ -26,13 +31,7 @@ const appointmentSchema = new Schema(
     },
     totalFee: { type: Number, default: 0 },
     note: String,
-    result: String, // Kết quả khám
-    images: [
-      {
-        url: String,
-        public_id: String,
-      },
-    ],
+    result: String,
   },
   { timestamps: true }
 );

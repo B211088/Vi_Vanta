@@ -325,6 +325,7 @@ export async function testingCollectionDataChatBot(req, res) {
       simplifyQuery(question.trim(), queryConversationContext),
       buildConversationContext(sectionId),
     ]);
+    console.log({ conversationContext });
 
     console.log(`📝 Context prepared (${Date.now() - startTime}ms)`);
 

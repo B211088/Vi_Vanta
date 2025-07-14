@@ -115,7 +115,7 @@ export class EmbedService {
   /**
    * Split text into chunks with smart splitting
    */
-  splitTextIntoChunks(text, chunkSize = 2000, chunkOverlap = 200) {
+  splitTextIntoChunks(text, chunkSize = 1000, chunkOverlap = 200) {
     const chunks = [];
     const separators = ["\n\n", "\n", ". ", "! ", "? ", "; ", ", ", " "];
 

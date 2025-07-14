@@ -51,59 +51,53 @@ class ArticleController {
       if (!Array.isArray(sections) || sections.length === 0) {
         throw new ApiError(400, "Phải có ít nhất 1 section");
       }
-
-      if (!images || images.length !== sections.length) {
-        throw new ApiError(
-          400,
-          "Số lượng ảnh sections phải bằng số lượng section"
-        );
-      }
     } catch (err) {
       throw new ApiError(400, `Xử lý section thất bại: ${err.message}`);
     }
-
+    let sectionsData = [];
     // Upload section images + build sectionsData
-    const sectionsData = await Promise.all(
-      sections.map(async (section, index) => {
-        const file = images[index];
-        if (!file) {
-          throw new ApiError(400, `Section ${index + 1} thiếu ảnh`);
-        }
+    if (Array.isArray(images) && images.length > 0) {
+      sectionsData = await Promise.all(
+        sections.map(async (section, index) => {
+          const file = images[index];
+          let uploadedImage = {};
+          if (file) {
+            uploadedImage = await uploads(file, userId, "article_section");
+          }
 
-        const uploadedImage = await uploads(file, userId, "article_section");
-
-        return {
-          heading: section.heading,
-          content: section.content,
-          image: {
-            url: uploadedImage.url,
-            public_id: uploadedImage.public_id,
-            description: section.imageDescription || "",
-          },
-        };
-      })
-    );
-    let { topics } = req.body;
-
-    if (typeof topics === "string") {
-      try {
-        topics = JSON.parse(topics);
-      } catch (err) {
-        throw new ApiError(400, "Topics không hợp lệ");
-      }
+          return {
+            heading: section.heading,
+            content: section.content,
+            image: {
+              url: uploadedImage.url || "",
+              public_id: uploadedImage.public_id || "",
+              description: uploadedImage.url ? section.imageDescription : "",
+            },
+          };
+        })
+      );
+    } else {
+      // Nếu không có ảnh section, vẫn cần map sections để giữ heading + content
+      sectionsData = sections.map((section) => ({
+        heading: section.heading,
+        content: section.content,
+        image: {
+          url: "",
+          public_id: "",
+          description: "",
+        },
+      }));
     }
 
-    // Đảm bảo topics là array
-    if (!Array.isArray(topics)) {
-      throw new ApiError(400, "Topics phải là một mảng");
-    }
+    let { topic } = req.body;
+
     // Create article
     const article = await articleService.createArticle(
       {
         ...otherFields,
         thumbnail: thumbnailData,
         sections: sectionsData,
-        topics: topics,
+        topic: topic,
       },
       userId
     );
@@ -120,7 +114,7 @@ class ArticleController {
       limit = 10,
       status,
       author,
-      topics,
+      topic,
       isFeatured,
       search,
       sortBy = "createdAt",
@@ -131,7 +125,7 @@ class ArticleController {
       limit,
       status,
       author,
-      topics,
+      topic,
       isFeatured,
       search,
       sortBy,
@@ -147,7 +141,7 @@ class ArticleController {
   getArticleById = asyncHandler(async (req, res) => {
     const { id } = req.params;
     const article = await articleService.getArticleById(id);
-
+    await articleService.incrementViews(article._id);
     res
       .status(200)
       .json(new ApiResponse(200, article, "Lấy bài viết thành công"));
@@ -276,6 +270,15 @@ class ArticleController {
       .json(new ApiResponse(200, article, "Xuất bản bài viết thành công"));
   });
 
+  approveArticle = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.userId;
+    const article = await articleService.approveArticle(id, userId);
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, article, "Xin duyệt bài viết thành công"));
+  });
   // Lấy bài viết nổi bật
   getFeaturedArticles = asyncHandler(async (req, res) => {
     const { limit } = req.query;
@@ -286,18 +289,34 @@ class ArticleController {
       .json(new ApiResponse(200, articles, "Lấy bài viết nổi bật thành công"));
   });
 
+  getMostViewedArticles = asyncHandler(async (req, res) => {
+    const { limit } = req.query;
+    const articles = await articleService.getMostViewedArticles(limit);
+
+    res
+      .status(200)
+      .json(
+        new ApiResponse(200, articles, "Lấy bài viết xem nhiều nhất thành công")
+      );
+  });
+
+  getLatestArticles = asyncHandler(async (req, res) => {
+    const { limit } = req.query;
+    const limitNumber = parseInt(limit) || 5;
+
+    const articles = await articleService.getLatestArticles(limitNumber);
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, articles, "Lấy bài viết mới nhất thành công"));
+  });
+
   // Lấy bài viết liên quan
   getRelatedArticles = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const { limit } = req.query;
+    const limit = parseInt(req.query.limit) || 5;
 
-    // Lấy bài viết hiện tại để có topics
-    const currentArticle = await articleService.getArticleById(id);
-    const relatedArticles = await articleService.getRelatedArticles(
-      id,
-      currentArticle.topics.map((topic) => topic._id),
-      limit
-    );
+    const relatedArticles = await articleService.getRelatedArticles(id, limit);
 
     res
       .status(200)
@@ -349,14 +368,11 @@ class ArticleController {
       );
   });
 
-  // Lấy bài viết theo topic
   getArticlesByTopic = asyncHandler(async (req, res) => {
+    const { limit } = req.query;
     const { topicId } = req.params;
-    const result = await articleService.getArticles({
-      topics: topicId,
-      status: "published",
-      ...req.query,
-    });
+
+    const result = await articleService.getArticlesByTopic(topicId, limit);
 
     res
       .status(200)
@@ -370,7 +386,11 @@ class ArticleController {
     const { id } = req.params;
     const { status } = req.body;
 
-    if (!["draft", "pending", "published", "archived"].includes(status)) {
+    if (
+      !["draft", "pending", "published", "archived", "rejected"].includes(
+        status
+      )
+    ) {
       throw new ApiError(400, "Trạng thái không hợp lệ");
     }
 

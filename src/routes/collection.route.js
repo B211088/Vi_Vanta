@@ -6,12 +6,22 @@ import {
   updateCollectionController,
   deleteCollectionController,
   updateConfigCollectionController,
+  toggleActiveCollection,
+  getActiveCollection,
 } from "../controllers/collection.controller.js";
 import verifyToken from "../middlewares/verifyToken.js";
 import { authorizeRoles } from "../middlewares/authorizeRoles.js";
 
 const router = express.Router();
 
+router.get("/active", getActiveCollection);
+
+router.post(
+  "/:id/toggle-active",
+  verifyToken,
+  authorizeRoles("admin"),
+  toggleActiveCollection
+);
 // Tạo Collection mới
 router.post(
   "/",

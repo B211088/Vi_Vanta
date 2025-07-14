@@ -31,6 +31,8 @@ import collectionRoutes from "./routes/collection.route.js";
 import aiModalRouter from "./routes/aiModel.route.js";
 import topicRouter from "./routes/topic.route.js";
 import articleRouter from "./routes/article.route.js";
+import chatbotRouter from "./routes/chatbot.route.js";
+import doctorRouter from "./routes/doctor.route.js";
 import fs from "fs";
 
 const app = express();
@@ -105,6 +107,8 @@ app.use("/api/v1/ai-modal", aiModalRouter);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/topics", topicRouter);
 app.use("/api/v1/articles", articleRouter);
+app.use("/api/v1/chatbot", chatbotRouter);
+app.use("/api/v1/doctors", doctorRouter);
 
 app.get("/api/v1/csrf-token", (req, res) => {
   res.json({ csrfToken: req.csrfToken() });

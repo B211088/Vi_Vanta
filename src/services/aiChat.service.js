@@ -34,46 +34,28 @@ class AIChatService {
     context = {},
     conversationContext = {}
   ) {
-    // Tạo section mới với tiêu đề là câu hỏi
-    const section = await this.createSection(userId, question);
-
     const now = new Date();
-
-    // Tạo message cho câu hỏi của user (timestamp trước)
-    const userMessage = await Message.create({
-      role: "user",
-      content: question,
-      timestamp: now,
-    });
-
-    // Tạo message cho câu trả lời của AI (timestamp sau 1ms)
-    const aiMessage = await Message.create({
+    const userMessage = { role: "user", content: question, timestamp: now };
+    const aiMessage = {
       role: "assistant",
       content: answer,
-      timestamp: new Date(now.getTime() + 1), // +1ms để đảm bảo sau user message
-    });
+      timestamp: new Date(now.getTime() + 1),
+    };
+    const messages = await Message.insertMany([userMessage, aiMessage]);
 
-    // Thêm cả hai message vào section theo đúng thứ tự
-    await Section.findByIdAndUpdate(section._id, {
-      $push: {
-        messages: {
-          $each: [userMessage._id, aiMessage._id],
-        },
-      },
+    const section = await Section.create({
+      userId,
+      title: question,
+      messages: messages.map((m) => m._id),
       context,
-      conversationContext: {
-        ...conversationContext,
-        updatedAt: new Date(),
-      },
+      conversationContext: { ...conversationContext, updatedAt: new Date() },
     });
 
-    // Trả về section đã populate messages với sort
     return await Section.findById(section._id).populate({
       path: "messages",
       options: { sort: { timestamp: 1 } },
     });
   }
-
   /**
    * Thêm tin nhắn mới vào section
    */
@@ -131,17 +113,16 @@ class AIChatService {
   async getMessageBySectionId(sectionId) {
     try {
       const messages = await Message.find({ sectionId })
-        .sort({ timestamp: 1 }) // hoặc createdAt: 1
+        .sort({ timestamp: 1 })
         .exec();
-      if (messages) {
+      if (!messages || messages.length === 0) {
         throw new Error("Không tìm thấy messages!");
       }
       return messages;
     } catch (error) {
-      throw new Error("Lỗi khi lấy messages:", error);
+      throw new Error(`Lỗi khi lấy messages: ${error.message}`);
     }
   }
-
   /**
    * Lấy section cho user - FIXED VERSION
    */
@@ -155,21 +136,6 @@ class AIChatService {
     return section;
   }
 
-  /**
-   * Lấy lịch sử chat với nhiều tùy chọn
-   * @param {string} userId - ID của user
-   * @param {Object} options - Các tùy chọn cho việc lấy lịch sử
-   * @param {number} options.page - Trang hiện tại (default: 1)
-   * @param {number} options.limit - Số lượng section trên mỗi trang (default: 10)
-   * @param {Date} options.fromDate - Lấy từ ngày (optional)
-   * @param {Date} options.toDate - Lấy đến ngày (optional)
-   * @param {boolean} options.includeMessages - Có include messages không (default: true)
-   * @param {boolean} options.includeContext - Có include context không (default: false)
-   * @param {string} options.sortBy - Sắp xếp theo ('updatedAt', 'createdAt') (default: 'updatedAt')
-   * @param {string} options.sortOrder - Thứ tự sắp xếp ('asc', 'desc') (default: 'desc')
-   * @param {boolean} options.activeOnly - Chỉ lấy các section active (default: true)
-   * @returns {Object} Kết quả chứa sections và thông tin phân trang
-   */
   async getChatHistory(userId, options = {}) {
     const {
       page = 1,
@@ -277,42 +243,30 @@ class AIChatService {
    * @private
    */
   async _getChatHistoryStats(userId, baseQuery) {
-    try {
-      const [totalSections, activeSections, totalMessages] = await Promise.all([
-        Section.countDocuments({ userId }),
-        Section.countDocuments({ userId, isActive: true }),
-        Section.aggregate([
-          { $match: { userId: mongoose.Types.ObjectId(userId) } },
-          { $project: { messageCount: { $size: "$messages" } } },
-          { $group: { _id: null, total: { $sum: "$messageCount" } } },
-        ]),
-      ]);
-
-      // Lấy ngày của section đầu tiên và cuối cùng
-      const [firstSection, lastSection] = await Promise.all([
-        Section.findOne({ userId }).sort({ createdAt: 1 }).select("createdAt"),
-        Section.findOne({ userId }).sort({ createdAt: -1 }).select("createdAt"),
-      ]);
-
-      return {
-        totalSections,
-        activeSections,
-        inactiveSections: totalSections - activeSections,
-        totalMessages: totalMessages[0]?.total || 0,
-        firstChatDate: firstSection?.createdAt || null,
-        lastChatDate: lastSection?.createdAt || null,
-      };
-    } catch (error) {
-      console.error("Lỗi khi tính thống kê:", error);
-      return {
-        totalSections: 0,
-        activeSections: 0,
-        inactiveSections: 0,
-        totalMessages: 0,
-        firstChatDate: null,
-        lastChatDate: null,
-      };
-    }
+    const [stats] = await Section.aggregate([
+      { $match: { userId: mongoose.Types.ObjectId(userId) } },
+      {
+        $group: {
+          _id: null,
+          totalSections: { $sum: 1 },
+          activeSections: {
+            $sum: { $cond: [{ $eq: ["$isActive", true] }, 1, 0] },
+          },
+          totalMessages: { $sum: { $size: "$messages" } },
+          firstChatDate: { $min: "$createdAt" },
+          lastChatDate: { $max: "$createdAt" },
+        },
+      },
+    ]);
+    return {
+      totalSections: stats?.totalSections || 0,
+      activeSections: stats?.activeSections || 0,
+      inactiveSections:
+        (stats?.totalSections || 0) - (stats?.activeSections || 0),
+      totalMessages: stats?.totalMessages || 0,
+      firstChatDate: stats?.firstChatDate || null,
+      lastChatDate: stats?.lastChatDate || null,
+    };
   }
 
   /**

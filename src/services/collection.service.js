@@ -63,12 +63,12 @@ export const updateCollectionHandle = async (CollectionId, payload) => {
   }
 };
 
-export const updateConfigCollectionHandle = async (CollectionId, payload) => {
+export const updateConfigCollectionHandle = async (collectionId, payload) => {
   try {
     const { prompt, temperature, maxToken, chunkLimit, similarityThreshold } =
       payload;
     const updatedCollection = await Collection.findByIdAndUpdate(
-      CollectionId,
+      collectionId,
       {
         $set: {
           prompt,
@@ -98,6 +98,45 @@ export const deleteCollectionHandle = async (CollectionId) => {
       throw new Error("Không tìm thấy Collection để xóa");
     }
     return { message: "Xóa Collection thành công", collection: deleted };
+  } catch (error) {
+    console.error("Lỗi khi xóa Collection:", error.message);
+    throw error;
+  }
+};
+
+export const toggleActiveCollectionHandle = async (collectionId) => {
+  try {
+    const currentCollectionActive = await Collection.findOne({
+      isActive: true,
+    });
+    if (currentCollectionActive) {
+      currentCollectionActive.isActive = false;
+      await currentCollectionActive.save();
+    }
+    const collection = await Collection.findByIdAndUpdate(
+      collectionId,
+      {
+        $set: { isActive: true },
+      },
+      { new: true }
+    );
+    if (!collection) {
+      throw new Error("Collection không tồn tại");
+    }
+    return collection;
+  } catch (error) {
+    console.error("Lỗi khi xóa Collection:", error.message);
+    throw error;
+  }
+};
+
+export const getActiveCollectionHandle = async () => {
+  try {
+    const collection = await Collection.findOne({ isActive: true });
+    if (!collection) {
+      throw new Error("Collection không tồn tại");
+    }
+    return collection;
   } catch (error) {
     console.error("Lỗi khi xóa Collection:", error.message);
     throw error;

@@ -4,6 +4,7 @@ import {
   getAIModelByIdHandle,
   updateAIModelHandle,
   deleteAIModelHandle,
+  getAllAIModelsUserUseHandle,
 } from "../services/aiModel.service.js";
 
 // Tạo model mới
@@ -25,8 +26,17 @@ export const createAIModelController = async (req, res) => {
 // Lấy tất cả model
 export const getAllAIModelsController = async (req, res) => {
   try {
-    const models = await getAllAIModelsHandle(req.query || {});
-    res.status(200).json({ success: true, data: models });
+    const modals = await getAllAIModelsHandle(req.query || {});
+    res.status(200).json({ success: true, data: modals });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+export const getAllAIModelsUserUseController = async (req, res) => {
+  try {
+    const modals = await getAllAIModelsUserUseHandle();
+    res.status(200).json({ success: true, data: modals });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
