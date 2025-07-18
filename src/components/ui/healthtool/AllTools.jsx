@@ -11,6 +11,14 @@ import {
   Timer,
   ChevronRight,
   ArrowLeft,
+  Shield,
+  Baby,
+  CalendarHeart,
+  Syringe,
+  BarChart3,
+  Droplet,
+  MoonStar,
+  HeartPulse,
 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -21,6 +29,8 @@ const AllTools = () => {
   const categories = [
     "Tất cả",
     "Cân nặng",
+    "Trẻ em",
+    "Mang thai",
     "Tim mạch",
     "Dinh dưỡng",
     "Giấc ngủ",
@@ -54,7 +64,7 @@ const AllTools = () => {
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer ${
                   selectedCategory === category
                     ? "bg-blue-600 text-white"
                     : "bg-white text-gray-700 hover:bg-gray-100"
@@ -149,7 +159,7 @@ const healthTools = [
     description:
       "Tính chỉ số khối cơ thể để đánh giá tình trạng cân nặng và kế hoạch sức khỏe",
     icon: Scale,
-    color: "bg-blue-500",
+    color: "bg-teal-500",
     category: "Cân nặng",
   },
   {
@@ -161,12 +171,12 @@ const healthTools = [
     category: "Tim mạch",
   },
   {
-    id: "tools/blood-pressure",
-    name: "Huyết áp",
-    description: "Theo dõi chỉ số huyết áp và đánh giá tình trạng",
-    icon: Activity,
-    color: "bg-green-500",
-    category: "Tim mạch",
+    id: "tools/vaccine",
+    name: "Gợi ý tiêm vắc xin cho bé",
+    description: "Lên lịch và theo dõi các mũi tiêm quan trọng cho trẻ",
+    icon: Syringe,
+    color: "bg-indigo-500",
+    category: "Trẻ em",
   },
   {
     id: "tools/body-fat",
@@ -177,12 +187,13 @@ const healthTools = [
     category: "Cân nặng",
   },
   {
-    id: "tools/calories",
-    name: "Tính calo cần thiết",
-    description: "Tính toán lượng calo cần thiết hàng ngày",
-    icon: Thermometer,
-    color: "bg-orange-500",
-    category: "Dinh dưỡng",
+    id: "tools/due-date",
+    name: "Tính ngày dự sinh",
+    description:
+      "Dự đoán ngày sinh dựa trên chu kỳ kinh nguyệt hoặc ngày siêu âm",
+    icon: Baby,
+    color: "bg-pink-400",
+    category: "Mang thai",
   },
   {
     id: "tools/water-intake",
@@ -207,5 +218,40 @@ const healthTools = [
     icon: Brain,
     color: "bg-pink-500",
     category: "Tâm lý",
+  },
+  {
+    id: "tools/diabetes-risk",
+    name: "Kiểm tra nguy cơ tiểu đường",
+    description: "Đánh giá nguy cơ mắc tiểu đường dựa trên các chỉ số cá nhân",
+    icon: BarChart3,
+    color: "bg-amber-600",
+    category: "Chẩn đoán",
+  },
+  {
+    id: "tools/anemia-check",
+    name: "Đánh giá thiếu máu (thiếu sắt)",
+    description:
+      "Dựa vào triệu chứng và dinh dưỡng để kiểm tra nguy cơ thiếu máu",
+    icon: Droplet,
+    color: "bg-red-400",
+    category: "Dinh dưỡng",
+  },
+  {
+    id: "tools/sleep-quality",
+    name: "Đánh giá chất lượng giấc ngủ",
+    description:
+      "Phân tích thời gian và chất lượng giấc ngủ để đưa ra khuyến nghị",
+    icon: MoonStar,
+    color: "bg-indigo-400",
+    category: "Giấc ngủ",
+  },
+  {
+    id: "tools/cardiac-risk",
+    name: "Đánh giá nguy cơ tim mạch",
+    description:
+      "Phân tích các yếu tố như tuổi, nhịp tim, huyết áp để đánh giá nguy cơ",
+    icon: HeartPulse,
+    color: "bg-rose-600",
+    category: "Tim mạch",
   },
 ];

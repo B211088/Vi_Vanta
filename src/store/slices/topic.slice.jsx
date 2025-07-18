@@ -25,7 +25,7 @@ const topicSlice = createSlice({
     },
     fetchTopicsFailer: (state, action) => {
       state.loading = false;
-      state.topics = action.payload;
+      state.error = action.payload;
     },
     fetchTopicSuccess: (state, action) => {
       state.loading = false;
@@ -33,7 +33,7 @@ const topicSlice = createSlice({
     },
     fetchTopicFailer: (state, action) => {
       state.loading = false;
-      state.topics = action.payload;
+      state.error = action.payload;
     },
     clearTopic: (state) => {
       state.loading = false;

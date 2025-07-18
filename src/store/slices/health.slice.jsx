@@ -7,6 +7,7 @@ const initialState = {
   bmi: null,
   bmiCategory: null,
 
+  metabolism: null,
   // All health info list (for admin)
   healthList: [],
 
@@ -63,6 +64,18 @@ const healthSlice = createSlice({
       state.healthList = Array.isArray(action.payload) ? action.payload : [];
     },
     fetchAllHealthFailure: (state, action) => {
+      state.loading = false;
+      state.error = action.payload;
+    },
+    fetchMetabolismStart: (state) => {
+      state.loading = true;
+      state.error = null;
+    },
+    fetchMetabolismSuccess: (state, action) => {
+      state.loading = false;
+      state.metabolism = action.payload;
+    },
+    fetchMetabolismFailure: (state, action) => {
       state.loading = false;
       state.error = action.payload;
     },
@@ -192,6 +205,10 @@ export const {
   fetchHealthStatsStart,
   fetchHealthStatsSuccess,
   fetchHealthStatsFailure,
+
+  fetchMetabolismStart,
+  fetchMetabolismSuccess,
+  fetchMetabolismFailure,
 
   // Clear states
   clearHealthInfo,

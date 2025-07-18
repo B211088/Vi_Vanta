@@ -156,7 +156,7 @@ const ArticlesSection = () => {
   console.log({ mainArticle });
   return (
     <section className="py-10 bg-gradient-to-br from-gray-50 via-white to-gray-100 ">
-      <div className="container mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-6 ">
         <div className="py-2">
           <div className="w-fit flex bg-gray-100 rounded-xl p-1">
             {[
@@ -181,93 +181,96 @@ const ArticlesSection = () => {
         </div>
 
         {/* Hiển thị thông báo khi không có dữ liệu */}
-        {(!articlesAttribute || articlesAttribute.length === 0) && (
-          <div className="text-center py-8">
-            <p className="text-gray-500">Không có bài viết nào để hiển thị.</p>
-          </div>
-        )}
-
-        {/* Hiển thị nội dung khi có dữ liệu */}
-        {articlesAttribute && articlesAttribute.length > 0 && (
-          <div className="w-full flex gap-5 rounded-md">
-            <Link
-              to={`/article?slug=${mainArticle?.slug}&title=${mainArticle?.title}&id=${mainArticle?._id}`}
-              className="w-7/12 flex flex-col border-1 border-dark-800 rounded-md p-4 "
-            >
-              <div className="w-full">
-                <img
-                  className="w-full rounded-md aspect-[16/9]"
-                  src={mainArticle?.thumbnail?.url}
-                  alt={mainArticle?.title || ""}
-                />
-              </div>
-              <div className="w-full flex flex-col">
-                <div className="w-full flex flex-col">
-                  <div className="text-vivanta-500 py-1">
-                    {mainArticle?.topics?.map((topic) => (
-                      <span key={topic._id}>{topic.name}</span>
-                    ))}
-                  </div>
-                  <h1 className="font-bold text-2xl py-2 line-clamp-2">
-                    {mainArticle?.title}
-                  </h1>
-                  <p className="text-md text-dark-400 line-clamp-3">
-                    {mainArticle?.summary}
-                  </p>
-                </div>
-                <div className="w-full flex items-center py-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 flex items-center justify-center bg-vivanta-cyan-400 text-light-50 rounded-sm">
-                      <i className="fa-solid fa-user-doctor"></i>
-                    </div>
-                    Tác giả:
-                    <span className="font-bold">
-                      {mainArticle?.author?.fullName}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </Link>
-
-            <div className="w-5/12 flex flex-col justify-between">
-              {sideArticles.map((article) => (
-                <Link
-                  to={`/article?slug=${article?.slug}&id=${article?._id}&tilte=${article?.title}`}
-                  key={article._id}
-                  className="w-full flex gap-2 p-2  cursor-pointer border-1 border-dark-800 rounded-md hover:translate-y-[-3px] transition-all duration-300"
-                >
+        <div className="w-full flex justify-center ">
+          {(!articlesAttribute || articlesAttribute.length === 0) && (
+            <div className="text-center py-8">
+              <p className="text-gray-500">
+                Không có bài viết nào để hiển thị.
+              </p>
+            </div>
+          )}
+          {/* Hiển thị nội dung khi có dữ liệu */}
+          {articlesAttribute && articlesAttribute.length > 0 && (
+            <div className="w-full flex lg:flex-row md:flex-col sm:flex-col gap-5 rounded-md flex-col">
+              <Link
+                to={`/article?slug=${mainArticle?.slug}&title=${mainArticle?.title}&id=${mainArticle?._id}`}
+                className="w-7/12 md:w-full sm:w-full  h-fit flex flex-col  rounded-md p-3"
+              >
+                <div className="w-full">
                   <img
-                    className="w-40 aspect-[16/9] object-cover rounded-md"
-                    src={article?.thumbnail?.url}
-                    alt={article?.title || ""}
+                    className="w-full rounded-md aspect-[16/9]"
+                    src={mainArticle?.thumbnail?.url}
+                    alt={mainArticle?.title || ""}
                   />
-                  <div className="flex flex-col">
-                    <div className="text-vivanta-500">
-                      {article?.topics?.map((topic) => (
-                        <span key={topic._id}>{topic?.name}</span>
+                </div>
+                <div className="w-full flex flex-col py-2">
+                  <div className="w-full flex flex-col">
+                    <div className="text-vivanta-500 py-1">
+                      {mainArticle?.topics?.map((topic) => (
+                        <span key={topic._id}>{topic.name}</span>
                       ))}
                     </div>
-                    <h1 className="font-bold text-md line-clamp-2 py-1 min-h-12">
-                      {article?.title}
+                    <h1 className="font-bold text-2xl py-2 line-clamp-2">
+                      {mainArticle?.title}
                     </h1>
-                    <p className="line-clamp-1 text-sm text-dark-500 mt-1">
-                      {article?.summary}
+                    <p className="text-md text-dark-400 line-clamp-3">
+                      {mainArticle?.summary}
                     </p>
-                    <div className="flex items-center gap-2 text-sm pt-2">
-                      <div className="w-5 h-5 flex items-center justify-center bg-vivanta-cyan-400 text-light-50 rounded-sm text-[0.8rem]">
+                  </div>
+                  <div className="w-full flex items-center pt-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 flex items-center justify-center bg-vivanta-cyan-400 text-light-50 rounded-sm">
                         <i className="fa-solid fa-user-doctor"></i>
                       </div>
                       Tác giả:
                       <span className="font-bold">
-                        {article?.author?.fullName}
+                        {mainArticle?.author?.fullName}
                       </span>
                     </div>
                   </div>
-                </Link>
-              ))}
+                </div>
+              </Link>
+
+              <div className="w-5/12 md:w-full sm:w-full  flex flex-col  justify-between">
+                {sideArticles.map((article) => (
+                  <Link
+                    to={`/article?slug=${article?.slug}&id=${article?._id}&tilte=${article?.title}`}
+                    key={article._id}
+                    className="w-full flex gap-2 p-2  cursor-pointer   border-b-1 border-dark-800 transition-all duration-300"
+                  >
+                    <div className="flex flex-col">
+                      <div className="text-vivanta-500">
+                        {article?.topics?.map((topic) => (
+                          <span key={topic._id}>{topic?.name}</span>
+                        ))}
+                      </div>
+                      <h1 className="font-bold text-lg line-clamp-2 py-1 min-h-12">
+                        {article?.title}
+                      </h1>
+                      <p className="line-clamp-1 text-xs text-dark-500 mt-1">
+                        {article?.summary}
+                      </p>
+                      <div className="flex items-center gap-2 text-xs pt-2">
+                        <div className="w-4 h-4 flex items-center justify-center bg-vivanta-cyan-400 text-light-50 rounded-sm text-[0.8rem]">
+                          <i className="fa-solid fa-user-doctor text-xs"></i>
+                        </div>
+                        <span className="text-xs"> Tác giả:</span>
+                        <span className="font-bold">
+                          {article?.author?.fullName}
+                        </span>
+                      </div>
+                    </div>
+                    <img
+                      className="w-40 aspect-[16/9] object-cover rounded-md"
+                      src={article?.thumbnail?.url}
+                      alt={article?.title || ""}
+                    />
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </section>
   );

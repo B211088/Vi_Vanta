@@ -22,8 +22,7 @@ const TopicFavorite = () => {
             Tất cả chuyên mục
           </span>
         </Link>
-        {!loading &&
-          topics?.length > 0 &&
+        {!loading && topics?.length > 0 ? (
           topics?.map((topic) => (
             <Link
               to={`/topic?name=${topic?.name}&id=${topic?._id}`}
@@ -39,7 +38,10 @@ const TopicFavorite = () => {
                 {topic?.name}
               </span>
             </Link>
-          ))}
+          ))
+        ) : (
+          <div className=""></div>
+        )}
       </div>
     </div>
   );

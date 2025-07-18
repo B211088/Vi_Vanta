@@ -14,7 +14,7 @@ const Banner = () => {
   return (
     <div className="w-full relative overflow-hidden">
       {/* Main Banner Container */}
-      <div className="relative bg-gradient-to-br py-6 from-emerald-50 via-teal-50 to-cyan-50 min-h-[500px] flex items-center">
+      <div className=" relative bg-gradient-to-br py-6 from-emerald-50 via-teal-50 to-cyan-50 min-h-[500px] flex items-center">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-5">
           <div className="absolute top-10 left-10 w-32 h-32 bg-teal-400 rounded-full blur-3xl"></div>

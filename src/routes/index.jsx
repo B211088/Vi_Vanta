@@ -18,6 +18,12 @@ import BMICalculator from "../components/ui/healthtool/BMICalculator";
 import Tools from "../components/layout/tools/Tools";
 import AllTools from "../components/ui/healthtool/AllTools";
 import SleepCalculator from "../components/ui/healthtool/SleepCalculator";
+import HeartRateMonitor from "../components/ui/healthtool/HeartRateMonitor";
+import BodyFatAnalyzer from "../components/ui/healthtool/BodyFatAnalyzer";
+import WaterIntakeCalculator from "../components/ui/healthtool/WaterIntakeCalculator";
+import VaccineTracker from "../components/ui/healthtool/VaccineTracker";
+import PregnancyCalculator from "../components/ui/healthtool/PregnancyCalculator";
+import StressAssessmentApp from "../components/ui/healthtool/StressAssessmentApp";
 
 const Home = lazy(() => import("../pages/user/Home"));
 const Auth = lazy(() => import("../pages/auth/Auth"));
@@ -135,9 +141,11 @@ const router = createBrowserRouter([
       {
         path: "bmi",
         element: (
-          <Suspense fallback={<Loading />}>
-            <BMICalculator />
-          </Suspense>
+          <ProtectedRoute>
+            <Suspense fallback={<Loading />}>
+              <BMICalculator />
+            </Suspense>
+          </ProtectedRoute>
         ),
 
         errorElement: <ErrorPage />,
@@ -147,6 +155,70 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<Loading />}>
             <SleepCalculator />
+          </Suspense>
+        ),
+
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "heart-rate",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <HeartRateMonitor />
+          </Suspense>
+        ),
+
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "body-fat",
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<Loading />}>
+              <BodyFatAnalyzer />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "water-intake",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <WaterIntakeCalculator />
+          </Suspense>
+        ),
+
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "due-date",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <PregnancyCalculator />
+          </Suspense>
+        ),
+
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "stress",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <StressAssessmentApp />
+          </Suspense>
+        ),
+
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "vaccine",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <ProtectedRoute>
+              <VaccineTracker />
+            </ProtectedRoute>
           </Suspense>
         ),
 

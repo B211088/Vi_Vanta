@@ -1,14 +1,29 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ChevronDown } from "lucide-react";
 
 const ActivityLevelSelect = ({ value, onChange, activityLevels }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const wrapperRef = useRef(null); // Tham chiếu tới toàn bộ component
 
   const currentLevel = activityLevels[value];
   const CurrentIcon = currentLevel?.icon;
 
+  // Đóng dropdown khi click bên ngoài
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
-    <div className="w-full">
+    <div className="w-full" ref={wrapperRef}>
       <div className="w-full flex flex-col">
         <label className="text-xs pb-1 text-gray-700 font-medium">
           Mức độ vận động
@@ -23,9 +38,9 @@ const ActivityLevelSelect = ({ value, onChange, activityLevels }) => {
               <CurrentIcon className={`${currentLevel.color} w-5 h-5`} />
             )}
             <div className="flex-1">
-              <div className="font-medium">{currentLevel.label}</div>
+              <div className="font-medium">{currentLevel?.label}</div>
               <div className="text-xs text-gray-500">
-                {currentLevel.description}
+                {currentLevel?.description}
               </div>
             </div>
             <ChevronDown
@@ -48,7 +63,7 @@ const ActivityLevelSelect = ({ value, onChange, activityLevels }) => {
                         : ""
                     }`}
                     onClick={() => {
-                      onChange(key); // Gọi về component cha
+                      onChange(key);
                       setIsOpen(false);
                     }}
                   >

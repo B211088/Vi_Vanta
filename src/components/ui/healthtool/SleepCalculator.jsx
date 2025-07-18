@@ -11,10 +11,20 @@ import {
   Power,
   ChevronUp,
   ChevronDown,
+  ArrowLeft,
+  Scale,
+  BedDouble,
+  Shield,
+  Users,
+  Award,
 } from "lucide-react";
 import TimePickerComponent from "./TimePickerComponent";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 const SleepCalculator = ({ onBack }) => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [fatigue, setFatigue] = useState(3);
   const [mode, setMode] = useState("sleepNow");
   const [wakeUpTime, setWakeUpTime] = useState("06:30");
@@ -225,12 +235,12 @@ const SleepCalculator = ({ onBack }) => {
   ];
 
   const InfoPanel = () => (
-    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-      <h3 className="font-semibold text-blue-800 mb-2 flex items-center gap-2">
+    <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
+      <h3 className="font-semibold text-purple-800 mb-2 flex items-center gap-2">
         <Info size={18} />
         Khoa học về giấc ngủ
       </h3>
-      <div className="space-y-2 text-sm text-blue-700">
+      <div className="space-y-2 text-sm text-purple-700">
         <p>
           <strong>Chu kỳ ngủ 90 phút:</strong> Não bộ trải qua 4 giai đoạn: ngủ
           nhẹ → ngủ sâu → ngủ rất sâu → REM. Thức dậy đúng lúc kết thúc chu kỳ
@@ -253,37 +263,45 @@ const SleepCalculator = ({ onBack }) => {
   );
 
   return (
-    <div className="w-f mx-auto p-6 bg-gradient-to-br from-indigo-50 via-white to-purple-50 rounded-2xl shadow-xl mt-10">
+    <div className="w-full min-h-screen mx-auto px-4 py-8  bg-light-50  ">
       {/* Header */}
-      <div className="text-center mb-8">
-        <div className="flex justify-center mb-4">
-          <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-3 rounded-full">
-            <Moon className="text-white" size={32} />
+      <div className="flex flex-col mb-8">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex w-fit items-center text-violet-600  mr-6 py-2 rounded-lg ransition-colors cursor-pointer"
+        >
+          <ArrowLeft className="h-5 w-5 mr-2" />
+          Quay lại
+        </button>
+        <div className="flex items-center space-x-4">
+          <div className="p-3 bg-white rounded-xl shadow-sm">
+            <BedDouble className="h-8 w-8 text-violet-600" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800">
+              Tính toán giác ngủ
+            </h1>
+            <p className="text-gray-600 mt-1">
+              Công cụ chuyên nghiệp tính toán giác ngủ thông minh
+            </p>
           </div>
         </div>
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-          Máy Tính Giấc Ngủ Thông Minh
-        </h1>
-        <p className="text-gray-600">Tối ưu hóa giấc ngủ cho mọi tình huống</p>
       </div>
-
       {/* Info Toggle */}
       <div className="mb-6">
         <button
           onClick={() => setShowInfo(!showInfo)}
-          className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors"
+          className="flex items-center gap-2 text-purple-600 cursor-pointer text-sm hover:text-purple-800 transition-colors"
         >
           <Info size={16} />
           {showInfo ? "Ẩn thông tin" : "Khoa học về giấc ngủ"}
         </button>
       </div>
-
       {showInfo && <InfoPanel />}
-
       {/* Mode Selection */}
       <div className="mb-6">
         <label className="block font-semibold mb-3 text-gray-700 flex items-center gap-2">
-          <Clock size={20} className="text-blue-600" />
+          <Clock size={20} className="text-purple-600" />
           Tình huống của bạn
         </label>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -292,10 +310,13 @@ const SleepCalculator = ({ onBack }) => {
             return (
               <button
                 key={option.value}
-                onClick={() => setMode(option.value)}
-                className={`p-3 rounded-lg border-2 transition-all text-center ${
+                onClick={() => {
+                  setMode(option.value);
+                  setResult([]);
+                }}
+                className={`p-3 rounded-lg border-2 transition-all text-center cursor-pointer ${
                   mode === option.value
-                    ? "border-blue-500 bg-blue-50 text-blue-700"
+                    ? "border-purple-500 bg-purple-50 text-purple-700"
                     : "border-gray-200 bg-white hover:border-gray-300"
                 }`}
               >
@@ -307,38 +328,44 @@ const SleepCalculator = ({ onBack }) => {
           })}
         </div>
       </div>
-
       {/* Fatigue Level - Only for sleep modes */}
       {mode !== "powerNap" && (
         <div className="mb-6">
-          <label className="block font-semibold mb-3 text-gray-700 flex items-center gap-2">
+          <label className="font-semibold mb-3 text-gray-700 flex items-center gap-2">
             <Brain size={20} className="text-purple-600" />
             Mức độ mệt mỏi hiện tại
           </label>
-          <div className="bg-white rounded-lg p-4 shadow-sm border">
-            <input
-              type="range"
-              min="1"
-              max="5"
-              value={fatigue}
-              onChange={(e) => setFatigue(Number(e.target.value))}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-            />
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
-              <span>Tỉnh táo</span>
-              <span>Kiệt sức</span>
-            </div>
-            <div className={`mt-3 p-2 rounded-lg ${fatigueLabels[fatigue].bg}`}>
-              <p
-                className={`text-center font-semibold ${fatigueLabels[fatigue].color}`}
-              >
-                {fatigue} - {fatigueLabels[fatigue].label}
-              </p>
-            </div>
+
+          <div className="grid grid-cols-5 gap-2 mt-2">
+            {Array.from({ length: 5 }, (_, i) => {
+              const level = i + 1;
+              const isActive = fatigue === level;
+
+              return (
+                <button
+                  key={level}
+                  onClick={() => setFatigue(level)}
+                  className={`p-3 rounded-lg text-center shadow-sm cursor-pointer transition-all duration-150 border
+              ${
+                isActive
+                  ? fatigueLabels[level].bg +
+                    " " +
+                    fatigueLabels[level].color +
+                    " font-bold "
+                  : "bg-white text-gray-600 border-gray-200"
+              }
+            `}
+                >
+                  <div className="text-2xl">{fatigueLabels[level].emoji}</div>
+                  <div className="text-sm mt-1">
+                    {fatigueLabels[level].label}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
-
       {/* Time Pickers */}
       {mode === "wakeUpAt" && (
         <div className="mb-6">
@@ -353,7 +380,6 @@ const SleepCalculator = ({ onBack }) => {
           />
         </div>
       )}
-
       {mode === "plannedSleep" && (
         <div className="mb-6">
           <label className="block font-semibold mb-3 text-gray-700">
@@ -367,7 +393,6 @@ const SleepCalculator = ({ onBack }) => {
           />
         </div>
       )}
-
       {mode === "powerNap" && (
         <div className="mb-6">
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
@@ -382,17 +407,14 @@ const SleepCalculator = ({ onBack }) => {
           </div>
         </div>
       )}
-
       {/* Calculate button */}
       <button
         onClick={calculateSleepTime}
-        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-6 py-4 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2"
+        className="w-full bg-gradient-to-r from-purple-600 to-purple-600 hover:from-purple-700 hover:to-purple-700 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200 transform cursor-pointer flex items-center justify-center gap-2"
       >
         <Zap size={20} />
         Tính toán thời gian tối ưu
-      </button>
-
-      {/* Results */}
+      </button>{" "}
       {result.length > 0 && (
         <div className="mt-8">
           <h2 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2">
@@ -435,7 +457,7 @@ const SleepCalculator = ({ onBack }) => {
                         r.quality === "Tuyệt vời"
                           ? "bg-green-100 text-green-700"
                           : r.quality === "Tốt"
-                          ? "bg-blue-100 text-blue-700"
+                          ? "bg-purple-100 text-purple-700"
                           : r.quality === "Đủ dùng"
                           ? "bg-yellow-100 text-yellow-700"
                           : r.quality === "Cẩn thận"
@@ -506,7 +528,44 @@ const SleepCalculator = ({ onBack }) => {
           </div>
         </div>
       )}
-
+      <div className="bg-white rounded-lg p-6 mt-6 mb-4 shadow-sm border border-purple-100">
+        <div className="flex items-center space-x-4 mb-4">
+          <Shield className="h-6 w-6 text-purple-600" />
+          <h3 className="text-lg font-semibold text-gray-800">
+            Thông tin y tế quan trọng
+          </h3>
+        </div>
+        <div className="grid md:grid-cols-3 gap-4">
+          <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-xl">
+            <Info className="h-5 w-5 text-purple-600" />
+            <div>
+              <p className="font-medium text-purple-800">Độ chính xác cao</p>
+              <p className="text-sm text-purple-600">Dựa trên chuẩn y khoa</p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-xl">
+            <Users className="h-5 w-5 text-purple-600" />
+            <div>
+              <p className="font-medium text-purple-800">Nhiều phương pháp</p>
+              <p className="text-sm text-purple-600">Phù hợp mọi trường hợp</p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-xl">
+            <Award className="h-5 w-5 text-purple-600" />
+            <div>
+              <p className="font-medium text-purple-800">Tư vấn chuyên sâu</p>
+              <p className="text-sm text-purple-600">Theo dõi toàn diện</p>
+            </div>
+          </div>
+        </div>
+        <div className="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+          <p className="text-sm text-yellow-800">
+            <strong>Lưu ý:</strong> Đây chỉ là công cụ tham khảo. Hãy luôn tham
+            khảo ý kiến bác sĩ để có lời khuyên chính xác nhất cho giấc ngủ bạn.
+          </p>
+        </div>
+      </div>
+      {/* Results */}
       <style jsx>{`
         .slider::-webkit-slider-thumb {
           appearance: none;

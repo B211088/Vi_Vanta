@@ -106,7 +106,7 @@ const DetailArticle = () => {
   return (
     <div className="w-full flex flex-col font-nunito">
       <Header />{" "}
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen ">
         <div className="container mx-auto py-3 px-4 mt-2">
           <div className="flex items-center gap-2 border-r-1 border-dark-700 pr-2">
             <div
@@ -154,18 +154,18 @@ const DetailArticle = () => {
                 </h1>
 
                 {article.summary && (
-                  <p className="text-md text-gray-700 mb-6 italic border-l-4 border-blue-500 pl-4">
+                  <p className="text-md text-justify text-gray-700 mb-6 italic border-l-4 border-blue-500 pl-4">
                     {article.summary}
                   </p>
                 )}
 
                 {/* Thumbnail */}
                 {article.thumbnail && article.thumbnail.url && (
-                  <div className="mb-3">
+                  <div className="w-full flex flex-col items-center  mb-3">
                     <img
                       src={article.thumbnail.url}
                       alt={article.title}
-                      className="w-full  aspect-[16/9] object-cover rounded-lg shadow-sm"
+                      className="w-9/12  aspect-[16/9] object-cover rounded-lg shadow-sm"
                     />
                   </div>
                 )}
@@ -183,11 +183,11 @@ const DetailArticle = () => {
                       )}
 
                       {section.image && section.image.url && (
-                        <div className="mb-6">
+                        <div className="w-full flex flex-col items-center mb-6">
                           <img
                             src={section.image.url}
                             alt={section.image.description || section.heading}
-                            className="w-full aspect-[16/9] object-cover rounded-lg shadow-sm"
+                            className="w-9/12 aspect-[16/9] object-cover rounded-lg shadow-sm"
                           />
                           {section.image.description && (
                             <p className="text-sm text-gray-600 mt-2 italic text-center">

@@ -203,7 +203,7 @@ export const MarkdownRenderer = ({ content }) => {
 
   return (
     <div
-      className="prose max-w-none"
+      className="prose max-w-none text-justify"
       dangerouslySetInnerHTML={{ __html: htmlContent }}
     />
   );

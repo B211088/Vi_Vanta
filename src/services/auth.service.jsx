@@ -22,6 +22,8 @@ import {
   updateUserAddressFailure,
 } from "../store/slices/authSlice";
 import { API_URL } from "../config/api.config";
+import { fetchUserHealthInfo } from "./health.service";
+import { clearHealthInfo } from "../store/slices/health.slice";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -61,6 +63,7 @@ export const loginUser = (credentials) => async (dispatch) => {
     dispatch(loginStart());
     const response = await api.post("/api/v1/user/login", credentials);
     dispatch(loginSuccess(response.data));
+
     await dispatch(loadUser());
     await dispatch(getUserAddress());
     return response.data;
@@ -75,6 +78,7 @@ export const logoutUser = () => async (dispatch) => {
     await api.post("/api/v1/user/logout");
 
     dispatch(logout());
+    dispatch(clearHealthInfo());
     return { success: true, message: "Đăng xuất thành công" };
   } catch (error) {
     const errorMessage = error.response?.data?.message || "Đăng xuất thất bại";

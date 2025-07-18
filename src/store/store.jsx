@@ -7,6 +7,7 @@ import articleReducer from "./slices/article.slices";
 import chatbotReducer from "./slices/chatbot.slice";
 import doctorReducer from "./slices/doctor.slice";
 import healthReducer from "./slices/health.slice";
+import childrenReducer from "./slices/children.slice";
 
 export const rootReducer = combineReducers({
   auth: authReducer,
@@ -16,4 +17,5 @@ export const rootReducer = combineReducers({
   chatbot: chatbotReducer,
   doctor: doctorReducer,
   health: healthReducer,
+  children: childrenReducer,
 });

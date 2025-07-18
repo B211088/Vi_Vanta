@@ -238,7 +238,7 @@ export const useChatLogic = (collectionId, currentSectionId) => {
       const loadingMessage = {
         _id: loadingMessageId,
         role: "assistant",
-        content: "Loading...",
+        content: "Đang trả lời câu hỏi của bạn",
         timestamp: new Date().toISOString(),
         isLoading: true,
         __v: 0,

@@ -1,8 +1,9 @@
 import { Minus, Plus, Target, TrendingDown, ChevronDown } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 
 const GoalSelect = ({ value, onChange, goals }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const selectRef = useRef(null); // tham chiếu tới container
 
   const goalIcons = {
     lose: { icon: TrendingDown, color: "text-red-500" },
@@ -14,8 +15,20 @@ const GoalSelect = ({ value, onChange, goals }) => {
   const currentIcon = goalIcons[value];
   const CurrentIcon = currentIcon?.icon || Target;
 
+  // Đóng dropdown nếu click ra ngoài
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (selectRef.current && !selectRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
-    <div className="w-full flex flex-col">
+    <div className="w-full flex flex-col" ref={selectRef}>
       <label className="text-xs pb-1 font-medium text-gray-700">
         Mục tiêu sức khỏe
       </label>
@@ -53,7 +66,7 @@ const GoalSelect = ({ value, onChange, goals }) => {
                     value === key ? "bg-teal-50 border-l-4 border-teal-500" : ""
                   }`}
                   onClick={() => {
-                    onChange(key); // Gọi setState từ component cha
+                    onChange(key);
                     setIsOpen(false);
                   }}
                 >

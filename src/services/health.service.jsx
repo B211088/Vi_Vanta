@@ -37,6 +37,9 @@ import {
   clearErrors,
   clearSuccess,
   resetHealthState,
+  fetchMetabolismStart,
+  fetchMetabolismSuccess,
+  fetchMetabolismFailure,
 } from "../store/slices/health.slice";
 
 const api = axios.create({
@@ -60,6 +63,24 @@ export const fetchUserHealthInfo = () => async (dispatch) => {
     throw error;
   }
 };
+
+export const getHealthAdviceMetabolism =
+  (params = "metabolism") =>
+  async (dispatch) => {
+    try {
+      dispatch(fetchMetabolismStart());
+      const response = await api.get("/api/v1/health-advices/latest", {
+        params,
+      });
+      dispatch(fetchMetabolismSuccess(response.data.data));
+      return { success: true, data: response.data };
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "Không lấy lời khuyên !";
+      dispatch(fetchMetabolismFailure(errorMessage));
+      throw error;
+    }
+  };
 
 // Get all health info (admin only)
 export const fetchAllHealthInfo = () => async (dispatch) => {
@@ -93,15 +114,27 @@ export const createHealthInfo = (healthData) => async (dispatch) => {
     throw error;
   }
 };
+export const getSimpleHealthAdvice = (healthData) => async (dispatch) => {
+  try {
+    dispatch(createHealthStart());
+    const response = await api.post("api/v1/health/advice", healthData);
+    return { success: true, data: response.data };
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message || "Không thể tạo thông tin sức khỏe!";
+    dispatch(createHealthFailure(errorMessage));
+    throw error;
+  }
+};
 
 // Update user health info
 export const updateHealthInfo = (healthData) => async (dispatch) => {
   try {
     dispatch(updateHealthStart());
-    const response = await api.put("api/v1/health/me", healthData);
+    const response = await api.post("api/v1/health/me", healthData);
 
     dispatch(updateHealthSuccess(response.data));
-    return response.data;
+    return { success: true, data: response.data };
   } catch (error) {
     const errorMessage =
       error.response?.data?.message || "Không thể cập nhật thông tin sức khỏe!";

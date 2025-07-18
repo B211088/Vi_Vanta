@@ -39,7 +39,7 @@ const TimePickerComponent = ({ value, onChange, label, icon }) => {
 
   return (
     <div className="relative">
-      <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
+      <div className="bg-white rounded-lg border border-dark-800  shadow-sm overflow-hidden">
         {/* Display */}
         <div
           className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
@@ -64,13 +64,13 @@ const TimePickerComponent = ({ value, onChange, label, icon }) => {
         </div>
 
         {/* Quick adjusters */}
-        <div className="flex border-t bg-gray-50">
+        <div className="flex border-t border-dark-800 pb-3  bg-gray-50">
           <div className="flex-1 text-center">
             <p className="text-xs text-gray-500 py-1">Giờ</p>
             <div className="flex">
               <button
                 onClick={() => adjustTime("hour", "down")}
-                className="flex-1 p-2 hover:bg-gray-100 border-r"
+                className="flex-1 p-2 hover:bg-gray-100 border-r border-dark-800 "
               >
                 <ChevronDown size={16} className="mx-auto text-gray-600" />
               </button>
@@ -79,7 +79,7 @@ const TimePickerComponent = ({ value, onChange, label, icon }) => {
               </div>
               <button
                 onClick={() => adjustTime("hour", "up")}
-                className="flex-1 p-2 hover:bg-gray-100 border-l"
+                className="flex-1 p-2 hover:bg-gray-100 border-l border-dark-800 "
               >
                 <ChevronUp size={16} className="mx-auto text-gray-600" />
               </button>
@@ -91,7 +91,7 @@ const TimePickerComponent = ({ value, onChange, label, icon }) => {
             <div className="flex">
               <button
                 onClick={() => adjustTime("minute", "down")}
-                className="flex-1 p-2 hover:bg-gray-100 border-r"
+                className="flex-1 p-2 hover:bg-gray-100 border-r border-dark-800 "
               >
                 <ChevronDown size={16} className="mx-auto text-gray-600" />
               </button>
@@ -100,7 +100,7 @@ const TimePickerComponent = ({ value, onChange, label, icon }) => {
               </div>
               <button
                 onClick={() => adjustTime("minute", "up")}
-                className="flex-1 p-2 hover:bg-gray-100 border-l"
+                className="flex-1 p-2 hover:bg-gray-100 border-l border-dark-800 "
               >
                 <ChevronUp size={16} className="mx-auto text-gray-600" />
               </button>
@@ -110,24 +110,26 @@ const TimePickerComponent = ({ value, onChange, label, icon }) => {
 
         {/* Dropdown picker */}
         {isOpen && (
-          <div className="border-t bg-white p-4 max-h-64 overflow-y-auto">
+          <div className="border-t h-full border-dark-800  bg-white p-4 ">
             <div className="grid grid-cols-2 gap-4">
               {/* Hours */}
               <div>
                 <p className="text-sm font-semibold text-gray-700 mb-2">Giờ</p>
-                <div className="grid grid-cols-4 gap-1 max-h-32 overflow-y-auto">
+                <div className="flex flex-wrap  h-full pb-6">
                   {timeOptions.hours.map((h) => (
-                    <button
-                      key={h}
-                      onClick={() => updateTime(h, parseInt(minute))}
-                      className={`p-2 text-sm rounded transition-colors ${
-                        parseInt(hour) === h
-                          ? "bg-blue-500 text-white"
-                          : "bg-gray-100 hover:bg-gray-200"
-                      }`}
-                    >
-                      {h.toString().padStart(2, "0")}
-                    </button>
+                    <div className="w-3/12 p-1">
+                      <button
+                        key={h}
+                        onClick={() => updateTime(h, parseInt(minute))}
+                        className={`p-2 w-full text-sm rounded transition-colors border border-dark-800 cursor-pointer  ${
+                          parseInt(hour) === h
+                            ? "bg-blue-500 text-white border-transparent"
+                            : "bg-gray-100 hover:bg-gray-200"
+                        }`}
+                      >
+                        {h.toString().padStart(2, "0")} giờ
+                      </button>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -140,9 +142,9 @@ const TimePickerComponent = ({ value, onChange, label, icon }) => {
                     <button
                       key={m}
                       onClick={() => updateTime(parseInt(hour), m)}
-                      className={`p-2 text-sm rounded transition-colors ${
+                      className={`p-2 text-sm border border-dark-800 rounded transition-colors cursor-pointer ${
                         parseInt(minute) === m
-                          ? "bg-blue-500 text-white"
+                          ? "bg-blue-500 text-white border-transparent"
                           : "bg-gray-100 hover:bg-gray-200"
                       }`}
                     >
@@ -154,7 +156,7 @@ const TimePickerComponent = ({ value, onChange, label, icon }) => {
             </div>
 
             {/* Common times */}
-            <div className="mt-4 border-t pt-3">
+            <div className="mt-4 border-t border-dark-800  pt-3">
               <p className="text-sm font-semibold text-gray-700 mb-2">
                 Thời gian phổ biến
               </p>
