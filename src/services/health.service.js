@@ -42,13 +42,19 @@ export const createHealthInfoHandle = async (payload) => {
 // Cập nhật thông tin sức khỏe
 export const updateHealthInfoHandle = async (userId, payload) => {
   try {
+    const existingHealthInfo = await Health.findOne({ userId });
+    if (!existingHealthInfo) {
+      const healthInfo = new Health(payload);
+      healthInfo.save();
+      console.log("Thêm thông tin sức khỏe:", healthInfo);
+      return healthInfo;
+    }
+
     const updatedHealthInfo = await Health.findOneAndUpdate(
       { userId },
       { $set: payload },
       { new: true }
     ).select("-__v -createdAt -updatedAt");
-
-    console.log("Cập nhật thông tin sức khỏe:", updatedHealthInfo);
 
     if (!updatedHealthInfo) {
       throw new Error("Không tìm thấy thông tin sức khỏe để cập nhật");

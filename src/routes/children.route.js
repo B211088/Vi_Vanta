@@ -5,10 +5,14 @@ import {
   getChildById,
   updateChild,
   deleteChild,
+  checkingVaccinacationRecord,
+  getVaccinationRecords,
 } from "../controllers/children.controller.js";
 import verifyToken from "../middlewares/verifyToken.js";
 
 const router = express.Router();
+router.get("/:childId/vaccination-records", verifyToken, getVaccinationRecords);
+router.post("/:childId/checking", verifyToken, checkingVaccinacationRecord);
 
 // Tạo thông tin trẻ mới
 router.post("/", verifyToken, createChild);

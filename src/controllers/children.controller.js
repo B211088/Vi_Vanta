@@ -4,6 +4,8 @@ import {
   getChildByIdHandle,
   updateChildHandle,
   deleteChildHandle,
+  checkingVaccinacationRecordHandle,
+  getVaccinationRecordsByChildId,
 } from "../services/children.service.js";
 
 // Tạo thông tin trẻ mới
@@ -71,11 +73,36 @@ export const deleteChild = async (req, res) => {
     const { childId } = req.params; // Lấy childId từ params
     const result = await deleteChildHandle(childId);
     res.status(200).json({
-      message: result.message,
+      message: "Xóa hồ sơ bé thành công!",
+      data: result,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
+export const checkingVaccinacationRecord = async (req, res) => {
+  try {
+    const { childId } = req.params;
+    const result = await checkingVaccinacationRecordHandle(childId, req.body);
+    res.status(200).json({
+      message: "Checking thành công!",
+      data: result,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
+export const getVaccinationRecords = async (req, res) => {
+  try {
+    const { childId } = req.params;
+    const records = await getVaccinationRecordsByChildId(childId);
+    res.status(200).json({
+      message: "Lấy danh sách record tiêm chủng thành công!",
+      data: records,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

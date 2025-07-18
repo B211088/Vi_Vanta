@@ -8,11 +8,15 @@ import {
   deleteHealth,
   getUserHealthInfoById,
   updateUserHealth,
+  getSimpleHealthAdvice,
 } from "../controllers/health.controller.js";
 
 const router = express.Router();
+
+router.post("/advice", verifyToken, getSimpleHealthAdvice);
 // Lấy thông tin sức khỏe theo ID
 router.get("/me", verifyToken, getUserHealthInfoById);
+
 // Lấy danh sách tất cả thông tin sức khỏe
 router.get("/", verifyToken, authorizeRoles("admin"), getAllHealth);
 
@@ -20,7 +24,7 @@ router.get("/", verifyToken, authorizeRoles("admin"), getAllHealth);
 router.post("/", sanitizeInputMiddleware, verifyToken, createHealth);
 
 // Cập nhật thông tin sức khỏe
-router.put("/me", sanitizeInputMiddleware, verifyToken, updateUserHealth);
+router.post("/me", sanitizeInputMiddleware, verifyToken, updateUserHealth);
 
 // Xóa thông tin sức khỏe
 router.delete("/:healthId", verifyToken, authorizeRoles("admin"), deleteHealth);

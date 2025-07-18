@@ -19,22 +19,7 @@ import { uploads } from "../utils/uploadImagesToCloud.js";
 // Tạo một vắc-xin mới
 export const createVaccine = async (req, res) => {
   try {
-    const payload = req.body; // Lấy dữ liệu từ body request
-    const userId = req.user.userId; // Lấy userId từ token đã xác thực
-    const { images, thumbnail } = req.files;
-
-    // Upload thumbnail lên Cloudinary
-    const uploadedThumbnail = await uploads(thumbnail[0], userId, "Vaccines");
-    payload.thumbnail = uploadedThumbnail;
-
-    // Upload từng ảnh lên Cloudinary
-    const uploadedImages = await Promise.all(
-      images.map((image) => uploads(image, userId, "Vaccines"))
-    );
-
-    // Gắn URL của ảnh vào payload
-    payload.images = uploadedImages;
-
+    const payload = req.body;
     const newVaccine = await createVaccineHandle(payload);
     res.status(201).json({
       message: "Tạo vắc-xin thành công!",
@@ -79,29 +64,7 @@ export const getVaccineById = async (req, res) => {
 export const updateVaccine = async (req, res) => {
   try {
     const { vaccineId } = req.params; // Lấy vaccineId từ params
-    const { images, thumbnail } = req.files;
     const payload = req.body; // Lấy dữ liệu từ body request
-    const userId = req.user.userId; // Lấy userId từ token đã xác thực
-
-    // Kiểm tra xem có thumbnail không
-    if (thumbnail && thumbnail.length === 0) {
-      return res.status(400).json({ message: "Vui lòng thêm ảnh đại diện!" });
-    }
-
-    // Kiểm tra xem có images không
-    if (!images || images.length === 0) {
-      return res.status(400).json({ message: "Vui lòng thêm ảnh!" });
-    }
-    // Upload từng ảnh lên Cloudinary
-    const uploadedThumbnail = await uploads(thumbnail[0], userId, "Vaccines");
-    payload.thumbnail = uploadedThumbnail; // Gắn URL của ảnh vào payload
-    const uploadedImages = await Promise.all(
-      images.map((image) => uploads(image, userId, "Vaccines"))
-    );
-
-    // Gắn URL của ảnh vào payload
-    payload.images = uploadedImages;
-    console.log("Uploaded Images:", uploadedImages);
 
     const updatedVaccine = await updateVaccineHandle(vaccineId, payload);
     res.status(200).json({

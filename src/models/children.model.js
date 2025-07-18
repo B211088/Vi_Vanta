@@ -8,7 +8,7 @@ const childrenSchema = new Schema(
       ref: "User",
       required: true,
     },
-    fullName: {
+    name: {
       type: String,
       required: true,
       trim: true,
@@ -18,14 +18,14 @@ const childrenSchema = new Schema(
       enum: ["male", "female", "other"],
       required: true,
     },
-    dateOfBirth: {
+    birthDate: {
       type: Date,
       required: true,
     },
-    birthWeight: {
+    height: {
       type: Number,
     },
-    birthHeight: {
+    weight: {
       type: Number,
     },
     bloodType: {
@@ -37,6 +37,9 @@ const childrenSchema = new Schema(
       type: String,
       enum: ["vaginal", "cesarean", "unknown"],
       default: "unknown",
+    },
+    notes: {
+      type: String,
     },
   },
   { timestamps: true }

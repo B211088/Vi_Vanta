@@ -20,8 +20,6 @@ import Appointment from "./appointment.model.js";
 import Payment from "./payment.model.js";
 import Notification from "./notification.model.js";
 import ChildVaccinationRecord from "./childVaccinationRecord.model.js";
-import Vaccine from "./vaccine.model.js";
-import VaccinCategory from "./vaccinCategory.model.js";
 
 import Exercise from "./exercises.model.js";
 import ExerciseCategory from "./exercisesCategory.model.js";
@@ -55,8 +53,6 @@ export {
   Payment,
   Notification,
   ChildVaccinationRecord,
-  Vaccine,
-  VaccinCategory,
   Exercise,
   ExerciseCategory,
   MedicationReminderItem,

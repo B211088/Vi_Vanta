@@ -21,7 +21,7 @@ import menstrualCycleRouter from "./routes/menstrualCycle.route.js";
 import medicationRouter from "./routes/medication.route.js";
 import medicationCategoryRouter from "./routes/medicationCategory.route.js";
 import childrenRouter from "./routes/children.route.js";
-import vaccineRouter from "./routes/vaccine.route.js";
+
 import clinicRouter from "./routes/clinic.route.js";
 import exerciseRouter from "./routes/exercise.route.js";
 import medicationReminderRouter from "./routes/medicationReminder.route.js";
@@ -33,6 +33,7 @@ import topicRouter from "./routes/topic.route.js";
 import articleRouter from "./routes/article.route.js";
 import chatbotRouter from "./routes/chatbot.route.js";
 import doctorRouter from "./routes/doctor.route.js";
+import healthAdviceRoutes from "./routes/healthAdvice.route.js";
 import fs from "fs";
 
 const app = express();
@@ -96,7 +97,6 @@ app.use("/api/v1/menstrual-cycle", menstrualCycleRouter);
 app.use("/api/v1/medication", medicationRouter);
 app.use("/api/v1/medication-categories", medicationCategoryRouter);
 app.use("/api/v1/children", childrenRouter);
-app.use("/api/v1/vaccines", vaccineRouter);
 app.use("/api/v1/clinics", clinicRouter);
 app.use("/api/v1/exercises", exerciseRouter);
 app.use("/api/v1/medication-reminders", medicationReminderRouter);
@@ -109,6 +109,7 @@ app.use("/api/v1/topics", topicRouter);
 app.use("/api/v1/articles", articleRouter);
 app.use("/api/v1/chatbot", chatbotRouter);
 app.use("/api/v1/doctors", doctorRouter);
+app.use("/api/v1/health-advices", healthAdviceRoutes);
 
 app.get("/api/v1/csrf-token", (req, res) => {
   res.json({ csrfToken: req.csrfToken() });
