@@ -1,56 +1,50 @@
 import { v4 as uuidv4 } from "uuid";
 import {
-  CONTEXT_HISTORY_LIMIT,
   DEFAULT_K,
   DEFAULT_MAX_TOKEN,
   DEFAULT_MODEL,
   DEFAULT_SIMILARITY_THRESHOLD,
   OPENAI_API_KEY,
+  OPENAI_EMBEDDING_MODEL,
 } from "../config/openai.config.js";
 import { getCollectionByIdHandle } from "../services/collection.service.js";
 import OpenAI from "openai";
 import EmbedService from "../services/ragOpenAI.service.js";
 import AIChatService from "../services/aiChat.service.js";
 import { getAIModelByIdHandle } from "../services/aiModel.service.js";
+import chromadbService from "../services/chromadb.service.js";
+import Message from "../models/message.model.js";
+import Section from "../models/section.model.js";
 
 const service = new EmbedService();
 const chatService = new AIChatService();
 const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 
-// Enhanced cache with memory management
-class CacheManager {
-  constructor(ttl = 5 * 60 * 1000, maxSize = 1000) {
+// Simplified cache manager
+class SimpleCache {
+  constructor(ttl = 5 * 60 * 1000, maxSize = 500) {
     this.cache = new Map();
     this.ttl = ttl;
     this.maxSize = maxSize;
-    this.cleanupInterval = setInterval(() => this.cleanup(), ttl);
+
+    setInterval(() => this.cleanup(), ttl / 2);
   }
 
   get(key) {
     const item = this.cache.get(key);
-    if (!item) return null;
-
-    if (Date.now() - item.timestamp > this.ttl) {
+    if (!item || Date.now() - item.timestamp > this.ttl) {
       this.cache.delete(key);
       return null;
     }
-
-    // Update last accessed time
-    item.lastAccessed = Date.now();
     return item.data;
   }
 
   set(key, data) {
-    // Cleanup if cache is full
     if (this.cache.size >= this.maxSize) {
-      this.evictOldest();
+      const firstKey = this.cache.keys().next().value;
+      this.cache.delete(firstKey);
     }
-
-    this.cache.set(key, {
-      data,
-      timestamp: Date.now(),
-      lastAccessed: Date.now(),
-    });
+    this.cache.set(key, { data, timestamp: Date.now() });
   }
 
   cleanup() {
@@ -61,192 +55,190 @@ class CacheManager {
       }
     }
   }
+}
 
-  evictOldest() {
-    let oldest = null;
-    let oldestTime = Date.now();
+// Cache instances
+const embeddingCache = new SimpleCache(30 * 60 * 1000, 1000);
+const collectionCache = new SimpleCache(60 * 60 * 1000, 100);
 
-    for (const [key, item] of this.cache.entries()) {
-      if (item.lastAccessed < oldestTime) {
-        oldest = key;
-        oldestTime = item.lastAccessed;
+// Circuit breaker for OpenAI calls
+class CircuitBreaker {
+  constructor(threshold = 3, timeout = 30000) {
+    this.failureThreshold = threshold;
+    this.timeout = timeout;
+    this.failureCount = 0;
+    this.lastFailureTime = null;
+    this.state = "CLOSED";
+  }
+
+  async execute(fn) {
+    if (this.state === "OPEN") {
+      if (Date.now() - this.lastFailureTime > this.timeout) {
+        this.state = "HALF_OPEN";
+      } else {
+        throw new Error("Circuit breaker is OPEN");
       }
     }
 
-    if (oldest) {
-      this.cache.delete(oldest);
+    try {
+      const result = await fn();
+      this.reset();
+      return result;
+    } catch (error) {
+      this.recordFailure();
+      throw error;
     }
   }
 
-  destroy() {
-    clearInterval(this.cleanupInterval);
-    this.cache.clear();
+  recordFailure() {
+    this.failureCount++;
+    this.lastFailureTime = Date.now();
+    if (this.failureCount >= this.failureThreshold) {
+      this.state = "OPEN";
+    }
+  }
+
+  reset() {
+    this.failureCount = 0;
+    this.state = "CLOSED";
   }
 }
 
-// Optimized caches
-const contextCache = new CacheManager(5 * 60 * 1000, 500);
-const queryCache = new CacheManager(10 * 60 * 1000, 300);
-const collectionCache = new CacheManager(30 * 60 * 1000, 100);
+const openaiCircuitBreaker = new CircuitBreaker();
 
-// Optimized retry utility with exponential backoff
-const retry = async (fn, maxRetries = 3, baseDelay = 1000) => {
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      return await fn();
-    } catch (error) {
-      if (attempt === maxRetries - 1) throw error;
-
-      const delay = baseDelay * Math.pow(2, attempt);
-      await new Promise((resolve) => setTimeout(resolve, delay));
+// Retry with exponential backoff
+const retryWithBackoff = async (fn, maxRetries = 3, baseDelay = 500) => {
+  return openaiCircuitBreaker.execute(async () => {
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        return await fn();
+      } catch (error) {
+        if (attempt === maxRetries - 1) throw error;
+        const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 1000;
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
     }
-  }
+  });
 };
 
-// Batch processing utility
-const batchProcess = async (items, processor, batchSize = 5) => {
-  const results = [];
-  for (let i = 0; i < items.length; i += batchSize) {
-    const batch = items.slice(i, i + batchSize);
-    const batchResults = await Promise.all(batch.map(processor));
-    results.push(...batchResults);
-  }
-  return results;
-};
-
-// Optimized context generation with streaming
-async function generateConversationContext(question, answer) {
-  const cacheKey = `context_${Buffer.from(question + answer)
-    .toString("base64")
-    .slice(0, 50)}`;
-  const cached = contextCache.get(cacheKey);
+// Get cached embedding
+async function getCachedEmbedding(text) {
+  const cacheKey = `embed_${Buffer.from(text).toString("base64").slice(0, 32)}`;
+  const cached = embeddingCache.get(cacheKey);
   if (cached) return cached;
 
-  try {
-    const completion = await retry(() =>
-      openai.chat.completions.create({
-        model: DEFAULT_MODEL,
-        messages: [
-          {
-            role: "system",
-            content: `Tóm tắt cuộc trò chuyện ngắn gọn dưới 150 từ. Format JSON: {"summary": "...", "keyPoints": ["..."], "lastContext": "..."}`,
-          },
-          {
-            role: "user",
-            content: `Q: ${question.slice(0, 200)}\nA: ${answer.slice(0, 300)}`,
-          },
-        ],
-        temperature: 0.1,
-        max_tokens: 200,
-        stream: false,
-      })
-    );
+  const response = await retryWithBackoff(() =>
+    openai.embeddings.create({
+      model: OPENAI_EMBEDDING_MODEL,
+      input: text.slice(0, 8000),
+    })
+  );
 
-    const result = JSON.parse(completion.choices[0].message.content);
-    contextCache.set(cacheKey, result);
-    return result;
-  } catch (error) {
-    console.error("Context generation error:", error);
-    return { summary: "", keyPoints: [], lastContext: "" };
-  }
+  const embedding = response.data[0].embedding;
+  embeddingCache.set(cacheKey, embedding);
+  return embedding;
 }
 
-// Optimized conversation context builder
-async function buildConversationContext(
-  sectionId,
-  limit = CONTEXT_HISTORY_LIMIT
-) {
+// Build conversation context from recent messages
+async function buildConversationContext(sectionId, limit = 5) {
   if (!sectionId) return "";
 
-  const cacheKey = `conv_${sectionId}_${limit}`;
-  const cached = contextCache.get(cacheKey);
-  if (cached) return cached;
-
   try {
-    // Get minimal chat history
-    const chatHistory = await chatService.getChatHistory(
-      sectionId,
-      Math.min(limit, 3)
-    );
+    // Get recent messages directly from database
+    const section = await Section.findById(sectionId)
+      .populate({
+        path: "messages",
+        options: {
+          sort: { timestamp: -1 },
+          limit: limit,
+        },
+      })
+      .lean();
 
-    if (!chatHistory?.length) return "";
+    if (!section?.messages?.length) return "";
 
-    // Efficient context building
-    const contextMessages = chatHistory
-      .slice(-limit)
+    // Build context from recent messages
+    const context = section.messages
+      .reverse() // Reverse to get chronological order
       .map(
         (msg) =>
-          `${msg.role === "user" ? "U" : "A"}: ${msg.content.slice(0, 300)}`
+          `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content.slice(
+            0,
+            200
+          )}`
       )
       .join("\n");
 
-    let result = contextMessages;
-
-    // Only summarize if really necessary
-    if (contextMessages.length > 2000) {
-      const summary = await retry(() =>
-        openai.chat.completions.create({
-          model: DEFAULT_MODEL,
-          messages: [
-            {
-              role: "system",
-              content: "Tóm tắt cuộc trò chuyện thành context ngắn gọn <150 từ",
-            },
-            { role: "user", content: contextMessages },
-          ],
-          temperature: 0.1,
-          max_tokens: 150,
-        })
-      );
-      result = summary.choices[0].message.content;
-    }
-
-    contextCache.set(cacheKey, result);
-    return result;
+    return context;
   } catch (error) {
     console.error("Context building error:", error);
     return "";
   }
 }
 
-// Optimized query simplification
-export const simplifyQuery = async (userQuestion, context = "") => {
-  const cacheKey = `query_${Buffer.from(userQuestion + context)
-    .toString("base64")
-    .slice(0, 50)}`;
-  const cached = queryCache.get(cacheKey);
-  if (cached) return cached;
+// Generate session ID for anonymous users
+function generateSessionId() {
+  return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
 
+// Get or create session identifier
+function getSessionIdentifier(req) {
+  const userId = req.user?.userId;
+  const sessionId =
+    req.body.sessionId || req.headers["x-session-id"] || generateSessionId();
+
+  return { userId, sessionId };
+}
+
+// Query similar documents
+async function querySimilarDocuments(
+  collectionName,
+  query,
+  k = 5,
+  filters = {}
+) {
   try {
-    const completion = await retry(() =>
-      openai.chat.completions.create({
-        model: DEFAULT_MODEL,
-        messages: [
-          {
-            role: "system",
-            content: `Chuyên gia y tế. Context: ${context.slice(
-              0,
-              200
-            )}\nChuyển đổi câu hỏi thành mô tả cụ thể về tình trạng sức khỏe, tập trung vào triệu chứng.`,
-          },
-          { role: "user", content: userQuestion.slice(0, 500) },
-        ],
-        temperature: 0.3,
-        max_tokens: 150,
-      })
+    console.log(`🔍 Querying: "${query.slice(0, 50)}" with k=${k}`);
+
+    const queryVector = await getCachedEmbedding(query);
+    console.log(
+      `🔢 Retrieved query embedding (dimension: ${queryVector.length})`
     );
 
-    const result = completion.choices[0].message.content;
-    queryCache.set(cacheKey, result);
-    return result;
-  } catch (error) {
-    console.error("Query simplification error:", error);
-    return userQuestion;
-  }
-};
+    const results = await chromadbService.queryDocuments(
+      collectionName,
+      null,
+      Math.min(Number(k), 8),
+      filters,
+      [queryVector]
+    );
 
-// Optimized similarity processing
-function processSimilarityResults(similarDocs, similarityThreshold) {
+    const formattedResults = {
+      query: query,
+      results: results.documents[0].map((doc, i) => ({
+        content: doc,
+        metadata: results.metadatas[0][i],
+        distance: results.distances[0][i],
+        similarity: 1 - results.distances[0][i],
+        id: results.ids[0][i],
+      })),
+      totalResults: results.documents[0].length,
+    };
+
+    console.log(`✅ Found ${formattedResults.totalResults} similar documents`);
+    return formattedResults;
+  } catch (error) {
+    console.error("❌ Error querying similar documents:", error);
+    throw error;
+  }
+}
+
+// Process similarity results
+function processSimilarityResults(
+  similarDocs,
+  similarityThreshold,
+  maxDocs = 5
+) {
   if (!similarDocs?.results?.length) {
     return {
       success: false,
@@ -257,19 +249,14 @@ function processSimilarityResults(similarDocs, similarityThreshold) {
     };
   }
 
-  // Vectorized similarity calculation
-  const docsWithSimilarity = similarDocs.results.map((doc) => ({
-    ...doc,
-    similarity: 1 - doc.distance,
-  }));
-
-  const relevantDocs = docsWithSimilarity.filter(
-    (doc) => doc.similarity >= similarityThreshold
-  );
+  const relevantDocs = similarDocs.results
+    .filter((doc) => doc.similarity >= similarityThreshold)
+    .sort((a, b) => b.similarity - a.similarity)
+    .slice(0, maxDocs);
 
   if (!relevantDocs.length) {
     const maxSimilarity = Math.max(
-      ...docsWithSimilarity.map((doc) => doc.similarity)
+      ...similarDocs.results.map((doc) => doc.similarity)
     );
     return {
       success: false,
@@ -281,9 +268,6 @@ function processSimilarityResults(similarDocs, similarityThreshold) {
     };
   }
 
-  // Sort by similarity descending
-  relevantDocs.sort((a, b) => b.similarity - a.similarity);
-
   return {
     success: true,
     relevantDocs,
@@ -292,21 +276,29 @@ function processSimilarityResults(similarDocs, similarityThreshold) {
   };
 }
 
-// Optimized document context builder
-function buildDocumentContext(relevantDocs) {
-  return relevantDocs
-    .slice(0, 5) // Limit to top 5 most relevant
-    .map(
-      (doc, i) =>
-        `[${i + 1}] (${doc.similarity.toFixed(3)}): ${doc.content.slice(
-          0,
-          800
-        )}`
-    )
-    .join("\n\n");
+// Build document context
+function buildDocumentContext(relevantDocs, maxLength = 2500) {
+  let context = "";
+  let currentLength = 0;
+
+  for (let i = 0; i < Math.min(relevantDocs.length, 5); i++) {
+    const doc = relevantDocs[i];
+    const docText = `[${i + 1}] (${doc.similarity.toFixed(3)}): ${doc.content}`;
+
+    if (currentLength + docText.length > maxLength) {
+      const remainingSpace = maxLength - currentLength;
+      context += docText.slice(0, remainingSpace) + "...";
+      break;
+    }
+
+    context += docText + "\n\n";
+    currentLength += docText.length + 2;
+  }
+
+  return context.trim();
 }
 
-// Optimized AI response generation
+// Generate AI response
 async function generateAIResponse({
   question,
   documentContext,
@@ -316,24 +308,31 @@ async function generateAIResponse({
   temperature,
   maxToken,
 }) {
-  const messages = [{ role: "system", content: systemPrompt }];
+  const messages = [];
 
   if (conversationContext?.trim()) {
     messages.push({
       role: "system",
-      content: `Context: ${conversationContext.slice(0, 500)}`,
+      content: `Bối cảnh cuộc trò chuyện trước:\n${conversationContext.slice(
+        0,
+        800
+      )}`,
     });
   }
 
   messages.push({
     role: "user",
-    content: `Thông tin tham khảo:\n${documentContext.slice(
+    content: `
+    Yêu cầu hệ thống : \n${systemPrompt}\n
+    Thông tin tham khảo:\n${documentContext.slice(
       0,
-      3000
-    )}\n\nCâu hỏi: "${question}"\n\nTrả lời dựa trên thông tin trên. Nếu không đủ thông tin, hãy nói thẳng.`,
+      2500
+    )}\n\nCâu hỏi: "${question}"\n\nTrả lời dựa trên thông tin trên.`,
   });
 
-  const completion = await retry(() =>
+  console.log({ messages });
+
+  const completion = await retryWithBackoff(() =>
     openai.chat.completions.create({
       model: modelData?.name || DEFAULT_MODEL,
       messages,
@@ -347,16 +346,73 @@ async function generateAIResponse({
   return completion.choices[0].message.content;
 }
 
+// Save chat messages
+async function saveChatMessages(
+  sectionId,
+  question,
+  answer,
+  { userId, sessionId }
+) {
+  try {
+    // Create messages
+    const userMessage = new Message({
+      role: "user",
+      content: question,
+    });
+
+    const assistantMessage = new Message({
+      role: "assistant",
+      content: answer,
+    });
+
+    await Promise.all([userMessage.save(), assistantMessage.save()]);
+
+    let section;
+
+    if (sectionId) {
+      // Update existing section
+      section = await Section.findByIdAndUpdate(
+        sectionId,
+        {
+          $push: {
+            messages: {
+              $each: [userMessage._id, assistantMessage._id],
+            },
+          },
+          updatedAt: new Date(),
+        },
+        { new: true }
+      ).populate("messages");
+    } else {
+      // Create new section
+      section = new Section({
+        userId: userId || null,
+        sessionId,
+        title:
+          question.length > 50 ? question.substring(0, 50) + "..." : question,
+        messages: [userMessage._id, assistantMessage._id],
+      });
+      await section.save();
+      section = await Section.findById(section._id).populate("messages");
+    }
+
+    return section;
+  } catch (error) {
+    console.error("Error saving chat messages:", error);
+    throw error;
+  }
+}
+
 // Main optimized chatbot function
 export async function chatWithChatBot(req, res) {
-  const userId = req.user.userId;
   const startTime = Date.now();
+  const { userId, sessionId } = getSessionIdentifier(req);
 
-  // Early response helper
   const sendResponse = (data, statusCode = 200) => {
     res.status(statusCode).json({
       ...data,
       processingTime: Date.now() - startTime,
+      sessionId, // Always return sessionId for client tracking
     });
   };
 
@@ -374,52 +430,33 @@ export async function chatWithChatBot(req, res) {
       similarityThreshold = DEFAULT_SIMILARITY_THRESHOLD,
     } = req.body;
 
-    // Fast validation
-    if (!question?.trim()) {
+    // Validation
+    if (!question?.trim() || !collectionId?.trim()) {
       return sendResponse(
         {
-          error: "Invalid question",
-          message: "Question must be a non-empty string",
-        },
-        400
-      );
-    }
-
-    if (!collectionId?.trim()) {
-      return sendResponse(
-        {
-          error: "Invalid collectionId",
-          message: "collectionId must be a non-empty string",
+          error: "Invalid input",
+          message: "Question and collectionId are required",
         },
         400
       );
     }
 
     console.log(
-      `🤔 Processing: "${question.slice(0, 50)}..." (${
-        Date.now() - startTime
-      }ms)`
+      `🤔 Processing: "${question.slice(0, 30)}..." for ${
+        userId ? "user" : "anonymous"
+      }`
     );
 
-    // Optimized parallel data fetching with caching
-    const collectionCacheKey = `collection_${collectionId}`;
+    // Get collection (with caching)
+    const collectionCacheKey = `col_${collectionId}`;
     let collection = collectionCache.get(collectionCacheKey);
 
-    const [modelData, contextData] = await Promise.all([
-      modelId ? getAIModelByIdHandle(modelId) : Promise.resolve(null),
-      sectionId
-        ? chatService.getconversationContextSectionById(sectionId)
-        : Promise.resolve(null),
-      // Fetch collection only if not cached
-      !collection
-        ? getCollectionByIdHandle(collectionId).then((col) => {
-            if (col) collectionCache.set(collectionCacheKey, col);
-            return col;
-          })
-        : Promise.resolve(collection),
-    ]);
-
-    collection = collection || collectionCache.get(collectionCacheKey);
+    if (!collection) {
+      collection = await getCollectionByIdHandle(collectionId);
+      if (collection) {
+        collectionCache.set(collectionCacheKey, collection);
+      }
+    }
 
     if (!collection) {
       return sendResponse(
@@ -431,29 +468,28 @@ export async function chatWithChatBot(req, res) {
       );
     }
 
-    const queryConversationContext = contextData?.lastContext || "";
-
-    // Parallel processing of query and context
-    const [questionSimify, conversationContext] = await Promise.all([
-      simplifyQuery(question.trim(), queryConversationContext),
+    // Get model data and conversation context in parallel
+    const [modelData, conversationContext] = await Promise.all([
+      modelId ? getAIModelByIdHandle(modelId) : null,
       buildConversationContext(sectionId),
     ]);
-
-    console.log(`📝 Context prepared (${Date.now() - startTime}ms)`);
-
-    // Optimized document querying
+    console.log({ conversationContext });
+    // Query similar documents
     const filters = documentId ? { documentId } : {};
-    const similarDocs = await service.querySimilar(
+    const similarDocs = await querySimilarDocuments(
       collection.name,
-      questionSimify,
-      Math.min(Number(k), 10), // Limit k to prevent excessive processing
+      question.trim(),
+      Math.min(Number(k), 8),
       filters
     );
 
     const similarityResult = processSimilarityResults(
       similarDocs,
-      similarityThreshold
+      similarityThreshold,
+      5
     );
+
+    console.log("similarityResult.relevantDocs", similarityResult.relevantDocs);
 
     if (!similarityResult.success) {
       return sendResponse({
@@ -475,15 +511,15 @@ export async function chatWithChatBot(req, res) {
     }
 
     const { relevantDocs, totalFound, relevantCount } = similarityResult;
-    const documentContext = buildDocumentContext(relevantDocs);
-
-    console.log(`✅ Documents processed (${Date.now() - startTime}ms)`);
-
+    const documentContext = buildDocumentContext(relevantDocs, 2000);
+    console.log({ documentContext });
+    // Generate AI response
     const systemPrompt =
       prompt ||
-      `Bạn là bác sĩ chuyên khoa. Chỉ trả lời dựa trên thông tin được cung cấp. Sử dụng context cuộc trò chuyện để đưa ra câu trả lời liên kết. Nếu thiếu thông tin, hãy nói thẳng.`;
+      `Bạn là bác sĩ chuyên khoa. Trả lời dựa trên thông tin được cung cấp. Ngắn gọn và chính xác.`;
 
-    // Generate AI response
+    console.log({ prompt });
+
     const answer = await generateAIResponse({
       question,
       documentContext,
@@ -494,69 +530,13 @@ export async function chatWithChatBot(req, res) {
       maxToken,
     });
 
-    console.log(`🤖 AI response generated (${Date.now() - startTime}ms)`);
+    // Save messages
+    const section = await saveChatMessages(sectionId, question, answer, {
+      userId,
+      sessionId,
+    });
 
-    // Generate context AFTER we have the answer
-    const newContext = await generateConversationContext(question, answer);
-
-    // Handle section and chat operations
-    let section;
-
-    if (sectionId) {
-      // Update existing section
-      await Promise.all([
-        chatService.addMessage(sectionId, "user", question),
-        chatService.addMessage(sectionId, "assistant", answer),
-      ]);
-
-      section = await chatService.getSectionById(sectionId);
-
-      // Fire and forget context updates
-      setImmediate(() => {
-        chatService.updateSectionContext(sectionId, {
-          documentIds: relevantDocs.map((doc) => doc.metadata.documentId),
-          relevantChunks: relevantDocs.slice(0, 3).map((doc) => ({
-            content: doc.content.slice(0, 200),
-            metadata: doc.metadata,
-            relevance: doc.similarity,
-            similarityScore: doc.similarity.toFixed(3),
-          })),
-          additionalContext: {
-            model: modelData?.name || DEFAULT_MODEL,
-            processedAt: new Date().toISOString(),
-            totalDocumentsFound: totalFound,
-            relevantDocumentsUsed: relevantCount,
-          },
-          updatedAt: new Date().toISOString(),
-        });
-        chatService.updateConversationContext(sectionId, newContext);
-      });
-    } else {
-      // Create new section
-      section = await chatService.initializeChat(
-        userId,
-        question,
-        answer,
-        {
-          documentIds: relevantDocs.map((doc) => doc.metadata.documentId),
-          relevantChunks: relevantDocs.slice(0, 3).map((doc) => ({
-            content: doc.content.slice(0, 200),
-            metadata: doc.metadata,
-            relevance: doc.similarity,
-            similarityScore: doc.similarity.toFixed(3),
-          })),
-          additionalContext: {
-            model: modelData?.name || DEFAULT_MODEL,
-            processedAt: new Date().toISOString(),
-            totalDocumentsFound: totalFound,
-            relevantDocumentsUsed: relevantCount,
-          },
-        },
-        newContext
-      );
-    }
-
-    console.log(`✨ Completed (${Date.now() - startTime}ms)`);
+    console.log(`✨ Completed in ${Date.now() - startTime}ms`);
 
     sendResponse({
       success: true,
@@ -576,7 +556,7 @@ export async function chatWithChatBot(req, res) {
           documentsAnalyzed: totalFound,
           relevantDocumentsUsed: relevantCount,
           conversationContextUsed: conversationContext.length > 0,
-          conversationContextLength: conversationContext.length,
+          isAuthenticated: !!userId,
         },
       },
     });
@@ -596,13 +576,58 @@ export async function chatWithChatBot(req, res) {
   }
 }
 
-// Cleanup function for graceful shutdown
-export function cleanup() {
-  contextCache.destroy();
-  queryCache.destroy();
-  collectionCache.destroy();
+// Get chat history for user or session
+export async function getChatHistory(req, res) {
+  try {
+    const { userId, sessionId } = getSessionIdentifier(req);
+    const { page = 1, limit = 20 } = req.query;
+
+    const query = userId ? { userId } : { sessionId };
+
+    const sections = await Section.find(query)
+      .populate("messages")
+      .sort({ updatedAt: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .lean();
+
+    const total = await Section.countDocuments(query);
+
+    res.json({
+      success: true,
+      data: {
+        sections,
+        pagination: {
+          current: page,
+          pages: Math.ceil(total / limit),
+          total,
+        },
+      },
+      sessionId,
+    });
+  } catch (error) {
+    console.error("Error getting chat history:", error);
+    res.status(500).json({
+      error: "Failed to get chat history",
+      message: error.message,
+    });
+  }
 }
 
-// Auto-cleanup on process exit
-process.on("SIGINT", cleanup);
-process.on("SIGTERM", cleanup);
+// Health check
+export function getHealthStats() {
+  return {
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    circuitBreaker: {
+      state: openaiCircuitBreaker.state,
+      failureCount: openaiCircuitBreaker.failureCount,
+    },
+  };
+}
+
+// Cleanup
+process.on("SIGINT", () => {
+  console.log("Cleaning up...");
+  process.exit(0);
+});

@@ -1,13 +1,17 @@
 import mongoose from "mongoose";
 const { Schema } = mongoose;
-import { messageSchema } from "./message.model.js";
 
 const sectionSchema = new Schema(
   {
     userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: false, // Allow anonymous users
+    },
+    sessionId: {
+      type: String,
+      required: true, // For anonymous users
+      index: true,
     },
     title: {
       type: String,
@@ -19,47 +23,6 @@ const sectionSchema = new Schema(
         ref: "Message",
       },
     ],
-    context: {
-      documentIds: [
-        {
-          type: String,
-          ref: "Document",
-        },
-      ],
-      relevantChunks: [
-        {
-          content: String,
-          metadata: {
-            type: Map,
-            of: mongoose.Schema.Types.Mixed,
-          },
-          relevance: Number,
-        },
-      ],
-      additionalContext: {
-        type: Map,
-        of: mongoose.Schema.Types.Mixed,
-      },
-    },
-    conversationContext: {
-      summary: {
-        type: String,
-        default: "",
-      },
-      keyPoints: [
-        {
-          type: String,
-        },
-      ],
-      lastContext: {
-        type: String,
-        default: "",
-      },
-      updatedAt: {
-        type: Date,
-        default: Date.now,
-      },
-    },
     createdAt: {
       type: Date,
       default: Date.now,
@@ -78,10 +41,9 @@ const sectionSchema = new Schema(
   }
 );
 
-// Tự động cập nhật title của section dựa trên tin nhắn đầu tiên nếu không được cung cấp
+// Auto-generate title from first message
 sectionSchema.pre("save", function (next) {
   if (!this.title && this.messages.length > 0) {
-    // Lấy nội dung tin nhắn đầu tiên và giới hạn độ dài
     const firstMessage = this.messages[0].content;
     this.title =
       firstMessage.length > 50
@@ -91,10 +53,11 @@ sectionSchema.pre("save", function (next) {
   next();
 });
 
-// Index để tối ưu tìm kiếm
+// Indexes for performance
+sectionSchema.index({ userId: 1, createdAt: -1 });
+sectionSchema.index({ sessionId: 1, createdAt: -1 });
 sectionSchema.index({ title: "text" });
 
 const Section = mongoose.model("Section", sectionSchema);
-
 export { sectionSchema };
 export default Section;

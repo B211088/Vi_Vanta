@@ -289,6 +289,325 @@ class ArticleService {
       totalViews: viewsStats[0]?.totalViews || 0,
     };
   }
+
+  async findRelatedArticlesByQuery(userQuestion, options = {}) {
+    const {
+      limit = 5,
+      userId = null,
+      minScore = 0.1,
+      topics = null,
+      excludeIds = [],
+    } = options;
+
+    try {
+      console.log(
+        `📚 Searching articles for query: "${userQuestion.slice(0, 50)}..."`
+      );
+
+      // Tạo search terms từ câu hỏi
+      const searchTerms = this.extractSearchTerms(userQuestion);
+      console.log(`🔍 Extracted search terms:`, searchTerms);
+
+      const pipeline = [
+        // 1. Text search với scoring
+        {
+          $match: {
+            $and: [
+              {
+                $text: {
+                  $search: searchTerms.join(" "),
+                  $caseSensitive: false,
+                  $diacriticSensitive: false,
+                },
+              },
+              { status: "published" },
+              ...(topics ? [{ topic: { $in: topics } }] : []),
+              ...(excludeIds.length > 0 ? [{ _id: { $nin: excludeIds } }] : []),
+            ],
+          },
+        },
+
+        // 2. Add text score
+        {
+          $addFields: {
+            textScore: { $meta: "textScore" },
+          },
+        },
+
+        // 3. Add relevance scoring based on multiple factors
+        {
+          $addFields: {
+            relevanceScore: {
+              $add: [
+                "$textScore",
+                // Boost recent articles
+                {
+                  $cond: {
+                    if: {
+                      $gte: [
+                        "$publishedAt",
+                        new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+                      ],
+                    },
+                    then: 0.2,
+                    else: 0,
+                  },
+                },
+                // Boost featured articles
+                {
+                  $cond: {
+                    if: "$isFeatured",
+                    then: 0.3,
+                    else: 0,
+                  },
+                },
+                // Boost articles with more views (normalized)
+                {
+                  $multiply: [{ $divide: ["$views", 1000] }, 0.1],
+                },
+              ],
+            },
+          },
+        },
+
+        // 4. Filter by minimum score
+        {
+          $match: {
+            relevanceScore: { $gte: minScore },
+          },
+        },
+
+        // 5. Sort by relevance score
+        {
+          $sort: { relevanceScore: -1, publishedAt: -1 },
+        },
+
+        // 6. Limit results
+        { $limit: limit },
+
+        // 7. Populate and select fields
+        {
+          $lookup: {
+            from: "users",
+            localField: "author",
+            foreignField: "_id",
+            as: "author",
+            pipeline: [{ $project: { fullName: 1, email: 1, avatar: 1 } }],
+          },
+        },
+        {
+          $lookup: {
+            from: "topics",
+            localField: "topic",
+            foreignField: "_id",
+            as: "topic",
+            pipeline: [{ $project: { name: 1, slug: 1 } }],
+          },
+        },
+
+        // 8. Format output
+        {
+          $project: {
+            title: 1,
+            slug: 1,
+            summary: 1,
+            thumbnail: 1,
+            publishedAt: 1,
+            views: 1,
+            isFeatured: 1,
+            author: { $arrayElemAt: ["$author", 0] },
+            topic: { $arrayElemAt: ["$topic", 0] },
+            relevanceScore: 1,
+            textScore: 1,
+          },
+        },
+      ];
+
+      const articles = await Article.aggregate(pipeline);
+
+      console.log(
+        `📚 Found ${articles.length} related articles with scores:`,
+        articles.map((a) => ({
+          title: a.title.slice(0, 30),
+          score: a.relevanceScore.toFixed(3),
+        }))
+      );
+
+      return {
+        articles,
+        searchTerms,
+        totalFound: articles.length,
+      };
+    } catch (error) {
+      console.error("❌ Error finding related articles:", error);
+      return {
+        articles: [],
+        searchTerms: [],
+        totalFound: 0,
+      };
+    }
+  }
+
+  // Trích xuất từ khóa tìm kiếm từ câu hỏi
+  extractSearchTerms(question) {
+    // Loại bỏ stop words tiếng Việt và các từ không quan trọng
+    const stopWords = [
+      "là",
+      "của",
+      "và",
+      "có",
+      "được",
+      "một",
+      "không",
+      "này",
+      "đó",
+      "khi",
+      "với",
+      "cho",
+      "từ",
+      "tôi",
+      "bạn",
+      "anh",
+      "chị",
+      "em",
+      "bác",
+      "sĩ",
+      "làm",
+      "thế",
+      "nào",
+      "như",
+      "gì",
+      "đâu",
+      "bao",
+      "nhiều",
+      "nào",
+      "ai",
+      "sao",
+      "the",
+      "a",
+      "an",
+      "and",
+      "or",
+      "but",
+      "in",
+      "on",
+      "at",
+      "to",
+      "for",
+      "of",
+      "with",
+      "by",
+      "what",
+      "how",
+      "why",
+      "when",
+      "where",
+      "who",
+    ];
+
+    // Làm sạch và tách từ
+    const words = question
+      .toLowerCase()
+      .replace(
+        /[^\w\sàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/g,
+        " "
+      )
+      .split(/\s+/)
+      .filter(
+        (word) =>
+          word.length > 2 && !stopWords.includes(word) && !/^\d+$/.test(word) // Loại bỏ số
+      );
+
+    // Lấy các từ quan trọng (danh từ y tế, triệu chứng, bệnh)
+    const medicalTerms = this.extractMedicalTerms(words);
+
+    return [...new Set([...medicalTerms, ...words])].slice(0, 10);
+  }
+
+  // Trích xuất thuật ngữ y tế
+  extractMedicalTerms(words) {
+    const medicalKeywords = [
+      "đau",
+      "viêm",
+      "nhiễm",
+      "trùng",
+      "khó",
+      "thở",
+      "ho",
+      "sốt",
+      "đỏ",
+      "sưng",
+      "bệnh",
+      "triệu",
+      "chứng",
+      "điều",
+      "trị",
+      "thuốc",
+      "vitamin",
+      "kháng",
+      "sinh",
+      "tim",
+      "phổi",
+      "gan",
+      "thận",
+      "dạ",
+      "dày",
+      "ruột",
+      "não",
+      "xương",
+      "khớp",
+      "da",
+      "mắt",
+      "tai",
+      "mũi",
+      "họng",
+      "răng",
+      "miệng",
+      "tử",
+      "cung",
+      "buồng",
+      "trứng",
+      "tiền",
+      "liệt",
+      "tuyến",
+      "ung",
+      "thư",
+      "ký",
+      "sinh",
+      "chăm",
+      "sóc",
+    ];
+
+    return words.filter((word) =>
+      medicalKeywords.some(
+        (keyword) => word.includes(keyword) || keyword.includes(word)
+      )
+    );
+  }
+
+  // Lấy bài viết được đề xuất cho người dùng
+  async getRecommendedArticlesForUser(userId, userQuestion, options = {}) {
+    const { limit = 3 } = options;
+
+    try {
+      // Nếu có userId, có thể lấy lịch sử đọc để cải thiện đề xuất
+      // Hiện tại chỉ dựa vào câu hỏi
+      const result = await this.findRelatedArticlesByQuery(userQuestion, {
+        limit,
+        userId,
+        ...options,
+      });
+
+      return result;
+    } catch (error) {
+      console.error("❌ Error getting recommended articles:", error);
+      return {
+        articles: [],
+        searchTerms: [],
+        totalFound: 0,
+      };
+    }
+  }
 }
 
 export default new ArticleService();

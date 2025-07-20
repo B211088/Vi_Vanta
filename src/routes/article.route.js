@@ -9,29 +9,29 @@ import {
 const router = Router();
 import upload from "../middlewares/uploadImageMiddleware.js";
 // Public routes - Không cần xác thực
-router.get("/", verifyToken, articleController.getArticles);
+router.get("/", articleController.getArticles);
 router.get("/search", articleController.searchArticles);
-router.get("/featured", verifyToken, articleController.getFeaturedArticles);
+router.get("/featured", articleController.getFeaturedArticles);
 router.get(
   "/most-viewed",
-  verifyToken,
+
   articleController.getMostViewedArticles
 );
 router.get("/latest", articleController.getLatestArticles);
 router.get("/stats", articleController.getArticleStats);
-router.get("/slug/:slug", verifyToken, articleController.getArticleBySlug);
+router.get("/slug/:slug", articleController.getArticleBySlug);
 router.get(
   "/author/:authorId",
-  verifyToken,
+
   articleController.getArticlesByAuthor
 );
 router.get(
   "/topic/:topicId",
-  verifyToken,
+
   articleController.getArticlesByTopic
 );
-router.get("/:id/related", verifyToken, articleController.getRelatedArticles);
-router.get("/:id", verifyToken, articleController.getArticleById);
+router.get("/:id/related", articleController.getRelatedArticles);
+router.get("/:id", articleController.getArticleById);
 
 // Author/Editor routes - Có thể tạo và chỉnh sửa bài viết của mình
 router.post(
