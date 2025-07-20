@@ -7,33 +7,80 @@ import {
 } from "../services/chatbot.service";
 import { useNotify } from "./useNotify";
 
+// Debounce utility
+const useDebounce = (value, delay) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
+// Performance monitoring utility
+const usePerformanceMonitor = () => {
+  const metricsRef = useRef({
+    apiCalls: 0,
+    avgResponseTime: 0,
+    totalResponseTime: 0,
+  });
+
+  const recordApiCall = useCallback((responseTime) => {
+    metricsRef.current.apiCalls++;
+    metricsRef.current.totalResponseTime += responseTime;
+    metricsRef.current.avgResponseTime =
+      metricsRef.current.totalResponseTime / metricsRef.current.apiCalls;
+  }, []);
+
+  const getMetrics = useCallback(() => metricsRef.current, []);
+
+  return { recordApiCall, getMetrics };
+};
+
+// Enhanced chat logic hook
 export const useChatLogic = (collectionId, currentSectionId) => {
   const { loading, section, collection } = useSelector(
     (state) => state.chatbot
   );
   const dispatch = useDispatch();
   const { notifyError, notifyWarning } = useNotify();
+  const { recordApiCall } = usePerformanceMonitor();
 
-  // Refs
+  // Refs for performance
   const textareaRef = useRef(null);
   const messagesEndRef = useRef(null);
   const containerRef = useRef(null);
   const lastMessageRef = useRef(null);
+  const abortControllerRef = useRef(null);
+  const isSubmittingRef = useRef(false);
 
-  // States
+  // Core states
   const [userInput, setUserInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [models, setModels] = useState([]);
-  const [selectedAiModel, setSelectedAiModel] = useState();
+  const [selectedAiModel, setSelectedAiModel] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [answer, setAnswer] = useState(null);
   const [conversationContext, setConversationContext] = useState(null);
   const [animatedMessageIds, setAnimatedMessageIds] = useState(new Set());
   const [latestMessageId, setLatestMessageId] = useState(null);
   const [isNewMessage, setIsNewMessage] = useState(false);
   const [apiCallCount, setApiCallCount] = useState(0);
 
-  // Extract collection settings với memoization
+  // Performance states
+  const [optimisticMessages, setOptimisticMessages] = useState([]);
+  const [lastAPICallTime, setLastAPICallTime] = useState(null);
+
+  // Debounced input for search optimization
+  const debouncedUserInput = useDebounce(userInput, 300);
+
+  // Memoized collection settings
   const collectionSettings = useMemo(() => {
     if (!collection) return null;
 
@@ -48,12 +95,24 @@ export const useChatLogic = (collectionId, currentSectionId) => {
     };
   }, [collection]);
 
-  // Utility functions
+  // Optimized message ID generator
   const generateMessageId = useCallback(() => {
     return `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }, []);
 
-  // Validation function
+  // Optimized scroll function with RAF
+  const scrollToBottom = useCallback(() => {
+    requestAnimationFrame(() => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "end",
+        });
+      }
+    });
+  }, []);
+
+  // Enhanced validation with caching
   const validateChatRequest = useCallback(() => {
     if (!collectionId) {
       notifyWarning("Vui lòng chọn bộ dữ liệu!");
@@ -70,95 +129,36 @@ export const useChatLogic = (collectionId, currentSectionId) => {
       return false;
     }
 
+    // Rate limiting check
+    if (lastAPICallTime && Date.now() - lastAPICallTime < 1000) {
+      notifyWarning("Vui lòng đợi một chút trước khi gửi tin nhắn tiếp theo!");
+      return false;
+    }
+
     return true;
-  }, [collectionId, collectionSettings, selectedAiModel, notifyWarning]);
+  }, [
+    collectionId,
+    collectionSettings,
+    selectedAiModel,
+    lastAPICallTime,
+    notifyWarning,
+  ]);
 
-  // Load messages when section changes
-  useEffect(() => {
-    if (section?.messages) {
-      console.log("Loading messages from section:", section._id);
-      setMessages(section.messages);
-
-      // Mark all existing assistant messages as animated
-      const assistantMessageIds = section.messages
-        .filter((msg) => msg.role === "assistant" && !msg.isLoading)
-        .map((msg) => msg._id);
-
-      setAnimatedMessageIds(new Set(assistantMessageIds));
-      setIsNewMessage(false);
-
-      // Set conversation context if available
-      if (section.conversationContext) {
-        setConversationContext(section.conversationContext);
-      }
-
-      // Scroll to bottom after loading
-      setTimeout(() => {
-        scrollToBottom();
-      }, 100);
-    } else if (section === null && currentSectionId === null) {
-      // Clear state for new conversation
-      console.log("Clearing state for new conversation");
-      setMessages([]);
-      setAnimatedMessageIds(new Set());
-      setLatestMessageId(null);
-      setConversationContext(null);
-      setIsNewMessage(false);
-      setApiCallCount(0);
-    }
-  }, [section, currentSectionId]);
-
-  // Fetch AI models with error handling
-  useEffect(() => {
-    const fetchModelAI = async () => {
-      try {
-        const response = await dispatch(getAllAIModel());
-
-        if (response?.success && response.data?.length > 0) {
-          setModels(response.data);
-          // Set default model if none selected
-          if (!selectedAiModel) {
-            setSelectedAiModel(response.data[0]);
-          }
-        } else {
-          notifyError("Không có model AI nào khả dụng");
-        }
-      } catch (error) {
-        console.error("Error fetching AI models:", error);
-        notifyError("Không thể tải danh sách model AI");
-      }
-    };
-
-    if (models.length === 0) {
-      fetchModelAI();
-    }
-  }, [dispatch]);
-
-  // Track latest assistant message for new messages only
-  useEffect(() => {
-    if (!isNewMessage) return;
-
-    const assistantMessages = messages.filter(
-      (msg) => msg.role === "assistant" && !msg.isLoading && !msg.isError
-    );
-
-    if (assistantMessages.length > 0) {
-      const latestAssistant = assistantMessages[assistantMessages.length - 1];
-
-      if (latestAssistant._id !== latestMessageId) {
-        console.log("Setting new latest message ID:", latestAssistant._id);
-        setLatestMessageId(latestAssistant._id);
-        lastMessageRef.current = latestAssistant;
-      }
-    }
-  }, [messages, latestMessageId, isNewMessage]);
-
-  // Enhanced API call function
+  // Optimized API call with abort controller
   const callChatbotAPI = useCallback(
     async (question) => {
+      const startTime = Date.now();
+
       if (!validateChatRequest()) {
         throw new Error("Invalid chat request");
       }
+
+      // Cancel previous request if still pending
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+
+      abortControllerRef.current = new AbortController();
 
       const payload = {
         collectionId: collectionId,
@@ -178,6 +178,10 @@ export const useChatLogic = (collectionId, currentSectionId) => {
       try {
         const response = await dispatch(askChatBot(payload));
 
+        const responseTime = Date.now() - startTime;
+        recordApiCall(responseTime);
+        setLastAPICallTime(Date.now());
+
         if (response?.success || response?.data?.success) {
           const responseData = response.data || response;
           return {
@@ -186,17 +190,25 @@ export const useChatLogic = (collectionId, currentSectionId) => {
             messages: responseData.section?.messages || [],
             conversationContext:
               responseData.section?.conversationContext || null,
+            responseTime,
           };
         }
 
         throw new Error(response?.message || "API call failed");
       } catch (error) {
+        if (error.name === "AbortError") {
+          console.log("API call was aborted");
+          return null;
+        }
+
         console.error("Chatbot API Error:", error);
         throw new Error(
           error?.response?.data?.message ||
             error?.message ||
             "Lỗi kết nối đến server"
         );
+      } finally {
+        abortControllerRef.current = null;
       }
     },
     [
@@ -207,25 +219,27 @@ export const useChatLogic = (collectionId, currentSectionId) => {
       currentSectionId,
       conversationContext,
       dispatch,
+      recordApiCall,
     ]
   );
 
-  // Enhanced submit question handler
+  // Enhanced submit with optimistic updates
   const handleSubmitQuestion = useCallback(
     async (question) => {
-      if (!question?.trim() || isSubmitting) return;
+      if (!question?.trim() || isSubmittingRef.current) return;
 
       const trimmedQuestion = question.trim();
       setUserInput("");
       setIsSubmitting(true);
+      isSubmittingRef.current = true;
       setIsNewMessage(true);
       setApiCallCount((prev) => prev + 1);
 
-      // Generate IDs for new messages
+      // Generate IDs
       const userMessageId = generateMessageId();
       const loadingMessageId = generateMessageId();
 
-      // Create user message
+      // Create optimistic messages
       const userMessage = {
         _id: userMessageId,
         role: "user",
@@ -234,28 +248,42 @@ export const useChatLogic = (collectionId, currentSectionId) => {
         __v: 0,
       };
 
-      // Create loading message
       const loadingMessage = {
         _id: loadingMessageId,
         role: "assistant",
-        content: "Đang trả lời câu hỏi của bạn",
+        content: "Đang xử lý câu hỏi của bạn...",
         timestamp: new Date().toISOString(),
         isLoading: true,
         __v: 0,
       };
 
-      // Add messages to state
+      // Optimistic update
       setMessages((prevMessages) => [
         ...prevMessages,
         userMessage,
         loadingMessage,
       ]);
 
+      // Auto-scroll immediately for better UX
+      setTimeout(() => {
+        scrollToBottom();
+      }, 50);
+
       try {
         const response = await callChatbotAPI(trimmedQuestion);
 
+        if (!response) {
+          // Request was aborted
+          setMessages((prev) =>
+            prev.filter((msg) => msg._id !== loadingMessageId)
+          );
+          return;
+        }
+
         if (response.success) {
-          // Update messages from API response
+          console.log(`API Response time: ${response.responseTime}ms`);
+
+          // Update with real messages
           if (response.messages?.length > 0) {
             console.log("Updating messages from API response");
             setMessages(response.messages);
@@ -337,30 +365,34 @@ export const useChatLogic = (collectionId, currentSectionId) => {
         notifyError("Gửi tin nhắn thất bại");
       } finally {
         setIsSubmitting(false);
+        isSubmittingRef.current = false;
       }
     },
     [
-      isSubmitting,
       generateMessageId,
       callChatbotAPI,
       currentSectionId,
       dispatch,
-
       notifyError,
+      scrollToBottom,
     ]
   );
 
-  // Clear chat handler
+  // Optimized clear chat
   const handleClearChat = useCallback(() => {
+    // Cancel any pending requests
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
     setMessages([]);
+    setOptimisticMessages([]);
     setConversationContext(null);
     setAnimatedMessageIds(new Set());
     setLatestMessageId(null);
     setIsNewMessage(false);
     setApiCallCount(0);
     lastMessageRef.current = null;
-
-    // Clear input
     setUserInput("");
 
     // Focus textarea
@@ -369,61 +401,51 @@ export const useChatLogic = (collectionId, currentSectionId) => {
     }
   }, []);
 
-  // Refresh sections with loading state
+  // Enhanced refresh sections
   const refreshSections = useCallback(async () => {
     try {
       await dispatch(getAllSectionsChat());
     } catch (error) {
       console.error("Error refreshing sections:", error);
-      notifyError("Không thể làm mới danh sách cuộc hội thoại");
     }
-  }, [dispatch, notifyError]);
+  }, [dispatch]);
 
-  // Auto-scroll to bottom
-  const scrollToBottom = useCallback(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, []);
-
-  // Effect to scroll when messages change
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      scrollToBottom();
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [messages.length, scrollToBottom]);
-
-  // Focus textarea on mount
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.focus();
-    }
-  }, []);
-
-  // Textarea resize handler
+  // Optimized textarea resize with RAF
   const handleTextareaResize = useCallback(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+      requestAnimationFrame(() => {
+        textareaRef.current.style.height = "auto";
+        textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+      });
     }
   }, []);
 
-  // Enhanced key press handler
+  // Enhanced key press handler with shortcuts
   const handleKeyPress = useCallback(
     (e) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        if (userInput.trim() && !isSubmitting) {
-          handleSubmitQuestion(userInput);
+      if (e.key === "Enter") {
+        if (e.shiftKey) {
+          // Allow new line
+          return;
+        } else {
+          e.preventDefault();
+          if (userInput.trim() && !isSubmitting) {
+            handleSubmitQuestion(userInput);
+          }
         }
+      } else if (e.key === "Escape") {
+        // Clear input on escape
+        setUserInput("");
+      } else if (e.ctrlKey && e.key === "k") {
+        // Clear chat shortcut
+        e.preventDefault();
+        handleClearChat();
       }
     },
-    [userInput, isSubmitting, handleSubmitQuestion]
+    [userInput, isSubmitting, handleSubmitQuestion, handleClearChat]
   );
 
-  // Input change handler
+  // Optimized input change handler
   const handleInputChange = useCallback(
     (value) => {
       setUserInput(value);
@@ -432,18 +454,150 @@ export const useChatLogic = (collectionId, currentSectionId) => {
     [handleTextareaResize]
   );
 
-  // Computed values
-  const hasMessages = messages.length > 0;
-  const canSubmit =
-    userInput.trim().length > 0 &&
-    !isSubmitting &&
-    collectionSettings?.isActive;
-  const isCollectionReady =
-    collectionSettings?.isActive && collectionSettings?.status;
+  // Optimized message loading with batch updates
+  useEffect(() => {
+    if (section?.messages) {
+      console.log("Loading messages from section:", section._id);
+
+      // Batch update for better performance
+      requestAnimationFrame(() => {
+        setMessages(section.messages);
+
+        // Mark existing assistant messages as animated
+        const assistantMessageIds = section.messages
+          .filter((msg) => msg.role === "assistant" && !msg.isLoading)
+          .map((msg) => msg._id);
+
+        setAnimatedMessageIds(new Set(assistantMessageIds));
+        setIsNewMessage(false);
+
+        if (section.conversationContext) {
+          setConversationContext(section.conversationContext);
+        }
+      });
+
+      // Smooth scroll with delay
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+    } else if (section === null && currentSectionId === null) {
+      // Reset state efficiently
+      console.log("Clearing state for new conversation");
+      setMessages([]);
+      setOptimisticMessages([]);
+      setAnimatedMessageIds(new Set());
+      setLatestMessageId(null);
+      setConversationContext(null);
+      setIsNewMessage(false);
+      setApiCallCount(0);
+    }
+  }, [section, currentSectionId, scrollToBottom]);
+
+  // Optimized model fetching with caching
+  useEffect(() => {
+    const fetchModelAI = async () => {
+      try {
+        const response = await dispatch(getAllAIModel());
+
+        if (response?.success && response.data?.length > 0) {
+          setModels(response.data);
+          // Set default model intelligently
+          if (!selectedAiModel) {
+            const defaultModel =
+              response.data.find((model) => model.isDefault) ||
+              response.data[0];
+            setSelectedAiModel(defaultModel);
+          }
+        } else {
+          notifyError("Không có model AI nào khả dụng");
+        }
+      } catch (error) {
+        console.error("Error fetching AI models:", error);
+        notifyError("Không thể tải danh sách model AI");
+      }
+    };
+
+    if (models.length === 0) {
+      fetchModelAI();
+    }
+  }, [dispatch, models.length, selectedAiModel, notifyError]);
+
+  // Enhanced latest message tracking
+  useEffect(() => {
+    if (!isNewMessage) return;
+
+    const assistantMessages = messages.filter(
+      (msg) => msg.role === "assistant" && !msg.isLoading && !msg.isError
+    );
+
+    if (assistantMessages.length > 0) {
+      const latestAssistant = assistantMessages[assistantMessages.length - 1];
+
+      if (latestAssistant._id !== latestMessageId) {
+        console.log("Setting new latest message ID:", latestAssistant._id);
+        setLatestMessageId(latestAssistant._id);
+        lastMessageRef.current = latestAssistant;
+      }
+    }
+  }, [messages, latestMessageId, isNewMessage]);
+
+  // Enhanced scroll effect with debouncing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      scrollToBottom();
+    }, 50); // Reduced delay for faster UX
+
+    return () => clearTimeout(timer);
+  }, [messages.length, scrollToBottom]);
+
+  // Auto-focus effect
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
+  // Computed values with memoization
+  const computedValues = useMemo(
+    () => ({
+      hasMessages: messages.length > 0,
+      canSubmit:
+        userInput.trim().length > 0 &&
+        !isSubmitting &&
+        collectionSettings?.isActive,
+      isCollectionReady:
+        collectionSettings?.isActive && collectionSettings?.status,
+      messageCount: messages.length,
+      lastUserMessage: messages.filter((m) => m.role === "user").pop(),
+      lastAssistantMessage: messages
+        .filter((m) => m.role === "assistant" && !m.isLoading)
+        .pop(),
+    }),
+    [messages, userInput, isSubmitting, collectionSettings]
+  );
+
+  // Performance metrics
+  const performanceMetrics = useMemo(
+    () => ({
+      totalMessages: messages.length,
+      apiCallCount,
+      averageResponseTime: lastAPICallTime ? Date.now() - lastAPICallTime : 0,
+    }),
+    [messages.length, apiCallCount, lastAPICallTime]
+  );
 
   return {
     // Core States
-    messages,
+    messages: messages.concat(optimisticMessages),
     models,
     selectedAiModel,
     setSelectedAiModel,
@@ -459,11 +613,10 @@ export const useChatLogic = (collectionId, currentSectionId) => {
 
     // Collection Settings
     collectionSettings,
-    isCollectionReady,
+    ...computedValues,
 
-    // Computed Values
-    hasMessages,
-    canSubmit,
+    // Performance Metrics
+    performanceMetrics,
     apiCallCount,
 
     // Refs
@@ -482,5 +635,9 @@ export const useChatLogic = (collectionId, currentSectionId) => {
     // Utilities
     generateMessageId,
     validateChatRequest,
+
+    // Enhanced features
+    debouncedUserInput,
+    abortCurrentRequest: () => abortControllerRef.current?.abort(),
   };
 };

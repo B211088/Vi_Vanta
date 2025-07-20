@@ -24,6 +24,8 @@ import WaterIntakeCalculator from "../components/ui/healthtool/WaterIntakeCalcul
 import VaccineTracker from "../components/ui/healthtool/VaccineTracker";
 import PregnancyCalculator from "../components/ui/healthtool/PregnancyCalculator";
 import StressAssessmentApp from "../components/ui/healthtool/StressAssessmentApp";
+import DiabetesRiskCalculator from "../components/ui/healthtool/DiabetesRiskCalculator";
+import SleepQualityAssessment from "../components/ui/healthtool/SleepQualityAssessment";
 
 const Home = lazy(() => import("../pages/user/Home"));
 const Auth = lazy(() => import("../pages/auth/Auth"));
@@ -207,6 +209,26 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<Loading />}>
             <StressAssessmentApp />
+          </Suspense>
+        ),
+
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "diabetes-risk",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <DiabetesRiskCalculator />
+          </Suspense>
+        ),
+
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "sleep-quality",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <SleepQualityAssessment />
           </Suspense>
         ),
 

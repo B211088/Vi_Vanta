@@ -45,7 +45,7 @@ const ValueSlider = ({
             MozAppearance: "textfield",
           }}
           onWheel={(e) => e.target.blur()}
-          className="w-20 text-xs px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-400 text-right"
+          className="w-20 text-xs px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-400 text-right"
         />
       </div>
 
@@ -57,7 +57,7 @@ const ValueSlider = ({
         value={value || 0}
         onChange={handleSliderChange}
         disabled={disabled}
-        className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-blue"
       />
 
       <div className="flex justify-between text-xs text-gray-400">

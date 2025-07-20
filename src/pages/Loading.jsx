@@ -270,19 +270,6 @@ const Loading = () => {
           />
         </div>
       </div>
-      <style jsx>{`
-        @keyframes progress {
-          0% {
-            width: 0%;
-          }
-          50% {
-            width: 80%;
-          }
-          100% {
-            width: 100%;
-          }
-        }
-      `}</style>
     </div>
   );
 };
