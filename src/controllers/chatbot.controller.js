@@ -323,11 +323,13 @@ async function generateAIResponse({
   messages.push({
     role: "user",
     content: `
+   
     Yêu cầu hệ thống : \n${systemPrompt}\n
     Thông tin tham khảo:\n${documentContext.slice(
       0,
       2500
-    )}\n\nCâu hỏi: "${question}"\n\nTrả lời dựa trên thông tin trên.`,
+    )}\n\nCâu hỏi: "${question}"\n\nTrả lời dựa trên thông tin trên. *
+    Lưu ý: Nếu câu hỏi hoàn toàn không liên quan đến y tế thì không trả lời và đưa ra thông báo, và có thể người dùng đánh sai chính tả thuật ngữ y tế, tên bệnh hoặc tên thuốc bạn nên kiểm tra cho kỹ `,
   });
 
   console.log({ messages });

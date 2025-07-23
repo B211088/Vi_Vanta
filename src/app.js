@@ -34,6 +34,7 @@ import articleRouter from "./routes/article.route.js";
 import chatbotRouter from "./routes/chatbot.route.js";
 import doctorRouter from "./routes/doctor.route.js";
 import healthAdviceRoutes from "./routes/healthAdvice.route.js";
+import bookingService from "./routes/bookingService.route.js";
 import fs from "fs";
 
 const app = express();
@@ -110,6 +111,7 @@ app.use("/api/v1/articles", articleRouter);
 app.use("/api/v1/chatbot", chatbotRouter);
 app.use("/api/v1/doctors", doctorRouter);
 app.use("/api/v1/health-advices", healthAdviceRoutes);
+app.use("/api/v1/services", bookingService);
 
 app.get("/api/v1/csrf-token", (req, res) => {
   res.json({ csrfToken: req.csrfToken() });

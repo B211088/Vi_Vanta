@@ -6,6 +6,7 @@ import {
   Province,
   District,
   Doctor,
+  Health,
 } from "../models/index.js";
 import { JWT_SECRET, JWT_EXPIRATION } from "../config/auth.config.js";
 import { deleteFromCloudinary } from "../utils/uploadImagesToCloud.js";
@@ -58,7 +59,7 @@ export const loginUser = async (email, password) => {
       }
     );
 
-    return token;
+    return { userInfo: user, token };
   } catch (error) {
     console.error("Lỗi đăng nhập", error.message);
     // Nếu error đã là instance của Error, lấy message

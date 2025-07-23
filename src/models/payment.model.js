@@ -8,21 +8,27 @@ const paymentSchema = new Schema(
       ref: "Appointment",
       required: true,
     },
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    clinicId: { type: Schema.Types.ObjectId, ref: "Clinic", required: true },
-    pregnancyVisitId: {
+    userId: {
       type: Schema.Types.ObjectId,
-      ref: "PregnancyVisit",
+      ref: "User",
+      required: true,
     },
     amount: { type: Number, required: true },
-    method: { type: String, enum: ["cash", "momo", "banking"], required: true },
+    paymentMethod: {
+      type: String,
+      enum: ["cash", "momo", "banking", "vnpay"],
+      required: true,
+    },
     status: {
       type: String,
-      enum: ["pending", "completed", "failed"],
+      enum: ["pending", "completed", "failed", "refunded"],
       default: "pending",
     },
-    transactionId: String,
+    transactionId: String, // ID từ cổng thanh toán
+    paymentGatewayResponse: Schema.Types.Mixed, // Response từ gateway
     paidAt: Date,
+    refundedAt: Date,
+    note: String,
   },
   { timestamps: true }
 );

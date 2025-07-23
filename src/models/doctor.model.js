@@ -24,19 +24,9 @@ const doctorSchema = new Schema(
       default: "cash",
     },
     services: [
-      {
-        name: { type: String },
-        description: { type: String },
-        price: { type: String },
-      },
+      { type: Schema.Types.ObjectId, ref: "BooingService", required: true },
     ],
     wallet: { type: Number, default: 0 },
-    workingHours: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "workingHour",
-      },
-    ],
     infoClinic: {
       clinicName: { type: String, required: true },
       address: { type: String, required: true },

@@ -6,7 +6,10 @@ const appointmentSchema = new Schema(
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true }, // Người đặt lịch
     doctorId: { type: Schema.Types.ObjectId, ref: "Doctor", required: true }, // Phòng khám
     date: { type: Date, required: true },
-    time: { type: String }, // VD: "09:00"
+    timeSlot: {
+      startTime: { type: String, required: true }, // "08:00"
+      endTime: { type: String, required: true }, // "08:15"
+    },
     status: {
       type: String,
       enum: ["pending", "confirmed", "completed", "canceled"],
@@ -18,11 +21,7 @@ const appointmentSchema = new Schema(
       default: "unpaid",
     },
     services: [
-      {
-        name: { type: String },
-        description: { type: String },
-        price: { type: String },
-      },
+      { type: Schema.Types.ObjectId, ref: "BooingService", required: true },
     ],
     paymentMethod: {
       type: String,

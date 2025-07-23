@@ -1,5 +1,8 @@
+import BookingService from "../models/bookingService.model.js";
 import Doctor from "../models/doctor.model.js";
 import User from "../models/user.model.js";
+import WorkingHour from "../models/workingHour.model.js";
+
 import { ApiError } from "../utils/ApiResponse.js";
 
 export const registerDoctor = async (doctorData) => {
@@ -11,7 +14,7 @@ export const registerDoctor = async (doctorData) => {
   return await doctor.save();
 };
 
-export const getDoctors = async (query = {}, isAdmin = false) => {
+export const getDoctors = async (query = {}) => {
   const {
     page = 1,
     limit = 10,
@@ -22,7 +25,6 @@ export const getDoctors = async (query = {}, isAdmin = false) => {
   } = query;
   const filter = {};
 
-  if (!isAdmin) filter.status = "active";
   if (status && isAdmin) filter.status = status;
   if (search) filter.$text = { $search: search };
 
@@ -79,8 +81,10 @@ export const rejectDoctor = async (id) => {
 
 export const getDoctorById = async (id) => {
   const doctor = await Doctor.findById(id).populate("userId", "avatar").lean();
+  const workingHour = await WorkingHour.find({ doctorId: id, isActive: true });
+  const services = await BookingService.find({ doctorId: id, isActive: true });
   if (!doctor) throw new ApiError(404, "Không tìm thấy bác sĩ");
-  return doctor;
+  return { doctor: { ...doctor, services }, workingHour };
 };
 
 export const getDoctorByUserId = async (userId) => {
@@ -93,4 +97,307 @@ export const getDoctorByUserId = async (userId) => {
   } catch (error) {
     throw new ApiError(404, "Gặp lỗi khi lấy thông tin !");
   }
+};
+
+// Tạo lịch làm việc cho bác sĩ
+export const createWorkingHour = async (workingHourData) => {
+  const { doctorId, dayOfWeek, date } = workingHourData;
+
+  // Kiểm tra bác sĩ có tồn tại không
+  const doctor = await Doctor.findById(doctorId);
+  if (!doctor) throw new ApiError(404, "Không tìm thấy bác sĩ");
+
+  // Kiểm tra trùng lặp lịch làm việc
+  const existingSchedule = await WorkingHour.findOne({
+    doctorId,
+    ...(date ? { date } : { dayOfWeek }),
+    isActive: true,
+  });
+
+  if (existingSchedule) {
+    throw new ApiError(400, "Lịch làm việc cho ngày này đã tồn tại");
+  }
+
+  // Validate time slots
+  if (workingHourData.timeSlots && workingHourData.timeSlots.length > 0) {
+    for (const slot of workingHourData.timeSlots) {
+      if (slot.startTime >= slot.endTime) {
+        throw new ApiError(
+          400,
+          "Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc"
+        );
+      }
+    }
+  }
+
+  const workingHour = new WorkingHour(workingHourData);
+  return await workingHour.save();
+};
+
+// Lấy lịch làm việc của bác sĩ theo ID
+export const getWorkingHoursByDoctorId = async (doctorId, query = {}) => {
+  const { date, dayOfWeek, isActive = true } = query;
+
+  const filter = { doctorId, isActive };
+
+  if (date) {
+    filter.date = new Date(date);
+  }
+
+  if (dayOfWeek !== undefined) {
+    filter.dayOfWeek = dayOfWeek;
+  }
+
+  return await WorkingHour.find(filter)
+    .select("-__v")
+    .sort({ dayOfWeek: 1, date: 1 })
+    .lean();
+};
+
+export const getMyWorkingHours = async (doctorId) => {
+  const filter = { doctorId };
+
+  return await WorkingHour.find(filter)
+    .select("-__v")
+    .sort({ dayOfWeek: 1, date: 1 })
+    .lean();
+};
+
+// Lấy lịch làm việc theo khoảng thời gian
+export const getWorkingHoursByDateRange = async (
+  doctorId,
+  startDate,
+  endDate
+) => {
+  const filter = {
+    doctorId,
+    isActive: true,
+    $or: [
+      { date: { $gte: new Date(startDate), $lte: new Date(endDate) } },
+      { date: { $exists: false } }, // Lịch theo ngày trong tuần
+    ],
+  };
+
+  return await WorkingHour.find(filter)
+    .populate("doctorId", "name specialty")
+    .sort({ date: 1, dayOfWeek: 1 })
+    .lean();
+};
+
+// Cập nhật lịch làm việc
+export const updateWorkingHour = async (id, updateData) => {
+  // Validate time slots nếu có cập nhật
+  if (updateData.timeSlots && updateData.timeSlots.length > 0) {
+    for (const slot of updateData.timeSlots) {
+      if (slot.startTime >= slot.endTime) {
+        throw new ApiError(
+          400,
+          "Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc"
+        );
+      }
+    }
+  }
+
+  const workingHour = await WorkingHour.findByIdAndUpdate(id, updateData, {
+    new: true,
+    runValidators: true,
+  }).populate("doctorId", "name specialty");
+
+  if (!workingHour) throw new ApiError(404, "Không tìm thấy lịch làm việc");
+  return workingHour;
+};
+export const deleteHardWorkingHour = async (id) => {
+  const deleted = await WorkingHour.findByIdAndDelete(id).populate(
+    "doctorId",
+    "name specialty"
+  );
+
+  if (!deleted) {
+    throw new ApiError(404, "Không tìm thấy lịch làm việc để xóa");
+  }
+
+  return {
+    message: "Xóa lịch làm việc thành công",
+    deleted,
+  };
+};
+
+// Cập nhật trạng thái slot thời gian cụ thể
+export const updateTimeSlotAvailability = async (
+  workingHourId,
+  slotIndex,
+  isAvailable
+) => {
+  const workingHour = await WorkingHour.findById(workingHourId);
+  if (!workingHour) throw new ApiError(404, "Không tìm thấy lịch làm việc");
+
+  if (!workingHour.timeSlots[slotIndex]) {
+    throw new ApiError(404, "Không tìm thấy slot thời gian");
+  }
+
+  workingHour.timeSlots[slotIndex].isAvailable = isAvailable;
+  await workingHour.save();
+
+  return workingHour;
+};
+
+// Thêm slot thời gian vào lịch làm việc
+export const addTimeSlot = async (workingHourId, timeSlot) => {
+  // Validate time slot
+  if (timeSlot.startTime >= timeSlot.endTime) {
+    throw new ApiError(
+      400,
+      "Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc"
+    );
+  }
+
+  const workingHour = await WorkingHour.findById(workingHourId);
+  if (!workingHour) throw new ApiError(404, "Không tìm thấy lịch làm việc");
+
+  // Kiểm tra trùng lặp thời gian
+  const isOverlapping = workingHour.timeSlots.some((slot) => {
+    return (
+      (timeSlot.startTime >= slot.startTime &&
+        timeSlot.startTime < slot.endTime) ||
+      (timeSlot.endTime > slot.startTime && timeSlot.endTime <= slot.endTime) ||
+      (timeSlot.startTime <= slot.startTime && timeSlot.endTime >= slot.endTime)
+    );
+  });
+
+  if (isOverlapping) {
+    throw new ApiError(400, "Slot thời gian bị trùng lặp với slot hiện có");
+  }
+
+  workingHour.timeSlots.push(timeSlot);
+  await workingHour.save();
+
+  return workingHour;
+};
+
+// Xóa slot thời gian
+export const removeTimeSlot = async (workingHourId, slotIndex) => {
+  const workingHour = await WorkingHour.findById(workingHourId);
+  if (!workingHour) throw new ApiError(404, "Không tìm thấy lịch làm việc");
+
+  if (!workingHour.timeSlots[slotIndex]) {
+    throw new ApiError(404, "Không tìm thấy slot thời gian");
+  }
+
+  workingHour.timeSlots.splice(slotIndex, 1);
+  await workingHour.save();
+
+  return workingHour;
+};
+
+// Xóa lịch làm việc (soft delete)
+export const deleteWorkingHour = async (id) => {
+  const workingHour = await WorkingHour.findByIdAndUpdate(
+    id,
+    { isActive: false },
+    { new: true }
+  );
+
+  if (!workingHour) throw new ApiError(404, "Không tìm thấy lịch làm việc");
+  return workingHour;
+};
+
+// Lấy lịch làm việc theo ID
+export const getWorkingHourById = async (id) => {
+  const workingHour = await WorkingHour.findById(id)
+    .populate("doctorId", "name specialty")
+    .lean();
+
+  if (!workingHour) throw new ApiError(404, "Không tìm thấy lịch làm việc");
+  return workingHour;
+};
+
+// Lấy slot thời gian có sẵn cho đặt lịch
+export const getAvailableTimeSlots = async (doctorId, date) => {
+  const dayOfWeek = new Date(date).getDay();
+
+  // Tìm lịch làm việc theo ngày cụ thể hoặc theo ngày trong tuần
+  const workingHours = await WorkingHour.find({
+    doctorId,
+    isActive: true,
+    $or: [{ date: new Date(date) }, { dayOfWeek, date: { $exists: false } }],
+  }).lean();
+
+  if (workingHours.length === 0) {
+    return [];
+  }
+
+  // Lấy tất cả slot có sẵn
+  const availableSlots = [];
+  workingHours.forEach((workingHour) => {
+    workingHour.timeSlots.forEach((slot) => {
+      if (slot.isAvailable) {
+        availableSlots.push({
+          workingHourId: workingHour._id,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          date: workingHour.date || date,
+        });
+      }
+    });
+  });
+
+  return availableSlots.sort((a, b) => a.startTime.localeCompare(b.startTime));
+};
+
+// Tạo lịch làm việc mặc định cho bác sĩ mới
+export const createDefaultWorkingSchedule = async (doctorId) => {
+  const defaultSchedules = [];
+
+  // Tạo lịch từ thứ 2 đến thứ 6 (1-5)
+  for (let day = 1; day <= 5; day++) {
+    const timeSlots = [
+      { startTime: "08:00", endTime: "08:30", isAvailable: true },
+      { startTime: "08:30", endTime: "09:00", isAvailable: true },
+      { startTime: "09:00", endTime: "09:30", isAvailable: true },
+      { startTime: "09:30", endTime: "10:00", isAvailable: true },
+      { startTime: "10:00", endTime: "10:30", isAvailable: true },
+      { startTime: "14:00", endTime: "14:30", isAvailable: true },
+      { startTime: "14:30", endTime: "15:00", isAvailable: true },
+      { startTime: "15:00", endTime: "15:30", isAvailable: true },
+      { startTime: "15:30", endTime: "16:00", isAvailable: true },
+      { startTime: "16:00", endTime: "16:30", isAvailable: true },
+    ];
+
+    defaultSchedules.push({
+      doctorId,
+      dayOfWeek: day,
+      timeSlots,
+      isActive: true,
+    });
+  }
+
+  return await WorkingHour.insertMany(defaultSchedules);
+};
+
+// Lấy thống kê lịch làm việc của bác sĩ
+export const getWorkingHourStats = async (doctorId) => {
+  const stats = await WorkingHour.aggregate([
+    { $match: { doctorId: doctorId, isActive: true } },
+    { $unwind: "$timeSlots" },
+    {
+      $group: {
+        _id: "$doctorId",
+        totalSlots: { $sum: 1 },
+        availableSlots: {
+          $sum: { $cond: ["$timeSlots.isAvailable", 1, 0] },
+        },
+        bookedSlots: {
+          $sum: { $cond: ["$timeSlots.isAvailable", 0, 1] },
+        },
+      },
+    },
+  ]);
+
+  return (
+    stats[0] || {
+      totalSlots: 0,
+      availableSlots: 0,
+      bookedSlots: 0,
+    }
+  );
 };

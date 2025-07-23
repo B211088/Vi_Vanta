@@ -57,7 +57,7 @@ export const getAllChildrenHandle = async (userId) => {
       const overdueVaccineCodes = [];
       Object.values(VACCINE_SCHEDULE).forEach((vaccines) => {
         vaccines.forEach((vaccine) => {
-          if (vaccine.required && vaccine.ageMonths <= ageInMonths) {
+          if (vaccine.required && vaccine.ageMonths < ageInMonths) {
             overdueVaccineCodes.push(vaccine.code);
           }
         });
@@ -176,7 +176,7 @@ export const updateChildHandle = async (childId, payload) => {
       vaccines.forEach((vaccine) => {
         if (
           vaccine.required &&
-          vaccine.ageMonths <= ageInMonths &&
+          vaccine.ageMonths < ageInMonths &&
           !completedCodes.includes(vaccine.code)
         ) {
           overdueCount++;

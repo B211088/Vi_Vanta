@@ -64,6 +64,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    health: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

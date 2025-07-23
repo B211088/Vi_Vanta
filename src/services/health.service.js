@@ -1,4 +1,4 @@
-import { Health } from "../models/index.js";
+import { Health, User } from "../models/index.js";
 
 // Lấy danh sách tất cả thông tin sức khỏe
 export const getAllHealthInfoHandle = async () => {
@@ -32,6 +32,12 @@ export const createHealthInfoHandle = async (payload) => {
   try {
     const newHealthInfo = new Health(payload);
     await newHealthInfo.save();
+    await User.findByIdAndUpdate(
+      { _id: payload.userId },
+      { $set: { health: true } },
+      { new: true }
+    );
+
     return newHealthInfo;
   } catch (error) {
     console.error("Lỗi khi tạo thông tin sức khỏe:", error.message);
