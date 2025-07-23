@@ -15,6 +15,7 @@ const VaccineModal = ({
   onSuccess,
 }) => {
   const dispatch = useDispatch();
+  const { loading } = useSelector((state) => state.children);
   const { notifySuccess, notifyWarning, notifyError, notifyConfirm } =
     useNotify();
   const [selectedVaccineDate, setSelectedVaccineDate] = useState("");
@@ -94,6 +95,7 @@ const VaccineModal = ({
 
         <div className="flex gap-2">
           <button
+            disabled={loading}
             onClick={closeModal}
             className="flex-1 px-4 py-2 border border-gray-300 rounded-md"
           >
@@ -101,10 +103,11 @@ const VaccineModal = ({
           </button>
           {!findStatus() && (
             <button
+              disabled={loading}
               onClick={checkingVaccinacationRecordHandle}
               className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
-              Xác nhận đã tiêm
+              {!loading ? " Xác nhận đã tiêm" : "Đang xử lý"}
             </button>
           )}
         </div>

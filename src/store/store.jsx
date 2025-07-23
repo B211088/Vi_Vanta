@@ -8,6 +8,7 @@ import chatbotReducer from "./slices/chatbot.slice";
 import doctorReducer from "./slices/doctor.slice";
 import healthReducer from "./slices/health.slice";
 import childrenReducer from "./slices/children.slice";
+import bookingReducer from "./slices/booking.slice";
 
 export const rootReducer = combineReducers({
   auth: authReducer,
@@ -18,4 +19,5 @@ export const rootReducer = combineReducers({
   doctor: doctorReducer,
   health: healthReducer,
   children: childrenReducer,
+  booking: bookingReducer,
 });

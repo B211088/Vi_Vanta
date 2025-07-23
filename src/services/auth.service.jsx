@@ -22,8 +22,9 @@ import {
   updateUserAddressFailure,
 } from "../store/slices/authSlice";
 import { API_URL } from "../config/api.config";
-import { fetchUserHealthInfo } from "./health.service";
+import { fetchAllHealthInfo, fetchUserHealthInfo } from "./health.service";
 import { clearHealthInfo } from "../store/slices/health.slice";
+import { Navigate } from "react-router-dom";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -35,7 +36,9 @@ export const loadUser = () => async (dispatch) => {
   try {
     dispatch(loadUserStart());
     const response = await api.get("/api/v1/user/profile");
+
     dispatch(loadUserSuccess(response.data.user));
+
     return response.data;
   } catch (error) {
     const errorMessage =
@@ -62,10 +65,11 @@ export const loginUser = (credentials) => async (dispatch) => {
   try {
     dispatch(loginStart());
     const response = await api.post("/api/v1/user/login", credentials);
+    console.log({ response });
     dispatch(loginSuccess(response.data));
 
     await dispatch(loadUser());
-    await dispatch(getUserAddress());
+
     return response.data;
   } catch (error) {
     const errorMessage = error.response?.data?.message || "Đăng nhập thất bại";

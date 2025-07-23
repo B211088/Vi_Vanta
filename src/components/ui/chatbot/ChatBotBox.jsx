@@ -19,6 +19,9 @@ import {
   Copy,
   MessageSquareX,
   SquareMinus,
+  Menu,
+  X,
+  Sidebar,
 } from "lucide-react";
 import { useNotify } from "../../../hook/useNotify";
 import { useTheme } from "../../../hook/useTheme";
@@ -66,7 +69,7 @@ const SimpleTypingIndicator = memo(() => {
   );
 });
 
-// Simple Chat Message Component
+// Responsive Chat Message Component
 const SimpleChatMessage = memo(
   ({
     message,
@@ -110,34 +113,34 @@ const SimpleChatMessage = memo(
     return (
       <div
         ref={messageRef}
-        className={`message-wrapper mb-4 transition-all duration-300 ${
+        className={`message-wrapper mb-3 md:mb-4 transition-all duration-300 ${
           isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
         }`}
       >
         <div
-          className={`message rounded-lg py-2  max-w-4xl transition-all duration-200 ${
+          className={`message rounded-lg py-2 mt-5 px-3 md:px-4 max-w-[85%] md:max-w-fit transition-all duration-200 ${
             isUserMessage
-              ? "bg-teal-50 w-fit pr-20 pl-4 text-black ml-auto mr-4 rounded-md "
-              : " text-black mr-auto ml-4 "
+              ? "bg-teal-50 text-black ml-auto   rounded-lg"
+              : "text-black mr-auto"
           }`}
         >
           {/* Message Content */}
-          <div className="message-content ">
+          <div className="message-content text-sm md:text-base leading-relaxed">
             {message.isLoading ? (
               <SimpleTypingIndicator />
             ) : message.isError ? (
-              <div className="w-full p-3 rounded-md border-1 border-red-400 bg-red-200 text-red-500">
+              <div className="w-full p-2 md:p-3 rounded-md border border-red-400 bg-red-50 text-red-600 text-sm">
                 {message}
               </div>
             ) : shouldUseTypewriter ? (
               <CharacterTypewriter
                 text={message.content}
-                speed="normal" // 'lightning', 'fast', 'normal', 'slow', 'very-slow'
+                speed="normal"
                 onComplete={handleTypewriterComplete}
                 shouldStop={shouldStopTypewriter}
                 messageId={message._id}
-                naturalPauses={true} // Dừng lâu hơn sau dấu câu
-                showCursor={true} // Hiển thị cursor nhấp nháy
+                naturalPauses={true}
+                showCursor={true}
               />
             ) : (
               <MarkdownRenderer content={message.content} />
@@ -146,7 +149,7 @@ const SimpleChatMessage = memo(
 
           {/* Message Footer */}
           {!message.isLoading && (
-            <div className="message-footer flex items-center justify-between">
+            <div className="message-footer flex items-center justify-between mt-2">
               <div className="text-xs text-gray-500">
                 {new Date(message.timestamp).toLocaleTimeString("vi-VN", {
                   hour: "2-digit",
@@ -154,31 +157,31 @@ const SimpleChatMessage = memo(
                 })}
               </div>
 
-              {/* Simple Action Buttons for Assistant Messages */}
+              {/* Action Buttons for Assistant Messages */}
               {message.role === "assistant" && !message.isError && (
-                <div className="flex items-center space-x-2 ">
+                <div className="flex items-center space-x-1 md:space-x-2">
                   <button
                     onClick={() =>
                       navigator.clipboard.writeText(message.content)
                     }
-                    className="text-xs text-gray-400 hover:text-gray-600 transition-colors px-2 py-1 rounded cursor-pointer"
+                    className="text-xs text-gray-400 hover:text-gray-600 transition-colors p-1 md:p-2 rounded cursor-pointer"
                     title="Sao chép"
                   >
-                    <Copy className="w-3 h-3" />
+                    <Copy className="w-3 h-3 md:w-4 md:h-4" />
                   </button>
                   <button
                     onClick={() => console.log("Like:", message._id)}
-                    className="text-xs text-gray-400 hover:text-green-600 transition-colors px-2 py-1 rounded cursor-pointer"
+                    className="text-xs text-gray-400 hover:text-green-600 transition-colors p-1 md:p-2 rounded cursor-pointer"
                     title="Thích"
                   >
-                    <ThumbsUp className="h-3 w-3" />
+                    <ThumbsUp className="w-3 h-3 md:w-4 md:h-4" />
                   </button>
                   <button
                     onClick={() => console.log("Dislike:", message._id)}
-                    className="text-xs text-gray-400 hover:text-red-600 transition-colors px-2 py-1 rounded cursor-pointer"
+                    className="text-xs text-gray-400 hover:text-red-600 transition-colors p-1 md:p-2 rounded cursor-pointer"
                     title="Không thích"
                   >
-                    <ThumbsDown className="w-3 h-3 " />
+                    <ThumbsDown className="w-3 h-3 md:w-4 md:h-4" />
                   </button>
                 </div>
               )}
@@ -190,7 +193,7 @@ const SimpleChatMessage = memo(
   }
 );
 
-// Memoized Section Item Component
+// Responsive Section Item Component
 const SectionItem = memo(
   ({ section, isSelected, onSelect, onRemove, isDisabled }) => {
     const handleClick = useCallback(() => {
@@ -207,7 +210,7 @@ const SectionItem = memo(
 
     return (
       <button
-        className={`w-full flex items-center gap-2 justify-between px-2 py-1 border border-gray-300 rounded-md hover:shadow-sm cursor-pointer transition-all duration-200 ${
+        className={`w-full flex items-center gap-2 justify-between px-2 md:px-3 py-2 border border-gray-300 rounded-md hover:shadow-sm cursor-pointer transition-all duration-200 ${
           isSelected
             ? "bg-blue-100 border-blue-500 shadow-sm"
             : "hover:bg-gray-100"
@@ -216,7 +219,7 @@ const SectionItem = memo(
         disabled={isDisabled}
         title={section.title}
       >
-        <div className="flex-1 text-xs font-medium truncate text-start pr-2">
+        <div className="flex-1 text-xs md:text-sm font-medium truncate text-start pr-2">
           {section.title}
         </div>
         <div
@@ -224,7 +227,7 @@ const SectionItem = memo(
           onClick={handleRemove}
           title="Xóa cuộc trò chuyện"
         >
-          <SquareMinus className="text-light-500 h-3.5 w-3.5" />
+          <SquareMinus className="text-gray-500 w-3 h-3 md:w-4 md:h-4" />
         </div>
       </button>
     );
@@ -233,15 +236,17 @@ const SectionItem = memo(
 
 // Loading Skeleton Component
 const LoadingSkeleton = memo(() => (
-  <div className="w-full flex items-center justify-center py-8">
-    <div className="text-center">
-      <Loader2 className="w-8 h-8 animate-spin text-blue-500 mx-auto mb-4" />
-      <p className="text-gray-500 text-sm">Đang tải thông tin collection...</p>
+  <div className="w-full h-screen flex items-center justify-center bg-gray-50">
+    <div className="text-center p-6">
+      <Loader2 className="w-8 h-8 md:w-12 md:h-12 animate-spin text-blue-500 mx-auto mb-4" />
+      <p className="text-gray-500 text-sm md:text-base">
+        Đang tải thông tin collection...
+      </p>
     </div>
   </div>
 ));
 
-// Optimized Sidebar Component
+// Responsive Sidebar Component
 const ChatSidebar = memo(
   ({
     sections,
@@ -253,67 +258,109 @@ const ChatSidebar = memo(
     onNewConversation,
     onRefreshSections,
     isDarkMode,
+    isOpen,
+    onClose,
   }) => {
     return (
-      <div
-        className={`w-[250px] flex flex-col text-sm transition-colors duration-200 ${
-          isDarkMode ? "bg-light-50 text-dark-50" : "bg-dark-200 text-light-50"
-        }`}
-      >
-        {/* New Conversation Button */}
-        <div className="w-full p-2 border-b border-gray-300">
-          <button
-            onClick={onNewConversation}
-            className="w-full p-2 flex items-center gap-2  text-dark-500 cursor-pointer rounded-md transition-colors text-sm font-medium disabled:opacity-50 hover:bg-gray-50"
-            disabled={isSubmitting}
-          >
-            <MessageSquareDiff className="w-5 h-5" />
-            <span>Cuộc trò chuyện mới</span>
-          </button>
-        </div>
+      <>
+        {/* Mobile Overlay */}
+        {isOpen && (
+          <div
+            className="fixed inset-0 bg-[#00000037] z-40 lg:hidden"
+            onClick={onClose}
+          />
+        )}
 
-        {/* Chat History Header */}
-        <div className="w-full px-3 pt-2  border-gray-300 flex items-center justify-between">
-          <span className="font-bold text-xs">Đoạn chat</span>
-          <button
-            onClick={onRefreshSections}
-            className="text-xs text-blue-600 hover:text-blue-800 transition-colors disabled:opacity-50"
-            title="Làm mới danh sách"
-            disabled={loading}
-          >
-            {loading && (
-              <Loader2 className={`w-3 h-3 ${loading ? "animate-spin" : ""}`} />
-            )}
-          </button>
-        </div>
+        {/* Sidebar */}
+        <div
+          className={`
+            fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto
+            w-64 md:w-72 lg:w-80 xl:w-[300px]
+            flex flex-col text-sm
+            transform transition-transform duration-300 ease-in-out lg:transform-none
+            ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+            ${
+              !isDarkMode
+                ? "bg-gray-800 text-gray-100"
+                : "bg-white text-gray-900"
+            }
+            border-r border-gray-200 shadow-lg lg:shadow-none
+          `}
+        >
+          {/* Mobile Header */}
+          <div className="lg:hidden flex items-center justify-between px-4 py-2 border-b border-gray-200">
+            <h2 className="font-semibold text-base">Cuộc trò chuyện</h2>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
 
-        {/* Sections List */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="w-full flex flex-col gap-1 p-2">
-            {loading && sections.length === 0 ? (
-              <div className="text-center text-gray-400 text-xs py-4">
-                <Loader2 className="w-4 h-4 animate-spin mx-auto mb-2" />
-                Đang tải...
-              </div>
-            ) : sections.length > 0 ? (
-              sections.map((section) => (
-                <SectionItem
-                  key={section._id}
-                  section={section}
-                  isSelected={currentSectionId === section._id}
-                  onSelect={onSelectSection}
-                  onRemove={onRemoveSection}
-                  isDisabled={isSubmitting}
-                />
-              ))
-            ) : (
-              <div className="text-center text-gray-500 text-xs py-4">
-                Chưa có cuộc trò chuyện nào
-              </div>
-            )}
+          {/* New Conversation Button */}
+          <div className="w-full p-3 md:p-4 lg:p-1 border-b border-gray-200">
+            <button
+              onClick={() => {
+                onNewConversation();
+                onClose();
+              }}
+              className="w-full p-1 md:p-3 flex items-center gap-2 text-gray-600 cursor-pointer rounded-md transition-colors text-sm font-medium disabled:opacity-50 hover:bg-gray-50"
+              disabled={isSubmitting}
+            >
+              <MessageSquareDiff className="w-4 h-4 md:w-5 md:h-5" />
+              <span>Cuộc trò chuyện mới</span>
+            </button>
+          </div>
+
+          {/* Chat History Header */}
+          <div className="w-full px-3 md:px-4 pt-3 md:pt-4 border-gray-300 flex items-center justify-between">
+            <span className="font-bold text-xs md:text-sm">Lịch sử chat</span>
+            <button
+              onClick={onRefreshSections}
+              className="text-xs text-blue-600 hover:text-blue-800 transition-colors disabled:opacity-50 p-1"
+              title="Làm mới danh sách"
+              disabled={loading}
+            >
+              <Loader2
+                className={`w-3 h-3 md:w-4 md:h-4 ${
+                  loading ? "animate-spin" : ""
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* Sections List */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="w-full flex flex-col gap-2 p-3 md:p-4">
+              {loading && sections.length === 0 ? (
+                <div className="text-center text-gray-400 text-xs py-6">
+                  <Loader2 className="w-4 h-4 animate-spin mx-auto mb-2" />
+                  Đang tải...
+                </div>
+              ) : sections.length > 0 ? (
+                sections.map((section) => (
+                  <SectionItem
+                    key={section._id}
+                    section={section}
+                    isSelected={currentSectionId === section._id}
+                    onSelect={(id) => {
+                      onSelectSection(id);
+                      onClose();
+                    }}
+                    onRemove={onRemoveSection}
+                    isDisabled={isSubmitting}
+                  />
+                ))
+              ) : (
+                <div className="text-center text-gray-500 text-xs py-6">
+                  Chưa có cuộc trò chuyện nào
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 );
@@ -332,6 +379,7 @@ const ChatBotBox = () => {
   const [currentSectionId, setCurrentSectionId] = useState(null);
   const [shouldStopAllTypewriter, setShouldStopAllTypewriter] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Memoize collection info
   const collectionInfo = useMemo(() => {
@@ -406,6 +454,18 @@ const ChatBotBox = () => {
     }
   }, [latestMessageId, isNewMessage]);
 
+  // Close sidebar on large screens
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   // Optimized handlers
   const handleSelectSection = useCallback(
     async (sectionId) => {
@@ -478,16 +538,21 @@ const ChatBotBox = () => {
     ]
   );
 
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarOpen((prev) => !prev);
+  }, []);
+
+  const closeSidebar = useCallback(() => {
+    setIsSidebarOpen(false);
+  }, []);
+
   // Show loading if not initialized
   if (!isInitialized || !collection) {
     return <LoadingSkeleton />;
   }
 
   return (
-    <div
-      style={{ height: "calc(100vh - 65px)" }}
-      className="w-full min-h-full flex rounded-md overflow-hidden"
-    >
+    <div className="w-full h-screen lg:h-[calc(100vh-65px)] flex overflow-hidden">
       {/* Sidebar */}
       {user && (
         <ChatSidebar
@@ -500,66 +565,99 @@ const ChatBotBox = () => {
           onNewConversation={handleNewConversation}
           onRefreshSections={refreshSections}
           isDarkMode={isDarkMode}
+          isOpen={isSidebarOpen}
+          onClose={closeSidebar}
         />
       )}
 
       {/* Main Chat Area */}
-      <div className="flex-1 h-full flex flex-col items-center p-6 bg-[#94c0d11d] relative">
-        {/* Header */}
-        {messages.length === 0 && (
-          <div className="w-full mb-4">
-            <div className="text-center">
-              {!currentSectionId && <WelcomeScreen userName={user?.fullName} />}
-            </div>
-          </div>
-        )}
-
-        {/* Messages Area */}
-        <div
-          ref={containerRef}
-          className="w-full h-full max-h-full overflow-y-auto sidebar-scroll-none flex flex-col gap-2 rounded-md"
-        >
-          {messages?.map((message) => (
-            <SimpleChatMessage
-              key={message._id}
-              message={message}
-              isLatest={message._id === latestMessageId}
-              hasBeenAnimated={animatedMessageIds.has(message._id)}
-              markAnimated={() =>
-                setAnimatedMessageIds((prev) => new Set([...prev, message._id]))
-              }
-              shouldStopTypewriter={shouldStopAllTypewriter}
-            />
-          ))}
-          <div ref={messagesEndRef} data-messages-end />
+      <div className="flex-1 h-full flex flex-col bg-gradient-to-br from-blue-50/30 to-teal-50/30 relative overflow-hidden">
+        {/* Mobile Header - FIXED HEIGHT */}
+        <div className="lg:hidden flex-shrink-0 flex items-center justify-between p-3 md:p-4 bg-white border-b border-gray-200 shadow-sm h-16">
+          {user && (
+            <button
+              onClick={toggleSidebar}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Mở menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+          )}
+          <h1 className="font-semibold text-base md:text-lg text-gray-900">
+            Vivanta AI Chat
+          </h1>
+          <div className="w-9"></div> {/* Spacer for centering */}
         </div>
 
-        <Suspense
-          fallback={
-            <div className="w-full h-20 bg-gray-100 rounded animate-pulse" />
-          }
-        >
-          <ScrollToBottom
-            containerRef={containerRef}
-            messagesEndRef={messagesEndRef}
-          />
+        {/* Chat Container - FLEXBOX LAYOUT */}
+        <div className="flex-1 flex flex-col min-h-0 relative">
+          {/* Welcome Screen - CONDITIONAL */}
+          {messages.length === 0 && (
+            <div className="flex-shrink-0 w-full px-4 md:px-6 py-4 md:py-6">
+              <div className="text-center">
+                {!currentSectionId && (
+                  <WelcomeScreen userName={user?.fullName} />
+                )}
+              </div>
+            </div>
+          )}
 
-          <ChatInput
-            userInput={userInput}
-            setUserInput={setUserInput}
-            isSubmitting={isSubmitting}
-            onSubmit={handleEnhancedSubmitQuestion}
-            onClearChat={handleClearChat}
-            models={models}
-            selectedAiModel={selectedAiModel}
-            setSelectedAiModel={setSelectedAiModel}
-            messagesLength={messages.length}
-            latestMessageId={latestMessageId}
-            animatedMessageIds={animatedMessageIds}
-            setAnimatedMessageIds={setAnimatedMessageIds}
-            collectionInfo={collectionInfo}
-          />
-        </Suspense>
+          {/* Messages Area - FLEX GROW */}
+          <div
+            ref={containerRef}
+            className="flex-1 w-full  overflow-y-auto pl-3 min-h-0 mb-34"
+          >
+            <div className="max-w-4xl mx-auto space-y-2 md:space-y-4">
+              {messages?.map((message) => (
+                <SimpleChatMessage
+                  key={message._id}
+                  message={message}
+                  isLatest={message._id === latestMessageId}
+                  hasBeenAnimated={animatedMessageIds.has(message._id)}
+                  markAnimated={() =>
+                    setAnimatedMessageIds(
+                      (prev) => new Set([...prev, message._id])
+                    )
+                  }
+                  shouldStopTypewriter={shouldStopAllTypewriter}
+                />
+              ))}
+              <div ref={messagesEndRef} className="h-1" />
+            </div>
+          </div>
+
+          {/* Chat Input Area - FIXED AT BOTTOM */}
+          <div className="flex-shrink-0 absolute  bottom-17 lg:bottom-0 w-full px-2 lg:px-0 md:px-3">
+            <div className="max-w-4xl mx-auto border-b-10 border-light-50">
+              <Suspense
+                fallback={
+                  <div className="w-full h-16 md:h-20 bg-gray-100 rounded-lg animate-pulse" />
+                }
+              >
+                <ScrollToBottom
+                  containerRef={containerRef}
+                  messagesEndRef={messagesEndRef}
+                />
+
+                <ChatInput
+                  userInput={userInput}
+                  setUserInput={setUserInput}
+                  isSubmitting={isSubmitting}
+                  onSubmit={handleEnhancedSubmitQuestion}
+                  onClearChat={handleClearChat}
+                  models={models}
+                  selectedAiModel={selectedAiModel}
+                  setSelectedAiModel={setSelectedAiModel}
+                  messagesLength={messages.length}
+                  latestMessageId={latestMessageId}
+                  animatedMessageIds={animatedMessageIds}
+                  setAnimatedMessageIds={setAnimatedMessageIds}
+                  collectionInfo={collectionInfo}
+                />
+              </Suspense>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

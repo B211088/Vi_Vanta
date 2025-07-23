@@ -29,7 +29,7 @@ const User = () => {
   };
 
   return (
-    <div className="flex items-center gap-[15px]">
+    <div className="flex items-center gap-[15px] font-nunito">
       <div className="flex items-center gap-[5px]">
         <div
           className={`w-[38px] h-[38px] flex items-center justify-center ${
@@ -90,7 +90,10 @@ const User = () => {
           </div>
           <div className="w-full flex flex-col">
             {menus.map((option) => (
-              <div key={option.id} className="w-full flex flex-col">
+              <div
+                key={option.id}
+                className="w-full flex flex-col text-teal-500"
+              >
                 <div className="w-full flex items-center justify-between">
                   <div className="flex items-center gap-[5px] px-[10px] py-[10px]">
                     <i className={option.icon}></i>
@@ -108,7 +111,7 @@ const User = () => {
                   </div>
                 </div>
                 <ul
-                  className={`w-full flex flex-col text-sm overflow-hidden transition-all duration-500 ${
+                  className={`w-full  flex flex-col text-xs font-semibold text-dark-500 overflow-hidden transition-all duration-500 ${
                     openMenus[option.id]
                       ? "max-h-[500px] opacity-100"
                       : "max-h-0 opacity-0"
@@ -129,7 +132,7 @@ const User = () => {
           </div>
           <div className="w-full flex justify-center items-center p-[10px]">
             <button
-              className="w-full px-[10px] py-[8px] bg-dark-600 rounded-md text-sm text-light-50 font-bold cursor-pointer"
+              className="w-full px-[10px] py-[8px] bg-teal-500 hover:bg-dark-600 rounded-md text-sm text-light-50 font-bold cursor-pointer"
               onClick={handleLogout}
             >
               Đăng xuất
@@ -156,22 +159,30 @@ const menus = [
       },
       {
         id: 2,
-        name: "Địa chỉ",
+        path: "/account/health_info",
+        name: "Thông tin sức khỏe",
       },
     ],
   },
   {
-    id: "social",
-    title: "Thông tin xã hội",
+    id: "doctor",
+    title: "Thông tin bác sĩ",
     icon: "fa-solid fa-users",
     item: [
       {
         id: 1,
-        name: "Bạn bè",
+        name: "Thông tin bác sĩ",
+        path: "/doctor/info",
       },
       {
         id: 2,
-        name: "Nhóm",
+        name: "Đặt khám",
+        path: "/doctor/booking",
+      },
+      {
+        id: 3,
+        name: "Lịch khám",
+        path: "/doctor/services/working-hour",
       },
     ],
   },

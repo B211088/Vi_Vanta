@@ -414,7 +414,7 @@ const BMICalculator = () => {
 
   return (
     <div className="min-h-screen  to-cyan-50 font-['Nunito']">
-      <div className="w-full mx-auto px-4 py-8">
+      <div className="w-full mx-auto overflow-x-auto px-4 py-8">
         {/* Header */}
         <HeaderTool
           title="Đánh giá Sức khỏe & BMI"

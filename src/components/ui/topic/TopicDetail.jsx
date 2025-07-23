@@ -27,8 +27,10 @@ import {
   ChevronRight,
   Bookmark,
   Play,
+  Dot,
 } from "lucide-react";
 import Footer from "../../../pages/user/Footer";
+import { formatDateDDMMYY } from "../../../utils/formatDate";
 const TopicDetail = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -213,7 +215,7 @@ const TopicDetail = () => {
             <div className="w-full flex gap-5 rounded-md">
               <Link
                 to={`/article?slug=${mainArticle?.slug}&title=${mainArticle?.title}&id=${mainArticle?._id}`}
-                className="w-6/12 h-fit flex flex-col border-1 border-dark-800 rounded-md p-4 "
+                className="w-6/12 h-fit flex flex-col p-3 cursor-pointer border-1 border-dark-900  rounded-md "
               >
                 <div className="w-full">
                   <img
@@ -237,14 +239,25 @@ const TopicDetail = () => {
                     </p>
                   </div>
                   <div className="w-full flex items-center py-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 flex items-center justify-center bg-vivanta-cyan-400 text-light-50 rounded-sm">
+                    <div className="flex items-center gap-2 text-sm">
+                      <div className="w-5 h-5 flex items-center justify-center bg-vivanta-cyan-400 text-light-50 rounded-sm">
                         <i className="fa-solid fa-user-doctor"></i>
                       </div>
-                      Tác giả:
-                      <span className="font-bold">
-                        {mainArticle?.author?.fullName}
-                      </span>
+                      <div className="flex ">
+                        <span> Tác giả:</span>
+                        <span className="font-bold">
+                          {mainArticle?.author?.fullName}
+                        </span>
+                      </div>{" "}
+                      <Dot />
+                      <div className="flex items-center gap-1 text-dark-400">
+                        <span> {mainArticle?.views} lượt xem</span>
+                        <Dot />
+                        <span>
+                          Ngày đăng:{" "}
+                          {formatDateDDMMYY(mainArticle?.publishedAt)}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -256,7 +269,7 @@ const TopicDetail = () => {
                     key={article._id}
                     className="w-6/12 pr-3 pb-3 "
                   >
-                    <div className="w-full flex flex-col p-3 cursor-pointer border-1 border-dark-800 rounded-md hover:translate-y-[-3px] transition-all duration-300">
+                    <div className="w-full flex flex-col p-3 cursor-pointer border-1 border-dark-900  rounded-md hover:translate-y-[-3px] transition-all duration-300">
                       {" "}
                       <img
                         className="w-full aspect-[16/9] object-cover rounded-md"

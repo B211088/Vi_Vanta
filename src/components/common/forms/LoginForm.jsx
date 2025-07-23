@@ -71,10 +71,13 @@ const LoginForm = () => {
     }
 
     try {
-      await dispatch(loginUser(formData));
+      const response = await dispatch(loginUser(formData));
+      console.log({ response });
+      if (response.user.health === false) {
+        navigate("/health_setup");
+        return;
+      }
     } catch (err) {
-      console.error(err.response.data);
-      notifyError(err.response.data.message);
       console.log(err.response.data?.active);
       if (err.response.data.active === false) {
         navigate("/confirm_account/send_code", {

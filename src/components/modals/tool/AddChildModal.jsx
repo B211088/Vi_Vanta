@@ -2,6 +2,7 @@ import { Baby, Calendar, User } from "lucide-react";
 import React, { useState } from "react";
 import { createChild } from "../../../services/children.service";
 import { useDispatch, useSelector } from "react-redux";
+import { useNotify } from "../../../hook/useNotify";
 const ValueInput = ({
   label,
   value,
@@ -65,6 +66,7 @@ const SelectInput = ({
 );
 const AddChildModal = ({ closeModal }) => {
   const dispatch = useDispatch();
+  const { notifyWarning, notifySuccess, notifyError } = useNotify();
   const [childForm, setChildForm] = useState({
     name: "",
     birthDate: "",
@@ -79,16 +81,21 @@ const AddChildModal = ({ closeModal }) => {
   const addChild = async (e) => {
     e.preventDefault();
     try {
+      if (new Date(childForm.birthDate) > new Date()) {
+        notifyWarning("Ngày lớn hơn ngày hiện tại!");
+        return;
+      }
       if (!childForm.name || !childForm.birthDate || !childForm.gender) {
-        alert("Vui lòng điền đầy đủ thông tin bắt buộc");
+        notifyWarning("Vui lòng điền đầy đủ thông tin bắt buộc!");
         return;
       }
 
-      const response = await dispatch(createChild(childForm));
+      await dispatch(createChild(childForm));
       setChildForm({ name: "", birthDate: "", gender: "", notes: "" });
+      notifySuccess("Thêm hồ sơ bé thành công!");
       closeModal();
     } catch (error) {
-      console.log(error);
+      notifyError(error.response.data.message || "Đã xảy ra lỗi");
     }
   };
 

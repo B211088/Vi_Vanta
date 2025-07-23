@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Scale,
   Heart,
@@ -38,9 +38,15 @@ import TopicFavorite from "../../components/ui/topic/TopicFavorite";
 import Banner from "../../components/layout/user/Banner";
 import ArticlesSection from "../../components/ui/article/ArticlesSection";
 import Footer from "./Footer";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchUserHealthInfo } from "../../services/health.service";
 
 const Home = () => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
+  const { healthInfo } = useSelector((state) => state.health);
   const [openFAQ, setOpenFAQ] = useState({});
   const [email, setEmail] = useState("");
 
@@ -50,6 +56,12 @@ const Home = () => {
       [index]: !prev[index],
     }));
   };
+
+  useEffect(() => {
+    if (user) {
+      dispatch(fetchUserHealthInfo());
+    }
+  }, []);
 
   const healthTools = [
     {

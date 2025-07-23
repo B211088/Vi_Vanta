@@ -11,7 +11,7 @@ const TabButton = ({ id, icon: Icon, label, isActive, onClick, color }) => {
       }`}
     >
       <Icon className="h-4 w-4" />
-      <span>{label}</span>
+      <span className="w-fit text-nowrap">{label}</span>
     </button>
   );
 };

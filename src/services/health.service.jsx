@@ -55,7 +55,7 @@ export const fetchUserHealthInfo = () => async (dispatch) => {
     const response = await api.get("/api/v1/health/me");
 
     dispatch(fetchHealthInfoSuccess(response.data));
-    return response.data;
+    return response.data.healthInfo;
   } catch (error) {
     const errorMessage =
       error.response?.data?.message || "Không thể tải thông tin sức khỏe!";

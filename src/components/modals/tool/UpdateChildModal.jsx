@@ -2,6 +2,7 @@ import { Baby, Calendar, User } from "lucide-react";
 import React, { useState } from "react";
 import { createChild, updateChild } from "../../../services/children.service";
 import { useDispatch, useSelector } from "react-redux";
+import { useNotify } from "../../../hook/useNotify";
 const ValueInput = ({
   label,
   value,
@@ -71,6 +72,7 @@ const formatDate = (dateStr) => {
 
 const UpdateChildModal = ({ closeModal, child }) => {
   const dispatch = useDispatch();
+  const { notifyWarning, notifySuccess, notifyError } = useNotify();
   const [childForm, setChildForm] = useState({
     name: child.name,
     birthDate: formatDate(child.birthDate),
@@ -85,19 +87,24 @@ const UpdateChildModal = ({ closeModal, child }) => {
   // Update child
   const updateChildHandle = async (e) => {
     e.preventDefault();
-
+    if (new Date(childForm.birthDate) > new Date()) {
+      notifyWarning("Ngày lớn hơn ngày hiện tại!");
+      return;
+    }
     if (!childForm.name || !childForm.birthDate || !childForm.gender) {
-      alert("Vui lòng điền đầy đủ thông tin bắt buộc");
+      notifyWarning("Vui lòng điền đầy đủ thông tin bắt buộc!");
+
       return;
     }
 
     try {
       await dispatch(updateChild(childForm, child._id));
       setChildForm({ name: "", birthDate: "", gender: "", notes: "" });
+      notifySuccess("Cập nhật hồ sơ bé thành công!");
       closeModal();
       closeModal;
     } catch (error) {
-      console.log(error);
+      notifyError(error.response.data.message || "Đã xảy ra lỗi");
     }
   };
 

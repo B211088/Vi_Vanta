@@ -26,6 +26,12 @@ import PregnancyCalculator from "../components/ui/healthtool/PregnancyCalculator
 import StressAssessmentApp from "../components/ui/healthtool/StressAssessmentApp";
 import DiabetesRiskCalculator from "../components/ui/healthtool/DiabetesRiskCalculator";
 import SleepQualityAssessment from "../components/ui/healthtool/SleepQualityAssessment";
+import HealthProfileSetup from "../pages/user/HealthProfileSetup";
+import Doctor from "../components/layout/doctor/Doctor";
+import BookingManager from "../components/layout/doctor/BookingManager";
+import ServicesManager from "../components/layout/doctor/ServicesManager";
+import TimeSlot from "../components/ui/doctor/WorkingHour";
+import WorkingHour from "../components/ui/doctor/WorkingHour";
 
 const Home = lazy(() => import("../pages/user/Home"));
 const Auth = lazy(() => import("../pages/auth/Auth"));
@@ -57,9 +63,7 @@ const router = createBrowserRouter([
     path: "/book-examination",
     element: (
       <Suspense fallback={<Loading />}>
-        <ProtectedRoute>
-          <BookExamination />
-        </ProtectedRoute>
+        <BookExamination />
       </Suspense>
     ),
     errorElement: <ErrorPage />,
@@ -68,9 +72,7 @@ const router = createBrowserRouter([
     path: "/book-examination/info",
     element: (
       <Suspense fallback={<Loading />}>
-        <ProtectedRoute>
-          <BookExaminationDetail />
-        </ProtectedRoute>
+        <BookExaminationDetail />
       </Suspense>
     ),
     errorElement: <ErrorPage />,
@@ -79,9 +81,7 @@ const router = createBrowserRouter([
     path: "/book-examination/confirm",
     element: (
       <Suspense fallback={<Loading />}>
-        <ProtectedRoute>
-          <AppointmentBookingForm />
-        </ProtectedRoute>
+        <AppointmentBookingForm />
       </Suspense>
     ),
     errorElement: <ErrorPage />,
@@ -281,6 +281,15 @@ const router = createBrowserRouter([
     errorElement: <ErrorPage />,
   },
   {
+    path: "health_setup",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <HealthProfileSetup />
+      </Suspense>
+    ),
+    errorElement: <ErrorPage />,
+  },
+  {
     path: "/auth",
     element: (
       <Suspense fallback={<Loading />}>
@@ -337,6 +346,50 @@ const router = createBrowserRouter([
             <ConfirmCodeForm />
           </Suspense>
         ),
+        errorElement: <ErrorPage />,
+      },
+    ],
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "doctor",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <Doctor />
+      </Suspense>
+    ),
+    children: [
+      {
+        path: "booking",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <BookingManager />
+          </Suspense>
+        ),
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "services",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <ServicesManager />
+          </Suspense>
+        ),
+        children: [
+          {
+            index: true,
+            element: <Navigate to="time-slot" replace />,
+          },
+          {
+            path: "working-hour",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <WorkingHour />
+              </Suspense>
+            ),
+            errorElement: <ErrorPage />,
+          },
+        ],
         errorElement: <ErrorPage />,
       },
     ],

@@ -27,85 +27,85 @@ import {
 } from "../../../services/article.service";
 import { Link } from "react-router-dom";
 
-// Skeleton Loading Component
+// Responsive Skeleton Loading Component
 const ArticlesSkeleton = () => {
   return (
-    <section className="py-10 bg-gradient-to-br from-gray-50 via-white to-gray-100 min-h-screen">
-      <div className="container mx-auto px-6">
+    <section className="py-6 md:py-10 bg-gradient-to-br from-gray-50 via-white to-gray-100 min-h-screen">
+      <div className="container mx-auto px-4 md:px-6">
         {/* Tab Skeleton */}
-        <div className="py-2">
+        <div className="py-2 mb-4">
           <div className="w-fit flex bg-gray-100 rounded-xl p-1">
             {[1, 2, 3].map((index) => (
               <div
                 key={index}
-                className="flex items-center space-x-2 px-4 py-2 rounded-lg"
+                className="flex items-center space-x-2 px-3 md:px-4 py-2 rounded-lg"
               >
                 <div className="w-4 h-4 bg-gray-300 rounded animate-pulse"></div>
-                <div className="w-16 h-4 bg-gray-300 rounded animate-pulse hidden sm:block"></div>
+                <div className="w-12 md:w-16 h-4 bg-gray-300 rounded animate-pulse hidden sm:block"></div>
               </div>
             ))}
           </div>
         </div>
 
         {/* Main Content Skeleton */}
-        <div className="w-full flex gap-5 rounded-md">
+        <div className="w-full flex flex-col lg:flex-row gap-4 md:gap-5">
           {/* Main Article Skeleton */}
-          <article className="w-7/12 flex flex-col">
+          <article className="w-full lg:w-7/12 flex flex-col">
             <div className="w-full">
               <div className="w-full rounded-md aspect-[16/9] bg-gray-300 animate-pulse"></div>
             </div>
-            <div className="w-full flex flex-col">
+            <div className="w-full flex flex-col mt-3 md:mt-4">
               <div className="w-full flex flex-col">
                 {/* Topic Skeleton */}
-                <div className="py-2">
-                  <div className="w-20 h-4 bg-gray-300 rounded animate-pulse"></div>
+                <div className="py-1 md:py-2">
+                  <div className="w-16 md:w-20 h-3 md:h-4 bg-gray-300 rounded animate-pulse"></div>
                 </div>
                 {/* Title Skeleton */}
-                <div className="py-2 space-y-2">
-                  <div className="w-full h-6 bg-gray-300 rounded animate-pulse"></div>
-                  <div className="w-4/5 h-6 bg-gray-300 rounded animate-pulse"></div>
+                <div className="py-1 md:py-2 space-y-2">
+                  <div className="w-full h-5 md:h-6 bg-gray-300 rounded animate-pulse"></div>
+                  <div className="w-4/5 h-5 md:h-6 bg-gray-300 rounded animate-pulse"></div>
                 </div>
                 {/* Summary Skeleton */}
-                <div className="space-y-2">
-                  <div className="w-full h-4 bg-gray-300 rounded animate-pulse"></div>
-                  <div className="w-full h-4 bg-gray-300 rounded animate-pulse"></div>
-                  <div className="w-3/4 h-4 bg-gray-300 rounded animate-pulse"></div>
+                <div className="space-y-2 mt-2">
+                  <div className="w-full h-3 md:h-4 bg-gray-300 rounded animate-pulse"></div>
+                  <div className="w-full h-3 md:h-4 bg-gray-300 rounded animate-pulse"></div>
+                  <div className="w-3/4 h-3 md:h-4 bg-gray-300 rounded animate-pulse"></div>
                 </div>
               </div>
               {/* Author Skeleton */}
-              <div className="w-full flex items-center py-4">
+              <div className="w-full flex items-center py-3 md:py-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 bg-gray-300 rounded-sm animate-pulse"></div>
-                  <div className="w-12 h-4 bg-gray-300 rounded animate-pulse"></div>
-                  <div className="w-24 h-4 bg-gray-300 rounded animate-pulse"></div>
+                  <div className="w-5 md:w-6 h-5 md:h-6 bg-gray-300 rounded-sm animate-pulse"></div>
+                  <div className="w-10 md:w-12 h-3 md:h-4 bg-gray-300 rounded animate-pulse"></div>
+                  <div className="w-20 md:w-24 h-3 md:h-4 bg-gray-300 rounded animate-pulse"></div>
                 </div>
               </div>
             </div>
           </article>
 
           {/* Side Articles Skeleton */}
-          <div className="w-5/12 flex flex-col gap-2">
+          <div className="w-full lg:w-5/12 flex flex-col gap-2 md:gap-3">
             {[1, 2, 3, 4, 5, 6].map((index) => (
               <article
                 key={index}
-                className="w-full flex gap-2 p-2 rounded-md shadow"
+                className="w-full flex gap-3 p-3 rounded-md shadow bg-white"
               >
-                <div className="w-40 aspect-[16/9] bg-gray-300 rounded-md animate-pulse"></div>
-                <div className="flex flex-col flex-1">
+                <div className="w-24 sm:w-32 md:w-40 aspect-[16/9] bg-gray-300 rounded-md animate-pulse flex-shrink-0"></div>
+                <div className="flex flex-col flex-1 min-w-0">
                   {/* Topic Skeleton */}
-                  <div className="w-16 h-3 bg-gray-300 rounded animate-pulse mb-1"></div>
+                  <div className="w-12 md:w-16 h-3 bg-gray-300 rounded animate-pulse mb-1"></div>
                   {/* Title Skeleton */}
                   <div className="space-y-1 py-1">
-                    <div className="w-full h-4 bg-gray-300 rounded animate-pulse"></div>
-                    <div className="w-4/5 h-4 bg-gray-300 rounded animate-pulse"></div>
+                    <div className="w-full h-3 md:h-4 bg-gray-300 rounded animate-pulse"></div>
+                    <div className="w-4/5 h-3 md:h-4 bg-gray-300 rounded animate-pulse"></div>
                   </div>
                   {/* Summary Skeleton */}
-                  <div className="w-full h-3 bg-gray-300 rounded animate-pulse mt-1"></div>
+                  <div className="w-full h-2 md:h-3 bg-gray-300 rounded animate-pulse mt-1 hidden sm:block"></div>
                   {/* Author Skeleton */}
-                  <div className="flex items-center gap-2 pt-2">
-                    <div className="w-5 h-5 bg-gray-300 rounded-sm animate-pulse"></div>
-                    <div className="w-10 h-3 bg-gray-300 rounded animate-pulse"></div>
-                    <div className="w-16 h-3 bg-gray-300 rounded animate-pulse"></div>
+                  <div className="flex items-center gap-1 md:gap-2 pt-2 mt-auto">
+                    <div className="w-4 md:w-5 h-4 md:h-5 bg-gray-300 rounded-sm animate-pulse"></div>
+                    <div className="w-8 md:w-10 h-2 md:h-3 bg-gray-300 rounded animate-pulse"></div>
+                    <div className="w-12 md:w-16 h-2 md:h-3 bg-gray-300 rounded animate-pulse"></div>
                   </div>
                 </div>
               </article>
@@ -131,11 +131,11 @@ const ArticlesSection = () => {
   // Xử lý khi thay đổi tab
   useEffect(() => {
     if (activeTab === "featured") {
-      dispatch(fetchFeaturedArticles({ limit: 6 }));
+      dispatch(fetchFeaturedArticles({ limit: 7 }));
     } else if (activeTab === "latest") {
-      dispatch(fetchLatestArticles({ limit: 6 }));
+      dispatch(fetchLatestArticles({ limit: 7 }));
     } else if (activeTab === "popular") {
-      dispatch(fetchMostViewedArticles({ limit: 6 }));
+      dispatch(fetchMostViewedArticles({ limit: 7 }));
     }
   }, [activeTab, dispatch]);
 
@@ -153,12 +153,13 @@ const ArticlesSection = () => {
   if (loading) {
     return <ArticlesSkeleton />;
   }
-  console.log({ mainArticle });
+
   return (
-    <section className="py-10 bg-gradient-to-br from-gray-50 via-white to-gray-100 ">
-      <div className="max-w-7xl mx-auto px-6 ">
-        <div className="py-2">
-          <div className="w-fit flex bg-gray-100 rounded-xl p-1">
+    <section className="py-6 md:py-10 bg-gradient-to-br from-gray-50 via-white to-gray-100">
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
+        {/* Responsive Tab Navigation */}
+        <div className="py-2 mb-4 md:mb-6">
+          <div className="w-fit flex bg-gray-100 rounded-xl p-1 mx-auto sm:mx-0">
             {[
               { key: "featured", label: "Nổi Bật", icon: Star },
               { key: "popular", label: "Phổ Biến", icon: TrendingUp },
@@ -167,63 +168,81 @@ const ArticlesSection = () => {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                className={`flex items-center justify-center space-x-1 md:space-x-2 px-3 md:px-4 py-2 rounded-lg font-medium transition-all text-sm md:text-base ${
                   activeTab === tab.key
                     ? "bg-white text-teal-600 shadow-sm"
                     : "text-gray-600 hover:text-teal-600"
                 }`}
               >
-                <tab.icon className="w-4 h-4" />
-                <span className="hidden sm:inline">{tab.label}</span>
+                <tab.icon className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="hidden xs:inline md:inline">{tab.label}</span>
               </button>
             ))}
           </div>
         </div>
 
-        {/* Hiển thị thông báo khi không có dữ liệu */}
-        <div className="w-full flex justify-center ">
+        {/* Content Section */}
+        <div className="w-full flex justify-center">
           {(!articlesAttribute || articlesAttribute.length === 0) && (
-            <div className="text-center py-8">
-              <p className="text-gray-500">
+            <div className="text-center py-8 md:py-12">
+              <BookOpen className="w-12 h-12 md:w-16 md:h-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500 text-sm md:text-base">
                 Không có bài viết nào để hiển thị.
               </p>
             </div>
           )}
-          {/* Hiển thị nội dung khi có dữ liệu */}
+
+          {/* Articles Content */}
           {articlesAttribute && articlesAttribute.length > 0 && (
-            <div className="w-full flex lg:flex-row md:flex-col sm:flex-col gap-5 rounded-md flex-col">
+            <div className="w-full  flex flex-col lg:flex-row gap-4 md:gap-6">
+              {/* Main Article */}
               <Link
                 to={`/article?slug=${mainArticle?.slug}&title=${mainArticle?.title}&id=${mainArticle?._id}`}
-                className="w-7/12 md:w-full sm:w-full  h-fit flex flex-col  rounded-md p-3"
+                className="w-full lg:w-7/12 h-fit flex flex-col bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group"
               >
-                <div className="w-full">
+                <div className="relative overflow-hidden">
                   <img
-                    className="w-full rounded-md aspect-[16/9]"
+                    className="w-full aspect-[16/9] object-cover group-hover:scale-105 transition-transform duration-300"
                     src={mainArticle?.thumbnail?.url}
                     alt={mainArticle?.title || ""}
+                    loading="lazy"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </div>
-                <div className="w-full flex flex-col py-2">
-                  <div className="w-full flex flex-col">
-                    <div className="text-vivanta-500 py-1">
+
+                <div className="p-4 md:p-6 h-fit flex flex-col ">
+                  <div className="">
+                    {/* Topic Badge */}
+                    <div className="mb-2 md:mb-3">
                       {mainArticle?.topics?.map((topic) => (
-                        <span key={topic._id}>{topic.name}</span>
+                        <span
+                          key={topic._id}
+                          className="inline-block px-2 md:px-3 py-1 bg-teal-100 text-teal-700 text-xs md:text-sm font-medium rounded-full"
+                        >
+                          {topic.name}
+                        </span>
                       ))}
                     </div>
-                    <h1 className="font-bold text-2xl py-2 line-clamp-2">
+
+                    {/* Title */}
+                    <h1 className="font-bold text-lg md:text-xl lg:text-2xl text-gray-900 line-clamp-2 md:line-clamp-3 mb-2 md:mb-3 group-hover:text-teal-600 transition-colors">
                       {mainArticle?.title}
                     </h1>
-                    <p className="text-md text-dark-400 line-clamp-3">
+
+                    {/* Summary */}
+                    <p className="text-sm md:text-base text-gray-600 line-clamp-2 md:line-clamp-3 leading-relaxed">
                       {mainArticle?.summary}
                     </p>
                   </div>
-                  <div className="w-full flex items-center pt-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 flex items-center justify-center bg-vivanta-cyan-400 text-light-50 rounded-sm">
-                        <i className="fa-solid fa-user-doctor"></i>
+
+                  {/* Author */}
+                  <div className="flex items-center mt-4 pt-4 border-t border-gray-100">
+                    <div className="flex items-center gap-2 text-xs md:text-sm text-gray-500">
+                      <div className="w-5 h-5 md:w-6 md:h-6 flex items-center justify-center bg-teal-500 text-white rounded-sm">
+                        <i className="fa-solid fa-user-doctor text-xs"></i>
                       </div>
-                      Tác giả:
-                      <span className="font-bold">
+                      <span>Tác giả:</span>
+                      <span className="font-semibold text-gray-700">
                         {mainArticle?.author?.fullName}
                       </span>
                     </div>
@@ -231,40 +250,62 @@ const ArticlesSection = () => {
                 </div>
               </Link>
 
-              <div className="w-5/12 md:w-full sm:w-full  flex flex-col  justify-between">
-                {sideArticles.map((article) => (
+              {/* Side Articles */}
+              <div className="w-full lg:w-5/12 flex flex-col gap-3 md:gap-4">
+                {sideArticles.map((article, index) => (
                   <Link
-                    to={`/article?slug=${article?.slug}&id=${article?._id}&tilte=${article?.title}`}
+                    to={`/article?slug=${article?.slug}&id=${article?._id}&title=${article?.title}`}
                     key={article._id}
-                    className="w-full flex gap-2 p-2  cursor-pointer   border-b-1 border-dark-800 transition-all duration-300"
+                    className={`w-full flex gap-3 md:gap-4 p-3 md:p-4 bg-white rounded-lg hover:shadow-md transition-all duration-300 group ${
+                      index !== sideArticles.length - 1
+                        ? "border-b border-gray-100 lg:border-b-0"
+                        : ""
+                    }`}
                   >
-                    <div className="flex flex-col">
-                      <div className="text-vivanta-500">
+                    <div className="flex flex-col flex-1 min-w-0">
+                      {/* Topic */}
+                      <div className="mb-1 md:mb-2">
                         {article?.topics?.map((topic) => (
-                          <span key={topic._id}>{topic?.name}</span>
+                          <span
+                            key={topic._id}
+                            className="inline-block px-2 py-0.5 bg-teal-50 text-teal-600 text-xs font-medium rounded"
+                          >
+                            {topic?.name}
+                          </span>
                         ))}
                       </div>
-                      <h1 className="font-bold text-lg line-clamp-2 py-1 min-h-12">
+
+                      {/* Title */}
+                      <h2 className="font-bold text-sm md:text-base lg:text-lg text-gray-900 line-clamp-2 mb-1 md:mb-2 group-hover:text-teal-600 transition-colors leading-tight">
                         {article?.title}
-                      </h1>
-                      <p className="line-clamp-1 text-xs text-dark-500 mt-1">
+                      </h2>
+
+                      {/* Summary - Hidden on small screens */}
+                      <p className=" truncate line-clamp-2 text-xs md:text-sm text-gray-500 mb-2 hidden sm:block">
                         {article?.summary}
                       </p>
-                      <div className="flex items-center gap-2 text-xs pt-2">
-                        <div className="w-4 h-4 flex items-center justify-center bg-vivanta-cyan-400 text-light-50 rounded-sm text-[0.8rem]">
-                          <i className="fa-solid fa-user-doctor text-xs"></i>
+
+                      {/* Author */}
+                      <div className="flex items-center gap-1 md:gap-2 text-xs text-gray-400 mt-auto">
+                        <div className="w-3 h-3 md:w-4 md:h-4 flex items-center justify-center bg-teal-400 text-white rounded-sm">
+                          <i className="fa-solid fa-user-doctor text-[8px] md:text-xs"></i>
                         </div>
-                        <span className="text-xs"> Tác giả:</span>
-                        <span className="font-bold">
+                        <span>Tác giả:</span>
+                        <span className="font-semibold text-gray-600 truncate">
                           {article?.author?.fullName}
                         </span>
                       </div>
                     </div>
-                    <img
-                      className="w-40 aspect-[16/9] object-cover rounded-md"
-                      src={article?.thumbnail?.url}
-                      alt={article?.title || ""}
-                    />
+
+                    {/* Thumbnail */}
+                    <div className="w-20 sm:w-24 md:w-28 lg:w-32 aspect-[16/9] flex-shrink-0">
+                      <img
+                        className="w-full h-full object-cover rounded-md group-hover:scale-105 transition-transform duration-300"
+                        src={article?.thumbnail?.url}
+                        alt={article?.title || ""}
+                        loading="lazy"
+                      />
+                    </div>
                   </Link>
                 ))}
               </div>

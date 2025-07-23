@@ -87,7 +87,7 @@ const WelcomeScreen = memo(({ userName, onTopicSelect }) => {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 py-8">
+    <div className="w-full max-w-4xl  mx-auto px-4 py-8">
       {/* Header */}
       <div className="flex flex-col items-center text-center mb-8">
         <div className="flex items-center mb-4">

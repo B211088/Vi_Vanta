@@ -4,15 +4,21 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Header from "../Header";
 import Footer from "../../../pages/user/Footer";
-import { fetchDoctorById } from "../../../services/doctor.service";
+
 import { useNotify } from "../../../hook/useNotify";
+import { ArrowRight, Lock, User } from "lucide-react";
+import RequireLogin from "../../modals/examination/RequireLogin";
+import { fetchDoctorById } from "../../../services/booking.service";
 
 const BookExaminationDetail = () => {
   const location = useLocation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { notifyWarning } = useNotify();
-  const { loading, error, doctor } = useSelector((state) => state.doctor);
+  const { loading, error, doctor, workingHour } = useSelector(
+    (state) => state.booking
+  );
+  const { user } = useSelector((state) => state.auth);
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const [selectedTab, setSelectedTab] = useState("info");
@@ -20,16 +26,37 @@ const BookExaminationDetail = () => {
   const [totalPrices, setTotalPrices] = useState(0);
   const [currentMonth, setCurrentMonth] = useState(new Date(2025, 6)); // Tháng 7/2025
   const [selectedTimeSlot, setSelectedTimeSlot] = useState("morning");
+  const [showRequireLogin, setShowRequireLogin] = useState(false);
+  const [timeSlots, setTimeSlots] = useState([]);
+  console.log({ workingHour });
 
-  console.log({ selectedDate, selectedServices, selectedTime });
   // Tách query string
   const searchParams = new URLSearchParams(location.search);
   const id = searchParams.get("id");
+
+  const getDayOfWeekNumber = (dateString) => {
+    const date = new Date(dateString);
+    const dayNumber = date.getDay(); // 0: Chủ nhật, 1: Thứ 2, ..., 6: Thứ 7
+    return dayNumber;
+  };
+
+  useEffect(() => {
+    const timeSlot = getTimeSlotsByDay(getDayOfWeekNumber(selectedDate));
+
+    setTimeSlots(timeSlot);
+  }, [selectedDate]);
 
   const isSelected = (service) => {
     selectedServices.some((s) => s.name === service.name);
   };
 
+  const getTimeSlotsByDay = (targetDayOfWeek) => {
+    const dayItem = workingHour.find(
+      (item) => item.dayOfWeek === targetDayOfWeek
+    );
+    return dayItem ? dayItem.timeSlots : [];
+  };
+  console.log({ selectedDate });
   const toggleService = (service) => {
     setSelectedServices((prev) => {
       const isAlreadySelected = prev.some((s) => s.name === service.name);
@@ -49,6 +76,7 @@ const BookExaminationDetail = () => {
     });
   };
 
+  console.log({ timeSlots });
   const handleBooking = () => {
     if (selectedServices.length === 0) {
       notifyWarning("Hãy chọn dịch vụ!");
@@ -76,8 +104,10 @@ const BookExaminationDetail = () => {
       return;
     }
 
-    console.log(selectedServices);
-
+    if (!user) {
+      setShowRequireLogin(true);
+      return;
+    }
     navigate("/book-examination/confirm", {
       state: {
         selectedServices,
@@ -93,50 +123,9 @@ const BookExaminationDetail = () => {
     dispatch(fetchDoctorById(id));
   }, [id]);
 
-  // Mock data for calendar
-  const timeSlots = {
-    morning: [
-      "08:00 - 08:15",
-      "08:15 - 08:30",
-      "08:30 - 08:45",
-      "08:45 - 09:00",
-      "09:00 - 09:15",
-      "09:15 - 09:30",
-      "09:30 - 09:45",
-      "09:45 - 10:00",
-      "10:00 - 10:15",
-      "10:15 - 10:30",
-      "10:30 - 10:45",
-      "10:45 - 11:00",
-    ],
-    afternoon: [
-      "14:00 - 14:15",
-      "14:15 - 14:30",
-      "14:30 - 14:45",
-      "14:45 - 15:00",
-      "15:00 - 15:15",
-      "15:15 - 15:30",
-      "15:30 - 15:45",
-      "15:45 - 16:00",
-      "16:00 - 16:15",
-      "16:15 - 16:30",
-      "16:30 - 16:45",
-      "16:45 - 17:00",
-    ],
-  };
-
   const formatPrice = (price) => {
     return new Intl.NumberFormat("vi-VN").format(price);
   };
-
-  //   if (loading)
-  //     return (
-  //       <div className="min-h-screen bg-gray-50 font-nunito">Loading...</div>
-  //     );
-  //   if (error)
-  //     return (
-  //       <div className="min-h-screen bg-gray-50 font-nunito">Error: {error}</div>
-  //     );
 
   // Thêm các helper functions
   const getMonthName = (month) => {
@@ -189,11 +178,12 @@ const BookExaminationDetail = () => {
       currentMonth.getMonth(),
       day
     );
+    setSelectedTime(null);
     setSelectedDate(fullDate);
   };
 
   const handleTimeSelect = (time) => {
-    const fullTime = `${time}`;
+    const fullTime = `${time.startTime} - ${time.endTime}`;
     setSelectedTime(fullTime);
   };
 
@@ -262,6 +252,9 @@ const BookExaminationDetail = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 font-nunito">
+      {showRequireLogin && (
+        <RequireLogin closeModal={() => setShowRequireLogin(false)} />
+      )}
       <Header />{" "}
       <div className="container mx-auto py-3 px-4 mt-2">
         <div className="flex items-center gap-2 border-r-1 border-dark-700 pr-2">
@@ -285,7 +278,7 @@ const BookExaminationDetail = () => {
                   <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
                     <img
                       className="object-cover aspect-square h-full w-full"
-                      src={doctor.userId.avatar.url}
+                      src={doctor?.userId?.avatar.url}
                       alt=""
                     />
                   </div>
@@ -605,81 +598,81 @@ const BookExaminationDetail = () => {
                 </div>
 
                 {/* Time Selection - Improved */}
-                <div className="mb-6">
+                {selectedDate ? (
+                  timeSlots.length > 0 ? (
+                    <div className="mb-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="font-semibold text-gray-800 flex items-center gap-2">
+                          <i className="fa-solid fa-clock text-green-500"></i>
+                          Chọn giờ khám
+                        </h4>
+                      </div>
+
+                      {/* Time Grid */}
+                      <div className="grid grid-cols-2 gap-2">
+                        {timeSlots.map((time, index) => {
+                          const isUnavailable = unavailableTimes.includes(time);
+                          const isSelected =
+                            selectedTime ===
+                            `${time.startTime} - ${time.endTime}`;
+
+                          return (
+                            <button
+                              key={index}
+                              onClick={() =>
+                                !isUnavailable && handleTimeSelect(time)
+                              }
+                              disabled={isUnavailable}
+                              className={`p-3 text-sm rounded-lg border text-center transition-all duration-200 
+                ${
+                  isUnavailable
+                    ? "bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed"
+                    : isSelected
+                    ? "bg-blue-500 text-white border-blue-500 shadow-md"
+                    : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300"
+                }
+              `}
+                            >
+                              {time.startTime} - {time.endTime}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Selected Time Display */}
+                      {selectedTime && (
+                        <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                          <div className="flex items-center gap-2">
+                            <i className="fa-solid fa-clock text-green-600"></i>
+                            <span className="text-sm text-green-800 font-medium">
+                              Giờ đã chọn: {selectedTime}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="font-semibold text-gray-800 flex items-center gap-2">
+                        <i className="fa-solid fa-clock text-green-500"></i>
+                        Chọn giờ khám
+                      </h4>
+                      <div className="text-red-600 p-3 text-sm">
+                        Ngày này không làm việc
+                      </div>
+                    </div>
+                  )
+                ) : (
                   <div className="flex items-center justify-between mb-4">
                     <h4 className="font-semibold text-gray-800 flex items-center gap-2">
                       <i className="fa-solid fa-clock text-green-500"></i>
                       Chọn giờ khám
                     </h4>
-                  </div>
-
-                  {/* Time Slot Selection */}
-                  <div className="flex gap-2 mb-4">
-                    <button
-                      onClick={() => setSelectedTimeSlot("morning")}
-                      className={`flex-1 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                        selectedTimeSlot === "morning"
-                          ? "bg-blue-500 text-white shadow-md"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
-                    >
-                      <i className="fa-solid fa-sun mr-2"></i>
-                      Sáng ({timeSlots.morning.length})
-                    </button>
-                    <button
-                      onClick={() => setSelectedTimeSlot("afternoon")}
-                      className={`flex-1 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                        selectedTimeSlot === "afternoon"
-                          ? "bg-blue-500 text-white shadow-md"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
-                    >
-                      <i className="fa-solid fa-sun mr-2"></i>
-                      Chiều ({timeSlots.afternoon.length})
-                    </button>
-                  </div>
-
-                  {/* Time Grid */}
-                  <div className="grid grid-cols-2 gap-2">
-                    {timeSlots[selectedTimeSlot].map((time, index) => {
-                      const isUnavailable = unavailableTimes.includes(time);
-                      const isSelected = selectedTime === time;
-
-                      return (
-                        <button
-                          key={index}
-                          onClick={() =>
-                            !isUnavailable && handleTimeSelect(time)
-                          }
-                          disabled={isUnavailable}
-                          className={`p-3 text-sm rounded-lg border text-center transition-all duration-200 
-          ${
-            isUnavailable
-              ? "bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed"
-              : isSelected
-              ? "bg-blue-500 text-white border-blue-500 shadow-md"
-              : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300"
-          }
-        `}
-                        >
-                          {time}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Selected Time Display */}
-                  {selectedTime && (
-                    <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
-                      <div className="flex items-center gap-2">
-                        <i className="fa-solid fa-clock text-green-600"></i>
-                        <span className="text-sm text-green-800 font-medium">
-                          Giờ đã chọn: {selectedTime}
-                        </span>
-                      </div>
+                    <div className="text-red-600 p-3 text-sm">
+                      Chọn ngày khám
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
 
                 {/* Price and Book Button */}
                 <div className="mb-4">

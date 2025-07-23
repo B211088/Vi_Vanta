@@ -1,10 +1,11 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import Loading from "../pages/Loading";
+import HealthProfileSetup from "../pages/user/HealthProfileSetup";
 
 const AuthRoute = ({ children }) => {
   const location = useLocation();
-  const { isAuthenticated, loading } = useSelector((state) => state.auth);
+  const { isAuthenticated, loading, user } = useSelector((state) => state.auth);
   const from = location.state?.from?.pathname || "/";
 
   if (loading) {
