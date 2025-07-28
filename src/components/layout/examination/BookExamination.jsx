@@ -17,7 +17,7 @@ const BookExamination = () => {
     dispatch(fetchDoctors({ page: 1, limit: 12 }));
   }, []);
 
-  if (loading) {
+  if (loading.fetch) {
     return (
       <div className="">
         <Loading />

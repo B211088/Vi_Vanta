@@ -46,7 +46,7 @@ const AllTools = () => {
     return matchesSearch && matchesCategory;
   });
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container max-w-8xl min-h-screen mx-auto px-4 py-8">
       {/* Search and Filter */}
       <div className="mb-8">
         <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -116,37 +116,6 @@ const AllTools = () => {
           </p>
         </div>
       )}
-
-      {/* Health Tips */}
-      <div className="mt-12 bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-xl font-semibold text-gray-800 mb-4">
-          Lời khuyên sức khỏe
-        </h3>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="p-4 bg-blue-50 rounded-lg">
-            <h4 className="font-semibold text-blue-800 mb-2">
-              Duy trì cân nặng lý tưởng
-            </h4>
-            <p className="text-blue-700 text-sm">
-              Thường xuyên kiểm tra BMI và duy trì chế độ ăn uống cân bằng.
-            </p>
-          </div>
-          <div className="p-4 bg-green-50 rounded-lg">
-            <h4 className="font-semibold text-green-800 mb-2">
-              Tập thể dục đều đặn
-            </h4>
-            <p className="text-green-700 text-sm">
-              Ít nhất 150 phút hoạt động vừa phải mỗi tuần.
-            </p>
-          </div>
-          <div className="p-4 bg-purple-50 rounded-lg">
-            <h4 className="font-semibold text-purple-800 mb-2">Ngủ đủ giấc</h4>
-            <p className="text-purple-700 text-sm">
-              Người lớn nên ngủ 7-9 tiếng mỗi đêm.
-            </p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

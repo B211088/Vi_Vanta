@@ -32,6 +32,13 @@ import BookingManager from "../components/layout/doctor/BookingManager";
 import ServicesManager from "../components/layout/doctor/ServicesManager";
 import TimeSlot from "../components/ui/doctor/WorkingHour";
 import WorkingHour from "../components/ui/doctor/WorkingHour";
+import Appointment from "../pages/user/Appointment";
+
+import AppointmentPayment from "../components/layout/examination/AppointmentPayment";
+import PaymentReturn from "../components/layout/examination/PaymentReturn";
+import BookingServices from "../components/ui/doctor/BookingServices";
+import BookingSuccess from "../components/layout/examination/BookingSuccess";
+import DoctorProtectedRoute from "./DoctorProtectedRoute";
 
 const Home = lazy(() => import("../pages/user/Home"));
 const Auth = lazy(() => import("../pages/auth/Auth"));
@@ -82,6 +89,33 @@ const router = createBrowserRouter([
     element: (
       <Suspense fallback={<Loading />}>
         <AppointmentBookingForm />
+      </Suspense>
+    ),
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/appointment-payment",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <AppointmentPayment />
+      </Suspense>
+    ),
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/booking-appointment-success",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <BookingSuccess />
+      </Suspense>
+    ),
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/payment/vnpay-return",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <PaymentReturn />
       </Suspense>
     ),
     errorElement: <ErrorPage />,
@@ -277,6 +311,15 @@ const router = createBrowserRouter([
         ),
         errorElement: <ErrorPage />,
       },
+      {
+        path: "appointment",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <Appointment />
+          </Suspense>
+        ),
+        errorElement: <ErrorPage />,
+      },
     ],
     errorElement: <ErrorPage />,
   },
@@ -363,7 +406,9 @@ const router = createBrowserRouter([
         path: "booking",
         element: (
           <Suspense fallback={<Loading />}>
-            <BookingManager />
+            <DoctorProtectedRoute>
+              <BookingManager />
+            </DoctorProtectedRoute>
           </Suspense>
         ),
         errorElement: <ErrorPage />,
@@ -372,7 +417,9 @@ const router = createBrowserRouter([
         path: "services",
         element: (
           <Suspense fallback={<Loading />}>
-            <ServicesManager />
+            <DoctorProtectedRoute>
+              <ServicesManager />
+            </DoctorProtectedRoute>
           </Suspense>
         ),
         children: [
@@ -384,7 +431,20 @@ const router = createBrowserRouter([
             path: "working-hour",
             element: (
               <Suspense fallback={<Loading />}>
-                <WorkingHour />
+                <DoctorProtectedRoute>
+                  <WorkingHour />
+                </DoctorProtectedRoute>
+              </Suspense>
+            ),
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "booking-services",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <DoctorProtectedRoute>
+                  <BookingServices />
+                </DoctorProtectedRoute>
               </Suspense>
             ),
             errorElement: <ErrorPage />,

@@ -10,8 +10,25 @@ const User = () => {
   const { isDarkMode } = useTheme();
   const [openMenus, setOpenMenus] = useState({
     account: true,
-    social: true, // thêm các menu khác nếu cần
+    doctor: true,
   });
+
+  // Kiểm tra xem user có role doctor hay không
+  const hasRole = (roleName) => {
+    return user?.roles?.some(
+      (role) => role === roleName || role.name === roleName
+    );
+  };
+
+  // Lọc menu dựa trên role của user
+  const getVisibleMenus = () => {
+    return menus.filter((menu) => {
+      if (menu.id === "doctor") {
+        return hasRole("doctor");
+      }
+      return true; // Hiển thị các menu khác
+    });
+  };
 
   const toggleMenu = (menuName) => {
     setOpenMenus((prev) => ({
@@ -27,6 +44,8 @@ const User = () => {
       console.error(error);
     }
   };
+
+  const visibleMenus = getVisibleMenus();
 
   return (
     <div className="flex items-center gap-[15px] font-nunito">
@@ -89,7 +108,7 @@ const User = () => {
             </div>
           </div>
           <div className="w-full flex flex-col">
-            {menus.map((option) => (
+            {visibleMenus.map((option) => (
               <div
                 key={option.id}
                 className="w-full flex flex-col text-teal-500"
@@ -162,6 +181,11 @@ const menus = [
         path: "/account/health_info",
         name: "Thông tin sức khỏe",
       },
+      {
+        id: 3,
+        path: "/account/appointment",
+        name: "Đặt khám",
+      },
     ],
   },
   {
@@ -169,11 +193,6 @@ const menus = [
     title: "Thông tin bác sĩ",
     icon: "fa-solid fa-users",
     item: [
-      {
-        id: 1,
-        name: "Thông tin bác sĩ",
-        path: "/doctor/info",
-      },
       {
         id: 2,
         name: "Đặt khám",

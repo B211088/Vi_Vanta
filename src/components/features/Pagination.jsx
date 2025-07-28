@@ -32,6 +32,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
       );
     }
   }
+
   return (
     <div className="flex justify-center items-center gap-2 ">
       <button

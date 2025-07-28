@@ -53,4 +53,9 @@ const nav = [
     path: "/account/health_info",
     name: "Thông tin sức khỏe",
   },
+  {
+    id: 3,
+    path: "/account/appointment",
+    name: "Đặt khám",
+  },
 ];

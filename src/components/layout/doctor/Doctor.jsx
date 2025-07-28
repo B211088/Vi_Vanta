@@ -4,12 +4,17 @@ import { useTheme } from "../../../hook/useTheme";
 import { useState } from "react";
 import { useLocation, Link, Outlet } from "react-router-dom";
 import { CalendarArrowUp, ClipboardPlus, Clock } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { fetchDoctorByUserId } from "../../../services/doctor.service";
 
 const Doctor = () => {
   const { isDarkMode } = useTheme();
   const location = useLocation();
+  const dispatch = useDispatch();
   const [openDropdowns, setOpenDropdowns] = useState({});
-
+  const { doctor } = useSelector((state) => state.doctor);
+  const { user } = useSelector((state) => state.auth);
   const toggleDropdown = (navId) => {
     setOpenDropdowns((prev) => {
       const isCurrentlyOpen = prev[navId];
@@ -21,6 +26,12 @@ const Doctor = () => {
       return { [navId]: false };
     });
   };
+  useEffect(() => {
+    if (user) {
+      dispatch(fetchDoctorByUserId());
+    }
+  }, []);
+  console.log({ doctor });
   return (
     <div className="min-h-screen bg-gray-50 font-nunito">
       <Header />
@@ -28,19 +39,32 @@ const Doctor = () => {
         style={{ height: "calc(100vh - 63px)" }}
         className="w-full  flex gap-3 "
       >
-        <div className="min-w-[250px] w-2/12 max-w-[280px] pl-[20px] mt-[10px] ">
+        <div className="min-w-[250px] w-3/12 max-w-[320px] pl-[20px] mt-[10px] ">
           <div className="w-full flex flex-col gap-[10px] pr-[15px] pl-[5px]">
             <div
-              className={`w-full flex items-center justify-between transition-all duration-300 ease-in-out transform hover:scale-[1.01] hover:shadow-md  ${
-                location.pathname == ""
+              className={`w-full flex flex-col gap-2 border-1 border-dark-800  ${
+                location.pathname === ""
                   ? "bg-dark-800 font-bold text-dark-50"
                   : "text-gray-600"
-              } cursor-pointer border-[1px] border-dark-700 font-bold shadow-sm rounded-sm px-[10px] py-[12px]`}
+              } cursor-pointer  font-bold rounded-sm  p-2`}
             >
-              <Link className="flex-1 flex items-center gap-[5px]">
-                <i className="fa-solid fa-hexagon-nodes text-blue-500"></i>
-                <span className="text-sm">Vivanta AI</span>
-              </Link>
+              <div className="text-sm flex items-center gap-2 font-semibold text-primary-700">
+                <img
+                  src={doctor?.userId.avatar.url}
+                  className="w-10 h-10 rounded-full object-cover"
+                  alt=""
+                />
+                <span>{doctor?.name}</span>
+              </div>
+              {/* 
+              <div className="w-full px-1">
+                <h3 className="text-sm">Chuyên khoa</h3>
+                <div className="text-sm flex flex-wrap gap-1">
+                  <div className="p-1 border-1 w-fit border-dark-800 rounded-md">
+                    {doctor.specialty?.join(", ")}
+                  </div>
+                </div>
+              </div> */}
             </div>
 
             {nav.map((option) => (
@@ -122,7 +146,7 @@ const nav = [
   {
     id: "booking",
     path: "/doctor/booking",
-    name: "Đặt khám",
+    name: "Quản lý lịch hẹn",
     icon: CalendarArrowUp,
     items: [],
   },
@@ -136,6 +160,12 @@ const nav = [
         id: "working-hour",
         path: "working-hour",
         name: "Lịch làm việc",
+        icon: Clock,
+      },
+      {
+        id: "booking-services",
+        path: "booking-services",
+        name: "Dịch vụ",
         icon: Clock,
       },
     ],

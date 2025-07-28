@@ -59,10 +59,10 @@ const LoginForm = () => {
       return;
     }
 
-    if (!validatePassword(formData.password)) {
-      notifyWarning("Mật khẩu không đáp ứng yêu cầu");
-      return;
-    }
+    // if (!validatePassword(formData.password)) {
+    //   notifyWarning("Mật khẩu không đáp ứng yêu cầu");
+    //   return;
+    // }
 
     if (rememberMe) {
       localStorage.setItem("rememberEmail", formData.email);
@@ -72,13 +72,7 @@ const LoginForm = () => {
 
     try {
       const response = await dispatch(loginUser(formData));
-      console.log({ response });
-      if (response.user.health === false) {
-        navigate("/health_setup");
-        return;
-      }
     } catch (err) {
-      console.log(err.response.data?.active);
       if (err.response.data.active === false) {
         navigate("/confirm_account/send_code", {
           state: { email: formData.email },

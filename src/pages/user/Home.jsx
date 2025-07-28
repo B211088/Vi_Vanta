@@ -41,6 +41,7 @@ import Footer from "./Footer";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchUserHealthInfo } from "../../services/health.service";
+import VoiceChatbot from "../../components/ui/chatbot/VoiceChatbot";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -251,12 +252,11 @@ const Home = () => {
 
   return (
     <div className="min-h-screen  font-nunito">
-      <ButtonToggleTheme />
       <Header />
       <TopicFavorite />
       <Banner />
       <ArticlesSection />
-
+      <VoiceChatbot />
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-teal-50 to-emerald-50 py-20">
         <div className="max-w-7xl mx-auto px-6 text-center">
@@ -287,7 +287,7 @@ const Home = () => {
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Công cụ sức khỏe thông minh
+              Công cụ kiểm tra sức khỏe thông minh
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Bộ công cụ đo lường và đánh giá sức khỏe chính xác, dễ sử dụng

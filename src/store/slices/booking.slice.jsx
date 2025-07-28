@@ -3,7 +3,6 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   doctor: null,
   workingHour: [],
-  // Available slots
   availableSlots: [],
   availableSlotsLoading: false,
   availableSlotsError: null,
@@ -77,6 +76,11 @@ const bookingSlice = createSlice({
       state.loading = false;
       state.error = action.payload;
     },
+
+    availableSlotsLoadingStart: (state) => {
+      state.availableSlotsLoading = true;
+      state.availableSlotsError = null;
+    },
     // Available slots actions
     getAvailableSlotsSuccess: (state, action) => {
       state.availableSlotsLoading = false;
@@ -88,11 +92,6 @@ const bookingSlice = createSlice({
       state.availableSlotsError = action.payload;
       state.availableSlots = [];
     },
-    availableSlotsLoadingStart: (state) => {
-      state.availableSlotsLoading = true;
-      state.availableSlotsError = null;
-    },
-
     // Create appointment actions
     createAppointmentSuccess: (state, action) => {
       state.currentAppointmentLoading = false;

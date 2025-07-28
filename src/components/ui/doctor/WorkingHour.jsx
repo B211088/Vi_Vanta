@@ -19,6 +19,10 @@ import {
   Save,
   AlertCircle,
 } from "lucide-react";
+import {
+  formatDateDDMMYY,
+  formatDateYYYYMMDD,
+} from "../../../utils/formatDate";
 
 const WorkingHour = () => {
   const dispatch = useDispatch();
@@ -30,11 +34,19 @@ const WorkingHour = () => {
   const [editingSchedule, setEditingSchedule] = useState(null);
   const [notification, setNotification] = useState(null);
 
+  useEffect(() => {
+    if (!doctor) {
+      dispatch(fetchDoctorByUserId());
+    }
+  }, []);
+
   // Form state for creating/editing
   const [formData, setFormData] = useState({
     dayOfWeek: 1,
     timeSlots: [],
     isActive: true,
+    endDate: "",
+    startDate: "",
   });
 
   // Days of week mapping
@@ -50,14 +62,9 @@ const WorkingHour = () => {
 
   useEffect(() => {
     dispatch(fetchMySchedule());
-
-    // Fetch doctor info if not available
-    if (!doctor) {
-      // You might need to import and use fetchDoctorByUserId
-      dispatch(fetchDoctorByUserId());
-    }
   }, [dispatch]);
-  console.log({ doctor });
+
+  console.log({ workingHour, formData });
 
   // Handle success/error messages
   useEffect(() => {
@@ -108,12 +115,24 @@ const WorkingHour = () => {
         )
         .sort((a, b) => a.startTime.localeCompare(b.startTime));
 
+      // Lấy startDate sớm nhất và endDate trễ nhất (trực tiếp vì là Date)
+      const startDate = daySchedules.reduce(
+        (min, s) => (s.startDate < min ? s.startDate : min),
+        daySchedules[0].startDate
+      );
+      const endDate = daySchedules.reduce(
+        (max, s) => (s.endDate > max ? s.endDate : max),
+        daySchedules[0].endDate
+      );
+
       return {
         dayOfWeek: parseInt(day),
         dayName: daysOfWeek[day],
         timeSlots: uniqueSlots,
         isActive: daySchedules.some((s) => s.isActive),
         scheduleIds: daySchedules.map((s) => s._id),
+        startDate,
+        endDate,
       };
     })
     .sort((a, b) => a.dayOfWeek - b.dayOfWeek);
@@ -182,6 +201,8 @@ const WorkingHour = () => {
       dayOfWeek: daySchedule.dayOfWeek,
       timeSlots: daySchedule.timeSlots,
       isActive: daySchedule.isActive,
+      startDate: daySchedule.startDate,
+      endDate: daySchedule.endDate,
     });
     setShowEditModal(true);
   };
@@ -463,6 +484,16 @@ const WorkingHour = () => {
                     {getAvailableCount(daySchedule.timeSlots)} sẵn sàng
                   </span>
                 </div>
+                <div className="mt-2 flex flex-col gap-1 text-sm text-gray-600">
+                  <span>
+                    Từ ngày: {formatDateDDMMYY(daySchedule.startDate)}
+                  </span>
+
+                  <span>
+                    {" "}
+                    Đến ngày: {formatDateDDMMYY(daySchedule.endDate)}
+                  </span>
+                </div>
               </div>
 
               {/* Time Slots */}
@@ -553,8 +584,8 @@ const WorkingHour = () => {
 
         {/* Create Modal */}
         {showCreateModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-[#00000020] bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-900">
                   Tạo Ca Làm Việc Mới
@@ -613,7 +644,7 @@ const WorkingHour = () => {
                     </button>
                   </div>
 
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                  <div className="space-y-2 max-h-90 overflow-y-auto">
                     {formData.timeSlots.map((slot, index) => (
                       <div
                         key={index}
@@ -674,9 +705,50 @@ const WorkingHour = () => {
                   </div>
                 </div>
 
+                <div className="w-full flex items-center gap-3">
+                  <div className="flex flex-1 flex-col gap-2 ">
+                    <label className="text-sm text-gray-700">
+                      Ngày bắt đầu
+                    </label>
+                    <div className="border-1 border-dark-800 p-2 rounded-lg">
+                      <input
+                        type="date"
+                        value={formData.startDate}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            startDate: e.target.value,
+                          }))
+                        }
+                        placeholder="Chọn ngày bắt đầu lịch"
+                        className="w-full text-blue-600"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-1 flex-col gap-2 ">
+                    <label className="text-sm text-gray-700">
+                      Ngày bắt kết thúc
+                    </label>
+                    <div className="border-1 border-dark-800 p-2 rounded-lg">
+                      <input
+                        type="date"
+                        value={formData.endDate}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            endDate: e.target.value,
+                          }))
+                        }
+                        placeholder="Chọn ngày bắt đầu lịch"
+                        className="w-full text-blue-600"
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 {/* Active Status */}
                 <div>
-                  <label className="flex items-center gap-2">
+                  <label className="flex items-center gap-2 mt-10">
                     <input
                       type="checkbox"
                       checked={formData.isActive}
@@ -721,14 +793,23 @@ const WorkingHour = () => {
 
         {/* Edit Modal */}
         {showEditModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-[#0000001c] bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-900">
                   Chỉnh Sửa Ca Làm Việc
                 </h2>
                 <button
-                  onClick={() => setShowEditModal(false)}
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setFormData({
+                      dayOfWeek: 1,
+                      timeSlots: [],
+                      isActive: false,
+                      startDate: "",
+                      endDate: "",
+                    });
+                  }}
                   className="p-1 text-gray-400 hover:text-gray-600"
                 >
                   <X className="h-5 w-5" />
@@ -771,7 +852,7 @@ const WorkingHour = () => {
                     </button>
                   </div>
 
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                  <div className="space-y-2 max-h-90 overflow-y-auto">
                     {formData.timeSlots.map((slot, index) => (
                       <div
                         key={index}
@@ -831,7 +912,46 @@ const WorkingHour = () => {
                     ))}
                   </div>
                 </div>
-
+                <div className="w-full flex items-center gap-3">
+                  <div className="flex flex-1 flex-col gap-2 ">
+                    <label className="text-sm text-gray-700">
+                      Ngày bắt đầu
+                    </label>
+                    <div className="border-1 border-dark-800 p-2 rounded-lg">
+                      <input
+                        type="date"
+                        value={formatDateYYYYMMDD(formData.startDate)}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            startDate: e.target.value,
+                          }))
+                        }
+                        placeholder="Chọn ngày bắt đầu lịch"
+                        className="w-full text-blue-600"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-1 flex-col gap-2 ">
+                    <label className="text-sm text-gray-700">
+                      Ngày bắt kết thúc
+                    </label>
+                    <div className="border-1 border-dark-800 p-2 rounded-lg">
+                      <input
+                        type="date"
+                        value={formatDateYYYYMMDD(formData.endDate)}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            endDate: e.target.value,
+                          }))
+                        }
+                        placeholder="Chọn ngày bắt đầu lịch"
+                        className="w-full text-blue-600"
+                      />
+                    </div>
+                  </div>
+                </div>
                 {/* Active Status */}
                 <div>
                   <label className="flex items-center gap-2">

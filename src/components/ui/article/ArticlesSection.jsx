@@ -168,7 +168,7 @@ const ArticlesSection = () => {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center justify-center space-x-1 md:space-x-2 px-3 md:px-4 py-2 rounded-lg font-medium transition-all text-sm md:text-base ${
+                className={`flex items-center justify-center space-x-1 md:space-x-2 px-3 md:px-4 py-2 cursor-pointer rounded-lg font-medium transition-all text-sm md:text-base ${
                   activeTab === tab.key
                     ? "bg-white text-teal-600 shadow-sm"
                     : "text-gray-600 hover:text-teal-600"

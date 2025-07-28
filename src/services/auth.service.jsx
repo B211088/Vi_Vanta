@@ -25,10 +25,11 @@ import { API_URL } from "../config/api.config";
 import { fetchAllHealthInfo, fetchUserHealthInfo } from "./health.service";
 import { clearHealthInfo } from "../store/slices/health.slice";
 import { Navigate } from "react-router-dom";
+import { fetchDoctorByUserId } from "./doctor.service";
 
 const api = axios.create({
   baseURL: API_URL,
-  timeout: 5000,
+  timeout: 50000,
   withCredentials: true,
 });
 
@@ -38,7 +39,10 @@ export const loadUser = () => async (dispatch) => {
     const response = await api.get("/api/v1/user/profile");
 
     dispatch(loadUserSuccess(response.data.user));
-
+    console.log(response);
+    if (response.data.user.roles.includes("doctor")) {
+      dispatch(fetchDoctorByUserId);
+    }
     return response.data;
   } catch (error) {
     const errorMessage =

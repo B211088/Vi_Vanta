@@ -82,7 +82,6 @@ export const deleteSectionChatHandle = (id) => async (dispatch) => {
   }
 };
 
-// FIXED: Đảm bảo askChatBot luôn trả về section với messages đúng thứ tự
 export const askChatBot = (payload) => async (dispatch) => {
   try {
     dispatch(fetchSectionStart());

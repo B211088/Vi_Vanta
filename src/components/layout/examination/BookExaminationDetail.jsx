@@ -8,7 +8,10 @@ import Footer from "../../../pages/user/Footer";
 import { useNotify } from "../../../hook/useNotify";
 import { ArrowRight, Lock, User } from "lucide-react";
 import RequireLogin from "../../modals/examination/RequireLogin";
-import { fetchDoctorById } from "../../../services/booking.service";
+import {
+  fetchDoctorById,
+  getAvailableSlots,
+} from "../../../services/booking.service";
 
 const BookExaminationDetail = () => {
   const location = useLocation();
@@ -20,15 +23,18 @@ const BookExaminationDetail = () => {
   );
   const { user } = useSelector((state) => state.auth);
   const [selectedDate, setSelectedDate] = useState("");
-  const [selectedTime, setSelectedTime] = useState("");
+  const [selectedTime, setSelectedTime] = useState({
+    startTime: "",
+    endTime: "",
+  });
   const [selectedTab, setSelectedTab] = useState("info");
   const [selectedServices, setSelectedServices] = useState([]);
   const [totalPrices, setTotalPrices] = useState(0);
   const [currentMonth, setCurrentMonth] = useState(new Date(2025, 6)); // Tháng 7/2025
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState("morning");
+
   const [showRequireLogin, setShowRequireLogin] = useState(false);
   const [timeSlots, setTimeSlots] = useState([]);
-  console.log({ workingHour });
+  console.log({ workingHour, selectedDate });
 
   // Tách query string
   const searchParams = new URLSearchParams(location.search);
@@ -45,6 +51,12 @@ const BookExaminationDetail = () => {
 
     setTimeSlots(timeSlot);
   }, [selectedDate]);
+
+  useEffect(() => {
+    if (id && selectedDate) {
+      dispatch(getAvailableSlots(id, selectedDate));
+    }
+  }, [selectedDate, id]);
 
   const isSelected = (service) => {
     selectedServices.some((s) => s.name === service.name);
@@ -76,7 +88,6 @@ const BookExaminationDetail = () => {
     });
   };
 
-  console.log({ timeSlots });
   const handleBooking = () => {
     if (selectedServices.length === 0) {
       notifyWarning("Hãy chọn dịch vụ!");
@@ -183,8 +194,7 @@ const BookExaminationDetail = () => {
   };
 
   const handleTimeSelect = (time) => {
-    const fullTime = `${time.startTime} - ${time.endTime}`;
-    setSelectedTime(fullTime);
+    setSelectedTime({ startTime: time.startTime, endTime: time.endTime });
   };
 
   const isDateSelected = (day) => {
@@ -509,7 +519,7 @@ const BookExaminationDetail = () => {
                             <h5 className="font-bold text-gray-800">
                               {service.name}
                             </h5>
-                            <p className="text-sm text-gray-600 mt-1">
+                            <p className="text-sm text-gray-600 mt-1 line-clamp-5">
                               {service.description}
                             </p>
                           </div>
@@ -613,7 +623,7 @@ const BookExaminationDetail = () => {
                         {timeSlots.map((time, index) => {
                           const isUnavailable = unavailableTimes.includes(time);
                           const isSelected =
-                            selectedTime ===
+                            `${selectedTime?.startTime} - ${selectedTime?.endTime}` ===
                             `${time.startTime} - ${time.endTime}`;
 
                           return (
@@ -645,7 +655,8 @@ const BookExaminationDetail = () => {
                           <div className="flex items-center gap-2">
                             <i className="fa-solid fa-clock text-green-600"></i>
                             <span className="text-sm text-green-800 font-medium">
-                              Giờ đã chọn: {selectedTime}
+                              Giờ đã chọn: {selectedTime.startTime} -{" "}
+                              {selectedTime.endTime}
                             </span>
                           </div>
                         </div>

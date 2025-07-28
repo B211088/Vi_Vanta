@@ -46,7 +46,7 @@ const DetailArticle = () => {
       <div className="w-full flex flex-col font-nunito">
         <Header />
         <div className="min-h-screen bg-gray-50">
-          <div className="container mx-auto px-4 py-8">
+          <div className="container max-w-6xl mx-auto px-4 py-8">
             <div className="animate-pulse">
               {/* Back button skeleton */}
               <div className="flex items-center gap-2 mb-6">
@@ -156,12 +156,12 @@ const DetailArticle = () => {
   };
 
   return (
-    <div className="w-full flex flex-col font-nunito">
+    <div className="w-full flex flex-col  font-nunito">
       <Header />
 
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen">
         {/* Back Navigation */}
-        <div className="container mx-auto py-3 px-4 md:px-6 mt-2">
+        <div className="container  max-w-7xl  mx-auto py-3 px-4 md:px-6 mt-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <button
@@ -184,7 +184,7 @@ const DetailArticle = () => {
         </div>
 
         {/* Main Container */}
-        <div className="container mx-auto px-4 md:px-6 py-3">
+        <div className="container  max-w-7xl mx-auto px-4 md:px-6 py-3">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Main Article Content */}
             <div className="lg:col-span-8">
@@ -464,7 +464,7 @@ const DetailArticle = () => {
           )}
 
           {/* Featured Articles Section */}
-          <div className="mt-8 md:mt-12">
+          <div className="mt-8 md:mt-12 py-12">
             <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-900">
               Xem thêm các bài viết nổi bật
             </h2>
