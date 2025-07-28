@@ -1,13 +1,15 @@
 // services/bookingService.js
 
 import mongoose from "mongoose";
-import Doctor from "../models/doctor.model";
-import TimeSlot from "../models/timeSlot.model";
-import WorkingHour from "../models/workingHour.model";
-import Appointment from "../models/appointment.model";
-import { ApiError } from "../middlewares/booking.validation";
+import Doctor from "../models/doctor.model.js";
+import TimeSlot from "../models/timeSlot.model.js";
+import WorkingHour from "../models/workingHour.model.js";
+import Appointment from "../models/appointment.model.js";
+import { ApiError } from "../utils/ApiResponse.js";
+import BookingService from "../models/bookingService.model.js";
+import { EXPIRE_MINUTES } from "../config/appointment.config.js";
 
-class BookingService {
+class BookingAppointmentService {
   // Lấy slot trống của bác sĩ theo ngày
   async getDoctorAvailableSlots(doctorId, date) {
     const doctor = await Doctor.findById(doctorId);
@@ -17,32 +19,37 @@ class BookingService {
 
     const dayOfWeek = date.getDay();
 
-    // Lấy lịch làm việc của bác sĩ
+    // Clone lại ngày để không bị mutation
+    const currentDate = new Date(date);
+    currentDate.setHours(0, 0, 0, 0);
+
+    // Lấy lịch làm việc hợp lệ (trong khoảng startDate -> endDate)
     const workingHour = await WorkingHour.findOne({
       doctorId,
       dayOfWeek,
       isActive: true,
+      startDate: { $lte: currentDate },
+      endDate: { $gte: currentDate },
     });
 
     if (!workingHour) {
       return [];
     }
 
-    // Lấy các slot đã đặt trong ngày
-    let timeSlot = await TimeSlot.findOne({
+    const startOfDay = new Date(currentDate);
+    const endOfDay = new Date(currentDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // Lấy các appointment đã đặt trong ngày
+    const appointments = await Appointment.find({
       doctorId,
-      date: {
-        $gte: new Date(date.setHours(0, 0, 0, 0)),
-        $lt: new Date(date.setHours(23, 59, 59, 999)),
-      },
+      date: { $gte: startOfDay, $lte: endOfDay },
+      status: { $in: ["pending", "confirmed", "in-progress"] },
     });
 
-    const bookedSlots = timeSlot
-      ? timeSlot.timeSlots.filter((slot) => slot.isBooked)
-      : [];
-    const bookedTimes = bookedSlots.map((slot) => slot.time);
+    const bookedTimes = appointments.map((appt) => appt.timeSlots.startTime);
 
-    // Filter available slots
+    // Trả về những timeSlots khả dụng
     const availableSlots = workingHour.timeSlots.filter(
       (slot) => slot.isAvailable && !bookedTimes.includes(slot.startTime)
     );
@@ -56,62 +63,114 @@ class BookingService {
     session.startTransaction();
 
     try {
-      const { userId, doctorId, date, time, services, paymentMethod, note } =
-        appointmentData;
+      const {
+        userId,
+        doctorId,
+        date,
+        timeSlots,
+        services,
+        patientInfo,
+        paymentMethod = "cash",
+      } = appointmentData;
 
-      // Kiểm tra bác sĩ tồn tại
+      // Kiểm tra doctor tồn tại
       const doctor = await Doctor.findById(doctorId).session(session);
       if (!doctor) {
         throw new ApiError(404, "Không tìm thấy bác sĩ");
       }
 
       // Kiểm tra slot còn trống
-      const appointmentDate = new Date(date);
-      const isSlotAvailable = await this.checkSlotAvailability(
+      const existingAppointment = await Appointment.findOne({
         doctorId,
-        appointmentDate,
-        time,
-        session
-      );
+        date: new Date(date),
+        "timeSlots.startTime": timeSlots.startTime,
+        "timeSlots.endTime": timeSlots.endTime,
+        status: { $ne: "canceled" },
+      }).session(session);
 
-      if (!isSlotAvailable) {
-        throw new ApiError(400, "Slot này đã được đặt");
+      if (existingAppointment) {
+        throw new ApiError(400, "Slot thời gian này đã được đặt");
       }
 
       // Tính tổng phí
-      const totalFee = services.reduce(
-        (sum, service) => sum + parseFloat(service.price.replace(/[^\d]/g, "")),
-        0
-      );
+      let totalFee = 0;
+      let serviceDetails = [];
+
+      if (services && services.length > 0) {
+        // Lấy thông tin chi tiết các dịch vụ
+        const servicePromises = services.map((serviceId) =>
+          BookingService.findById(serviceId).session(session)
+        );
+        serviceDetails = await Promise.all(servicePromises);
+
+        // Kiểm tra tất cả services có tồn tại không
+        if (serviceDetails.some((service) => !service)) {
+          throw new ApiError(404, "Một hoặc nhiều dịch vụ không tồn tại");
+        }
+
+        // Tính tổng phí
+        totalFee = serviceDetails.reduce(
+          (sum, service) => sum + (service.price || 0),
+          0
+        );
+      } else {
+        totalFee = doctor.consultationFee || 200000; // Phí mặc định
+      }
 
       // Tạo appointment
       const appointment = new Appointment({
         userId,
         doctorId,
-        date: appointmentDate,
-        time,
-        services,
-        paymentMethod,
+        date: new Date(date),
+        timeSlots: {
+          startTime: timeSlots.startTime,
+          endTime: timeSlots.endTime,
+          isAvailable: false,
+        },
+        services: services || [],
+        patientInfo: {
+          fullName: patientInfo.fullName,
+          phone: patientInfo.phone,
+          email: patientInfo.email,
+          gender: patientInfo.gender,
+          dateOfBirth: new Date(patientInfo.dateOfBirth),
+          address: patientInfo.address || "",
+          reason: patientInfo.reason || "",
+          patientType: patientInfo.patientType || "benhNhanMoi",
+          zalo: patientInfo.zalo || "",
+          isOtherUser: patientInfo.isOtherUser || false,
+        },
         totalFee,
-        note,
+        paymentMethod,
+        paymentStatus: "unpaid",
+        status: "pending",
+        paymentExpireAt: new Date(Date.now() + EXPIRE_MINUTES * 60 * 1000),
       });
 
       await appointment.save({ session });
 
-      // Cập nhật TimeSlot
-      await this.updateTimeSlot(
-        doctorId,
-        appointmentDate,
-        time,
-        appointment._id,
-        session
-      );
+      // Populate thông tin để trả về
+      await appointment.populate([
+        {
+          path: "doctorId",
+          select: "name specialty infoClinic consultationFee userId",
+          populate: {
+            path: "userId",
+            select: "avatar",
+          },
+        },
+        {
+          path: "services",
+          select: "name price description duration",
+        },
+        {
+          path: "userId",
+          select: "fullName phone email",
+        },
+      ]);
 
       await session.commitTransaction();
-
-      return await Appointment.findById(appointment._id)
-        .populate("doctorId", "name specialty infoClinic")
-        .populate("userId", "name phone email");
+      return appointment;
     } catch (error) {
       await session.abortTransaction();
       throw error;
@@ -351,5 +410,4 @@ class BookingService {
     };
   }
 }
-
-export const bookingService = new BookingService();
+export default BookingAppointmentService;

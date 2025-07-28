@@ -10,7 +10,7 @@ import compression from "compression";
 import hpp from "hpp";
 import morgan from "morgan";
 import csurf from "csurf";
-
+import "./helpers/autoCancelAppointments.js";
 import authRouter from "./routes/auth.route.js";
 import addressRouter from "./routes/address.route.js";
 import userRoutes from "./routes/user.route.js";
@@ -34,7 +34,8 @@ import articleRouter from "./routes/article.route.js";
 import chatbotRouter from "./routes/chatbot.route.js";
 import doctorRouter from "./routes/doctor.route.js";
 import healthAdviceRoutes from "./routes/healthAdvice.route.js";
-import bookingService from "./routes/bookingService.route.js";
+import bookingServiceRouter from "./routes/bookingService.route.js";
+import bookingRouter from "./routes/booking.route.js";
 import fs from "fs";
 
 const app = express();
@@ -111,7 +112,8 @@ app.use("/api/v1/articles", articleRouter);
 app.use("/api/v1/chatbot", chatbotRouter);
 app.use("/api/v1/doctors", doctorRouter);
 app.use("/api/v1/health-advices", healthAdviceRoutes);
-app.use("/api/v1/services", bookingService);
+app.use("/api/v1/booking-services", bookingServiceRouter);
+app.use("/api/v1/booking", bookingRouter);
 
 app.get("/api/v1/csrf-token", (req, res) => {
   res.json({ csrfToken: req.csrfToken() });

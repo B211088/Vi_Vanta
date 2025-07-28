@@ -41,13 +41,11 @@ export const login = async (req, res) => {
       sameSite: "Lax",
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "Đăng nhập thành công!",
-        user: user.userInfo,
-      });
+    res.status(200).json({
+      success: true,
+      message: "Đăng nhập thành công!",
+      user: user.userInfo,
+    });
   } catch (error) {
     if (error.message === "Chưa xác nhận email") {
       return res.status(400).json({

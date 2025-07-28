@@ -48,7 +48,9 @@ const bookingServiceSchema = new Schema(
       type: Boolean,
       default: true,
     },
+    reasons: { type: [String], default: [""] },
   },
+
   {
     timestamps: true,
     // Add indexes for better performance

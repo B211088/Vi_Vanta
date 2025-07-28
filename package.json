@@ -10,7 +10,8 @@
     "start": "nodemon src/server.mjs",
     "dev": "nodemon server.js",
     "chroma": "chroma run --host localhost --port 8000",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "patch-package"
   },
   "devDependencies": {
     "argon": "^2.0.21",
@@ -22,7 +23,9 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.14.1",
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.10",
+    "patch-package": "^8.0.0",
+    "postinstall-postinstall": "^2.1.0"
   },
   "dependencies": {
     "@chroma-core/default-embed": "^0.1.8",
@@ -36,6 +39,7 @@
     "cloudinary": "^2.6.0",
     "compression": "^1.8.0",
     "csurf": "^1.10.0",
+    "dayjs": "^1.11.13",
     "express-mongo-sanitize": "^2.2.0",
     "express-rate-limit": "^7.5.0",
     "form-data": "^4.0.3",
@@ -45,13 +49,14 @@
     "mongoose-sequence": "^6.0.1",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.2",
-    "node-cron": "^4.0.7",
+    "node-cron": "^4.2.1",
     "nodemailer": "^7.0.0",
     "openai": "^5.5.1",
     "path": "^0.12.7",
     "pdf-parse": "^1.1.1",
     "redis": "^5.0.1",
     "uuid": "^11.1.0",
+    "vnpay": "^2.4.0",
     "xss-clean": "^0.1.4"
   }
 }

@@ -13,7 +13,7 @@ class BookingServiceController {
     if (req.user.role === "doctor") {
       const doctor = await Doctor.findOne({
         _id: doctorId,
-        userId: req.user._id,
+        userId: req.user.userId,
       });
 
       if (!doctor) {
@@ -102,7 +102,7 @@ class BookingServiceController {
     const { serviceId } = req.params;
 
     // Get doctor by userId
-    const doctor = await Doctor.findOne({ userId: req.user._id });
+    const doctor = await Doctor.findOne({ userId: req.user.userId });
     if (!doctor) {
       throw new ApiError(404, "Không tìm thấy thông tin bác sĩ");
     }
@@ -122,7 +122,7 @@ class BookingServiceController {
     const { serviceId } = req.params;
 
     // Get doctor by userId
-    const doctor = await Doctor.findOne({ userId: req.user._id });
+    const doctor = await Doctor.findOne({ userId: req.user.userId });
     if (!doctor) {
       throw new ApiError(404, "Không tìm thấy thông tin bác sĩ");
     }
@@ -179,21 +179,6 @@ class BookingServiceController {
   });
 
   // Get services by category
-  static getServicesByCategory = asyncHandler(async (req, res) => {
-    const { category } = req.params;
-    const filters = req.query;
-
-    const result = await BookingServiceService.getServicesByCategory(
-      category,
-      filters
-    );
-
-    res
-      .status(200)
-      .json(
-        new ApiResponse(200, result, "Lấy dịch vụ theo danh mục thành công")
-      );
-  });
 
   // Get popular services
   static getPopularServices = asyncHandler(async (req, res) => {
@@ -211,7 +196,7 @@ class BookingServiceController {
   // Get service statistics
   static getServiceStats = asyncHandler(async (req, res) => {
     // Get doctor by userId
-    const doctor = await Doctor.findOne({ userId: req.user._id });
+    const doctor = await Doctor.findOne({ userId: req.user.userId });
     if (!doctor) {
       throw new ApiError(404, "Không tìm thấy thông tin bác sĩ");
     }
@@ -232,7 +217,7 @@ class BookingServiceController {
     }
 
     // Get doctor by userId
-    const doctor = await Doctor.findOne({ userId: req.user._id });
+    const doctor = await Doctor.findOne({ userId: req.user.userId });
     if (!doctor) {
       throw new ApiError(404, "Không tìm thấy thông tin bác sĩ");
     }
@@ -255,7 +240,7 @@ class BookingServiceController {
     const { serviceId } = req.params;
 
     // Get doctor by userId
-    const doctor = await Doctor.findOne({ userId: req.user._id });
+    const doctor = await Doctor.findOne({ userId: req.user.userId });
     if (!doctor) {
       throw new ApiError(404, "Không tìm thấy thông tin bác sĩ");
     }
@@ -296,7 +281,7 @@ class BookingServiceController {
     const { period = "30d" } = req.query; // 7d, 30d, 90d, 1y
 
     // Get doctor by userId
-    const doctor = await Doctor.findOne({ userId: req.user._id });
+    const doctor = await Doctor.findOne({ userId: req.user.userId });
     if (!doctor) {
       throw new ApiError(404, "Không tìm thấy thông tin bác sĩ");
     }
@@ -354,7 +339,7 @@ class BookingServiceController {
     const { format = "csv" } = req.query;
 
     // Get doctor by userId
-    const doctor = await Doctor.findOne({ userId: req.user._id });
+    const doctor = await Doctor.findOne({ userId: req.user.userId });
     if (!doctor) {
       throw new ApiError(404, "Không tìm thấy thông tin bác sĩ");
     }

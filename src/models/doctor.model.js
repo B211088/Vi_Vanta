@@ -24,7 +24,7 @@ const doctorSchema = new Schema(
       default: "cash",
     },
     services: [
-      { type: Schema.Types.ObjectId, ref: "BooingService", required: true },
+      { type: Schema.Types.ObjectId, ref: "BookingService", required: true },
     ],
     wallet: { type: Number, default: 0 },
     infoClinic: {

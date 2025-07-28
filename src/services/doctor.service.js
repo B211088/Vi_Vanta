@@ -69,6 +69,24 @@ export const approveDoctor = async (id) => {
   return doctor;
 };
 
+export const updateWalletDoctor = async (doctorId, amount) => {
+  console.log({ doctorId, amount });
+  try {
+    const doctor = await Doctor.findById(doctorId);
+    if (!doctor) {
+      throw new Error("Không tìm thấy bác sĩ");
+    }
+
+    doctor.wallet += amount;
+    await doctor.save();
+
+    return { success: true };
+  } catch (error) {
+    console.error("Lỗi khi cập nhật ví bác sĩ:", error);
+    throw new Error("Lỗi khi cập nhật ví bác sĩ");
+  }
+};
+
 export const rejectDoctor = async (id) => {
   const doctor = await Doctor.findByIdAndUpdate(
     id,
@@ -93,6 +111,7 @@ export const getDoctorByUserId = async (userId) => {
       .populate("userId", "avatar")
       .lean();
     if (!doctor) throw new ApiError(404, "Không tìm thấy bác sĩ");
+
     return doctor;
   } catch (error) {
     throw new ApiError(404, "Gặp lỗi khi lấy thông tin !");
@@ -101,35 +120,54 @@ export const getDoctorByUserId = async (userId) => {
 
 // Tạo lịch làm việc cho bác sĩ
 export const createWorkingHour = async (workingHourData) => {
-  const { doctorId, dayOfWeek, date } = workingHourData;
+  const { doctorId, dayOfWeek, startDate, endDate, timeSlots } =
+    workingHourData;
 
   // Kiểm tra bác sĩ có tồn tại không
   const doctor = await Doctor.findById(doctorId);
   if (!doctor) throw new ApiError(404, "Không tìm thấy bác sĩ");
 
-  // Kiểm tra trùng lặp lịch làm việc
-  const existingSchedule = await WorkingHour.findOne({
+  // Kiểm tra ngày bắt đầu và kết thúc hợp lệ
+  if (!startDate || !endDate || new Date(startDate) > new Date(endDate)) {
+    throw new ApiError(
+      400,
+      "Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc"
+    );
+  }
+
+  // Kiểm tra trùng lặp lịch làm việc trong khoảng thời gian này với cùng doctor + dayOfWeek
+  const overlappingSchedule = await WorkingHour.findOne({
     doctorId,
-    ...(date ? { date } : { dayOfWeek }),
+    dayOfWeek,
     isActive: true,
+    $or: [
+      {
+        startDate: { $lte: new Date(endDate) },
+        endDate: { $gte: new Date(startDate) },
+      },
+    ],
   });
 
-  if (existingSchedule) {
-    throw new ApiError(400, "Lịch làm việc cho ngày này đã tồn tại");
+  if (overlappingSchedule) {
+    throw new ApiError(
+      400,
+      "Đã tồn tại lịch làm việc trùng trong khoảng thời gian này"
+    );
   }
 
   // Validate time slots
-  if (workingHourData.timeSlots && workingHourData.timeSlots.length > 0) {
-    for (const slot of workingHourData.timeSlots) {
-      if (slot.startTime >= slot.endTime) {
+  if (Array.isArray(timeSlots) && timeSlots.length > 0) {
+    for (const slot of timeSlots) {
+      if (!slot.startTime || !slot.endTime || slot.startTime >= slot.endTime) {
         throw new ApiError(
           400,
-          "Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc"
+          "Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc trong các slot"
         );
       }
     }
   }
 
+  // Tạo mới lịch làm việc
   const workingHour = new WorkingHour(workingHourData);
   return await workingHour.save();
 };
@@ -206,6 +244,7 @@ export const updateWorkingHour = async (id, updateData) => {
   if (!workingHour) throw new ApiError(404, "Không tìm thấy lịch làm việc");
   return workingHour;
 };
+
 export const deleteHardWorkingHour = async (id) => {
   const deleted = await WorkingHour.findByIdAndDelete(id).populate(
     "doctorId",

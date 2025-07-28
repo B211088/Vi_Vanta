@@ -165,7 +165,6 @@ export const serverError = (message = ErrorMessages.SERVER_ERROR) => {
 // Default exports
 export default {
   ApiResponse,
-  ApiError,
   asyncHandler,
   catchAsync,
   ErrorTypes,

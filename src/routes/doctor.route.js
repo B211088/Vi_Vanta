@@ -36,28 +36,33 @@ router.post(
 router.get(
   "/my-schedule",
   verifyToken,
-  authorizeRoles("doctor"),
+  authorizeRoles("doctor", "admin"),
   DoctorController.getMyWorkingHours
 );
 router.post(
   "/my-schedule",
   verifyToken,
-  authorizeRoles("doctor"),
+  authorizeRoles("doctor", "admin"),
   DoctorController.createMyWorkingHour
 );
 router.put(
   "/my-schedule/:id",
   verifyToken,
-  authorizeRoles("doctor"),
+  authorizeRoles("doctor", "admin"),
   DoctorController.updateMyWorkingHour
 );
 router.delete(
   "/my-schedule/hard/:id",
   verifyToken,
-  authorizeRoles("doctor"),
+  authorizeRoles("doctor", "admin"),
   DoctorController.deleteHardWorkingHour
 );
-router.get("/user", verifyToken, DoctorController.getDoctorByUserId);
+router.get(
+  "/user",
+  verifyToken,
+  authorizeRoles("doctor", "admin"),
+  DoctorController.getDoctorByUserId
+);
 
 /* ──────────────────────────────────────────────────────────────
    🔴 ADMIN ROUTES - quản lý danh sách bác sĩ và lịch làm việc

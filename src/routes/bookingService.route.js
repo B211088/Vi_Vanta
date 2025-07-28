@@ -12,18 +12,7 @@ const router = express.Router();
 router.get("/categories", BookingServiceController.getCategories);
 
 // Search services across all doctors
-router.get(
-  "/search",
-
-  BookingServiceController.searchServices
-);
-
-// Get services by category
-router.get(
-  "/category/:category",
-
-  BookingServiceController.getServicesByCategory
-);
+router.get("/search", BookingServiceController.searchServices);
 
 // Get popular services
 router.get("/popular", BookingServiceController.getPopularServices);
@@ -44,16 +33,13 @@ router.get(
 
 // ================== PROTECTED ROUTES ==================
 
-// All routes below require authentication
-router.use(verifyToken);
-
 // ================== DOCTOR ROUTES ==================
 
 // Get my services (doctor only)
 router.get(
   "/my/service/:doctorId",
   verifyToken,
-  authorizeRoles("doctor"),
+  authorizeRoles("doctor", "admin"),
 
   BookingServiceController.getMyServices
 );
@@ -62,7 +48,7 @@ router.get(
 router.get(
   "/my/stats/:doctorId",
   verifyToken,
-  authorizeRoles("doctor"),
+  authorizeRoles("doctor", "admin"),
   BookingServiceController.getServiceStats
 );
 
@@ -70,15 +56,15 @@ router.get(
 router.get(
   "/my/export/:doctorId",
   verifyToken,
-  authorizeRoles("doctor"),
+  authorizeRoles("doctor", "admin"),
   BookingServiceController.exportServices
 );
 
 // Create new service for myself (doctor only)
 router.post(
   "/my/create/:doctorId",
-  authorizeRoles("doctor"),
-
+  verifyToken,
+  authorizeRoles("doctor", "admin"),
   BookingServiceController.createService
 );
 
@@ -95,7 +81,7 @@ router.put(
 router.patch(
   "/my/:serviceId/toggle",
   verifyToken,
-  authorizeRoles("doctor"),
+  authorizeRoles("doctor", "admin"),
 
   BookingServiceController.toggleServiceStatus
 );
@@ -104,8 +90,7 @@ router.patch(
 router.post(
   "/my/:serviceId/duplicate",
   verifyToken,
-  authorizeRoles("doctor"),
-
+  authorizeRoles("doctor", "admin"),
   BookingServiceController.duplicateService
 );
 
@@ -113,16 +98,22 @@ router.post(
 router.delete(
   "/my/:serviceId",
   verifyToken,
-  authorizeRoles("doctor"),
+  authorizeRoles("doctor", "admin"),
 
   BookingServiceController.deleteService
+);
+router.delete(
+  "/my/:serviceId/hard",
+  verifyToken,
+  authorizeRoles("doctor", "admin"),
+  BookingServiceController.hardDeleteService
 );
 
 // Hard delete my service (doctor only)
 router.delete(
   "/my/:serviceId/hard",
   verifyToken,
-  authorizeRoles("doctor"),
+  authorizeRoles("doctor", "admin"),
 
   BookingServiceController.hardDeleteService
 );
@@ -131,7 +122,7 @@ router.delete(
 router.patch(
   "/my/bulk-update",
   verifyToken,
-  authorizeRoles("doctor"),
+  authorizeRoles("doctor", "admin"),
 
   BookingServiceController.bulkUpdateServices
 );
@@ -140,7 +131,7 @@ router.patch(
 router.get(
   "/my/:serviceId/analytics",
   verifyToken,
-  authorizeRoles("doctor"),
+  authorizeRoles("doctor", "admin"),
 
   BookingServiceController.getServiceAnalytics
 );

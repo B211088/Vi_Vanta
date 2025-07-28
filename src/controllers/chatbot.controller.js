@@ -332,8 +332,6 @@ async function generateAIResponse({
     Lưu ý: Nếu câu hỏi hoàn toàn không liên quan đến y tế thì không trả lời và đưa ra thông báo, và có thể người dùng đánh sai chính tả thuật ngữ y tế, tên bệnh hoặc tên thuốc bạn nên kiểm tra cho kỹ `,
   });
 
-  console.log({ messages });
-
   const completion = await retryWithBackoff(() =>
     openai.chat.completions.create({
       model: modelData?.name || DEFAULT_MODEL,
@@ -443,12 +441,6 @@ export async function chatWithChatBot(req, res) {
       );
     }
 
-    console.log(
-      `🤔 Processing: "${question.slice(0, 30)}..." for ${
-        userId ? "user" : "anonymous"
-      }`
-    );
-
     // Get collection (with caching)
     const collectionCacheKey = `col_${collectionId}`;
     let collection = collectionCache.get(collectionCacheKey);
@@ -475,7 +467,7 @@ export async function chatWithChatBot(req, res) {
       modelId ? getAIModelByIdHandle(modelId) : null,
       buildConversationContext(sectionId),
     ]);
-    console.log({ conversationContext });
+
     // Query similar documents
     const filters = documentId ? { documentId } : {};
     const similarDocs = await querySimilarDocuments(
@@ -490,8 +482,6 @@ export async function chatWithChatBot(req, res) {
       similarityThreshold,
       5
     );
-
-    console.log("similarityResult.relevantDocs", similarityResult.relevantDocs);
 
     if (!similarityResult.success) {
       return sendResponse({
@@ -514,13 +504,11 @@ export async function chatWithChatBot(req, res) {
 
     const { relevantDocs, totalFound, relevantCount } = similarityResult;
     const documentContext = buildDocumentContext(relevantDocs, 2000);
-    console.log({ documentContext });
+
     // Generate AI response
     const systemPrompt =
       prompt ||
       `Bạn là bác sĩ chuyên khoa. Trả lời dựa trên thông tin được cung cấp. Ngắn gọn và chính xác.`;
-
-    console.log({ prompt });
 
     const answer = await generateAIResponse({
       question,

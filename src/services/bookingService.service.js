@@ -1,3 +1,4 @@
+import Appointment from "../models/appointment.model.js";
 import BookingService from "../models/bookingService.model.js";
 import Doctor from "../models/doctor.model.js";
 import { ApiError } from "../utils/ApiResponse.js";
@@ -52,28 +53,61 @@ class BookingServiceService {
 
       let query = { doctorId };
 
-      // Apply filters
       if (isActive !== undefined) query.isActive = isActive;
       if (category) query.category = category;
       if (isPopular !== undefined) query.isPopular = isPopular;
 
-      // Sorting
       const sortOptions = {};
       sortOptions[sortBy] = sortOrder === "desc" ? -1 : 1;
 
-      // Pagination
       const skip = (page - 1) * limit;
 
+      // Bước 1: Lấy các appointment đã paid + completed
+      const appointments = await Appointment.find({
+        doctorId,
+        paymentStatus: "paid",
+        status: "completed",
+      })
+        .populate("services")
+        .select("services");
+
+      // Bước 2: Tính revenue và usageCount cho mỗi serviceId
+      const serviceStats = {};
+
+      appointments.forEach((appointment) => {
+        appointment.services.forEach((service) => {
+          const id = service._id.toString();
+          if (!serviceStats[id]) {
+            serviceStats[id] = { revenue: 0, usageCount: 0 };
+          }
+          serviceStats[id].revenue += service.price || 0;
+          serviceStats[id].usageCount += 1;
+        });
+      });
+
+      // Bước 3: Lấy danh sách service có phân trang
       const services = await BookingService.find(query)
-        .populate("doctorId", "name specialty infoClinic")
         .sort(sortOptions)
         .skip(skip)
         .limit(parseInt(limit));
 
+      // Bước 4: Gắn thêm revenue và usageCount vào mỗi service
+      const servicesWithStats = services.map((service) => {
+        const stats = serviceStats[service._id.toString()] || {
+          revenue: 0,
+          usageCount: 0,
+        };
+        return {
+          ...service.toObject(),
+          revenue: stats.revenue,
+          bookingCount: stats.usageCount,
+        };
+      });
+
       const total = await BookingService.countDocuments(query);
 
       return {
-        services,
+        services: servicesWithStats,
         pagination: {
           page: parseInt(page),
           limit: parseInt(limit),
@@ -154,17 +188,19 @@ class BookingServiceService {
         throw new ApiError(403, "Không có quyền xóa dịch vụ này");
       }
 
-      // Check if there are pending bookings for this service
-      // You might want to add this check based on your Booking model
-      // const pendingBookings = await Booking.countDocuments({
-      //   serviceId,
-      //   status: { $in: ['pending', 'confirmed', 'checked-in'] }
-      // });
+      const usedInAppointments = await Appointment.exists({
+        doctorId,
+        services: serviceId,
+      });
 
-      // if (pendingBookings > 0) {
-      //   throw new ApiError(400, "Không thể xóa dịch vụ có lịch hẹn đang chờ");
-      // }
+      if (usedInAppointments) {
+        throw new ApiError(
+          400,
+          "Không thể xóa dịch vụ vì đang được sử dụng trong lịch hẹn"
+        );
+      }
 
+      // Nếu không bị sử dụng => Cho phép ẩn (xóa mềm)
       service.isActive = false;
       await service.save();
 
@@ -211,7 +247,11 @@ class BookingServiceService {
         );
       }
 
-      await service.toggleActive();
+      service.isActive = !service.isActive;
+
+      console.log(service.isActive);
+      await service.save();
+
       await service.populate("doctorId", "name specialty infoClinic");
 
       return service;
@@ -253,37 +293,6 @@ class BookingServiceService {
 
       return {
         services: sortedServices,
-        pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
-          total,
-          pages: Math.ceil(total / limit),
-        },
-      };
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  // Get services by category
-  static async getServicesByCategory(category, filters = {}) {
-    try {
-      const { page = 1, limit = 10 } = filters;
-
-      const skip = (page - 1) * limit;
-
-      const services = await BookingService.findByCategory(category, true)
-        .skip(skip)
-        .limit(parseInt(limit))
-        .sort({ bookingCount: -1, isPopular: -1 });
-
-      const total = await BookingService.countDocuments({
-        category,
-        isActive: true,
-      });
-
-      return {
-        services,
         pagination: {
           page: parseInt(page),
           limit: parseInt(limit),
