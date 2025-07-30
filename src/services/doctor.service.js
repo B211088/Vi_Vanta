@@ -1,3 +1,4 @@
+import Appointment from "../models/appointment.model.js";
 import BookingService from "../models/bookingService.model.js";
 import Doctor from "../models/doctor.model.js";
 import User from "../models/user.model.js";
@@ -99,10 +100,223 @@ export const rejectDoctor = async (id) => {
 
 export const getDoctorById = async (id) => {
   const doctor = await Doctor.findById(id).populate("userId", "avatar").lean();
-  const workingHour = await WorkingHour.find({ doctorId: id, isActive: true });
+  const workingHour = await WorkingHour.find({
+    doctorId: id,
+    isActive: true,
+  }).select("-timeSlots");
   const services = await BookingService.find({ doctorId: id, isActive: true });
+
   if (!doctor) throw new ApiError(404, "Không tìm thấy bác sĩ");
+
   return { doctor: { ...doctor, services }, workingHour };
+};
+
+export const getDoctorSlotAvailability = async (id, date) => {
+  if (!date) {
+    throw new ApiError(400, "Thiếu ngày cần kiểm tra slot.");
+  }
+
+  const workingHours = await WorkingHour.find({ doctorId: id, isActive: true });
+
+  const targetDate = new Date(date);
+  const dayOfWeek = targetDate.getDay();
+
+  const dayWorkingHours = workingHours.filter((wh) => {
+    const isMatchDay = wh.dayOfWeek === dayOfWeek;
+
+    let isInDateRange = true;
+    if (wh.startDate && wh.endDate) {
+      const whStart = new Date(wh.startDate);
+      const whEnd = new Date(wh.endDate);
+      isInDateRange =
+        !isNaN(whStart.getTime()) &&
+        !isNaN(whEnd.getTime()) &&
+        targetDate >= whStart &&
+        targetDate <= whEnd;
+    }
+
+    return isMatchDay && isInDateRange;
+  });
+
+  const appointments = await Appointment.find({
+    doctorId: id,
+    date: {
+      $gte: new Date(targetDate.setHours(0, 0, 0, 0)),
+      $lt: new Date(targetDate.setHours(23, 59, 59, 999)),
+    },
+    status: { $in: ["pending", "confirmed", "in-progress"] },
+  }).lean();
+
+  const bookedSlots = new Set();
+  const bookedSlotMap = new Map();
+
+  appointments.forEach((appt) => {
+    const key = `${appt.timeSlots.startTime}-${appt.timeSlots.endTime}`;
+    bookedSlots.add(key);
+    bookedSlotMap.set(key, {
+      isBooked: true,
+      bookedDate: appt.date,
+      appointmentId: appt._id,
+      status: appt.status,
+      patientName: appt.patientName,
+      patientPhone: appt.patientPhone,
+    });
+  });
+
+  const availableSlots = [];
+
+  for (const wh of dayWorkingHours) {
+    for (const slot of wh.timeSlots) {
+      if (!slot.isAvailable) continue;
+
+      const slotKey = `${slot.startTime}-${slot.endTime}`;
+      const isBooked = bookedSlots.has(slotKey);
+
+      availableSlots.push({
+        ...slot.toObject(),
+        isBooked,
+        isAvailableForBooking: !isBooked,
+        bookingDetails: isBooked ? bookedSlotMap.get(slotKey) : null,
+      });
+    }
+  }
+
+  return {
+    date: targetDate,
+    availableSlots,
+  };
+};
+
+// Nếu bạn chỉ muốn lấy slots available để booking
+export const getAvailableSlotsOnly = async (id, date) => {
+  const allSlots = await getDoctorSlotAvailability(id, date);
+
+  return allSlots
+    .map((wh) => ({
+      ...wh,
+      timeSlots: wh.timeSlots.filter((slot) => slot.isAvailableForBooking),
+    }))
+    .filter((wh) => wh.timeSlots.length > 0);
+};
+
+// Function để lấy thông tin chi tiết về slot đã được đặt
+export const getBookedSlotsDetails = async (id, date) => {
+  const allSlots = await getDoctorSlotAvailability(id, date);
+
+  return allSlots
+    .map((wh) => ({
+      ...wh,
+      timeSlots: wh.timeSlots.filter((slot) => slot.isBooked),
+    }))
+    .filter((wh) => wh.timeSlots.length > 0);
+};
+// Function để lấy slot availability cho nhiều ngày
+export const getDoctorSlotAvailabilityRange = async (
+  id,
+  startDate,
+  endDate
+) => {
+  const doctor = await Doctor.findById(id).populate("userId", "avatar").lean();
+  const workingHours = await WorkingHour.find({ doctorId: id, isActive: true });
+  const services = await BookingService.find({ doctorId: id, isActive: true });
+
+  if (!doctor) throw new ApiError(404, "Không tìm thấy bác sĩ");
+
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  // Lấy tất cả appointments trong khoảng thời gian
+  const existingAppointments = await Appointment.find({
+    doctorId: id,
+    date: {
+      $gte: new Date(start.setHours(0, 0, 0, 0)),
+      $lt: new Date(end.setHours(23, 59, 59, 999)),
+    },
+    status: { $in: ["pending", "confirmed", "in-progress"] },
+  }).lean();
+
+  // Group appointments by date
+  const appointmentsByDate = {};
+  existingAppointments.forEach((appointment) => {
+    const dateKey = appointment.date.toISOString().split("T")[0];
+    if (!appointmentsByDate[dateKey]) {
+      appointmentsByDate[dateKey] = [];
+    }
+    appointmentsByDate[dateKey].push(appointment);
+  });
+
+  const dateRange = [];
+  const currentDate = new Date(startDate);
+
+  while (currentDate <= new Date(endDate)) {
+    const dayOfWeek = currentDate.getDay();
+    const dateKey = currentDate.toISOString().split("T")[0];
+
+    // Lấy working hours cho ngày này
+    const dayWorkingHours = workingHours.filter(
+      (wh) =>
+        wh.dayOfWeek === dayOfWeek &&
+        currentDate >= new Date(wh.startDate) &&
+        currentDate <= new Date(wh.endDate)
+    );
+
+    // Tạo Set các slot đã được đặt cho ngày này
+    const bookedSlots = new Set();
+    if (appointmentsByDate[dateKey]) {
+      appointmentsByDate[dateKey].forEach((appointment) => {
+        const slotKey = `${appointment.timeSlots.startTime}-${appointment.timeSlots.endTime}`;
+        bookedSlots.add(slotKey);
+      });
+    }
+
+    // Thêm thông tin availability
+    const workingHoursWithAvailability = dayWorkingHours.map((workingHour) => ({
+      ...workingHour.toObject(),
+      timeSlots: workingHour.timeSlots.map((slot) => {
+        const slotKey = `${slot.startTime}-${slot.endTime}`;
+        return {
+          ...slot.toObject(),
+          isBooked: bookedSlots.has(slotKey),
+          isAvailableForBooking: slot.isAvailable && !bookedSlots.has(slotKey),
+        };
+      }),
+    }));
+
+    dateRange.push({
+      date: new Date(currentDate),
+      dayOfWeek,
+      workingHours: workingHoursWithAvailability,
+      totalSlots: dayWorkingHours.reduce(
+        (total, wh) => total + wh.timeSlots.length,
+        0
+      ),
+      availableSlots:
+        dayWorkingHours.reduce(
+          (total, wh) =>
+            total + wh.timeSlots.filter((slot) => slot.isAvailable).length,
+          0
+        ) - bookedSlots.size,
+      bookedSlots: bookedSlots.size,
+    });
+
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  return {
+    doctor: { ...doctor, services },
+    dateRange,
+    summary: {
+      totalDays: dateRange.length,
+      totalAvailableSlots: dateRange.reduce(
+        (sum, day) => sum + day.availableSlots,
+        0
+      ),
+      totalBookedSlots: dateRange.reduce(
+        (sum, day) => sum + day.bookedSlots,
+        0
+      ),
+    },
+  };
 };
 
 export const getDoctorByUserId = async (userId) => {
@@ -439,4 +653,28 @@ export const getWorkingHourStats = async (doctorId) => {
       bookedSlots: 0,
     }
   );
+};
+
+export const updateDoctorPaymentMethod = async (doctorId, payload) => {
+  try {
+    const doctor = await Doctor.findByIdAndUpdate(
+      doctorId,
+      { $set: { paymentMethod: payload } },
+      { new: true }
+    );
+
+    if (!doctor) {
+      throw new ApiError(
+        404,
+        "Không tìm thấy bác sĩ để cập nhật phương thức thanh toán"
+      );
+    }
+
+    return doctor;
+  } catch (error) {
+    throw new ApiError(
+      500,
+      "Đã xảy ra lỗi khi cập nhật phương thức thanh toán"
+    );
+  }
 };

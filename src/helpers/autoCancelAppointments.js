@@ -11,7 +11,7 @@ cron.schedule("* * * * *", async () => {
     status: "pending",
     paymentExpireAt: { $lt: now },
   });
-  console.log(`Đang cron server`);
+
   for (const appointment of expiredAppointments) {
     appointment.status = "canceled";
     await appointment.save();

@@ -11,6 +11,7 @@ import {
   getPaymentHistory,
   vnpayReturnHandler,
   processPayment,
+  getDoctorSlots,
 } from "../controllers/booking.controller.js";
 import verifyToken from "../middlewares/verifyToken.js";
 
@@ -20,7 +21,7 @@ const router = express.Router();
 
 // Public routes
 // Lấy slot trống của bác sĩ theo ngày
-router.get("/doctors/:doctorId/available-slots", getDoctorAvailableSlots);
+router.get("/doctors/:doctorId/slots", getDoctorSlots);
 
 // Protected routes - Require authentication
 // Đặt lịch khám mới

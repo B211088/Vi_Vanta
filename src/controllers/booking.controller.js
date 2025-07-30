@@ -10,7 +10,43 @@ import { ApiError } from "../utils/ApiResponse.js";
 
 const paymentService = new PaymentService();
 const bookingAppointmentService = new BookingAppointmentService();
+export const getDoctorSlots = async (req, res) => {
+  const { doctorId } = req.params;
+  const { date, type = "all" } = req.query;
 
+  if (!date) {
+    throw new ApiError(400, "Vui lòng cung cấp ngày cần kiểm tra");
+  }
+
+  const queryDate = new Date(date);
+  if (isNaN(queryDate.getTime())) {
+    throw new ApiError(400, "Định dạng ngày không hợp lệ");
+  }
+
+  let result;
+
+  switch (type) {
+    case "available":
+      result = await bookingAppointmentService.getDoctorAvailableSlots(
+        doctorId,
+        queryDate
+      );
+      break;
+    case "all":
+    default:
+      result = await bookingAppointmentService.getDoctorAllSlots(
+        doctorId,
+        queryDate
+      );
+      break;
+  }
+
+  res.json({
+    success: true,
+    data: result,
+    message: "Lấy thông tin lịch khám thành công",
+  });
+};
 // Lấy slot trống của bác sĩ theo ngày
 export const getDoctorAvailableSlots = async (req, res) => {
   try {

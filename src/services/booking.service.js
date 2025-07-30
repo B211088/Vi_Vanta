@@ -10,53 +10,136 @@ import BookingService from "../models/bookingService.model.js";
 import { EXPIRE_MINUTES } from "../config/appointment.config.js";
 
 class BookingAppointmentService {
+  async getDoctorAllSlots(doctorId, date) {
+    try {
+      const doctor = await Doctor.findById(doctorId);
+      if (!doctor) {
+        throw new ApiError(404, "Không tìm thấy bác sĩ");
+      }
+
+      const dayOfWeek = date.getDay();
+      const currentDate = new Date(date);
+      currentDate.setHours(0, 0, 0, 0);
+
+      // Lấy lịch làm việc hợp lệ
+      const workingHour = await WorkingHour.findOne({
+        doctorId,
+        dayOfWeek,
+        isActive: true,
+        startDate: { $lte: currentDate },
+        endDate: { $gte: currentDate },
+      });
+
+      if (!workingHour) {
+        return {
+          date: currentDate,
+          doctorId,
+          dayOfWeek,
+          hasWorkingHours: false,
+          totalSlots: 0,
+          availableSlots: [],
+          bookedSlots: [],
+          message: "Bác sĩ không có lịch làm việc trong ngày này",
+        };
+      }
+
+      const startOfDay = new Date(currentDate);
+      const endOfDay = new Date(currentDate);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      // Lấy các appointment đã đặt trong ngày
+      const appointments = await Appointment.find({
+        doctorId,
+        date: { $gte: startOfDay, $lte: endOfDay },
+        status: { $in: ["pending", "confirmed", "in-progress"] },
+      })
+        .populate("userId", "fullName phone email")
+        .populate("services", "name price");
+
+      // Tạo map các slot đã được đặt với thông tin chi tiết
+      const bookedSlotsMap = new Map();
+      appointments.forEach((appt) => {
+        bookedSlotsMap.set(appt.timeSlots.startTime, {
+          appointmentId: appt._id,
+          startTime: appt.timeSlots.startTime,
+          endTime: appt.timeSlots.endTime,
+          patientName: appt.patientInfo.fullName,
+          patientPhone: appt.patientInfo.phone,
+          status: appt.status,
+          services: appt.services,
+          totalFee: appt.totalFee,
+          paymentStatus: appt.paymentStatus,
+          bookingUser: appt.userId,
+          isOtherUser: appt.patientInfo.isOtherUser,
+        });
+      });
+
+      // Phân loại các time slots
+      const availableSlots = [];
+      const bookedSlots = [];
+      const unavailableSlots = [];
+
+      workingHour.timeSlots.forEach((slot) => {
+        const slotInfo = {
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          isAvailable: slot.isAvailable,
+        };
+
+        if (!slot.isAvailable) {
+          // Slot bị vô hiệu hóa bởi bác sĩ
+          unavailableSlots.push({
+            ...slotInfo,
+            reason: "Bác sĩ không khả dụng trong khung giờ này",
+          });
+        } else if (bookedSlotsMap.has(slot.startTime)) {
+          // Slot đã được đặt
+          bookedSlots.push({
+            ...slotInfo,
+            ...bookedSlotsMap.get(slot.startTime),
+            reason: "Đã có bệnh nhân đặt lịch",
+          });
+        } else {
+          // Slot khả dụng
+          availableSlots.push(slotInfo);
+        }
+      });
+
+      return {
+        date: currentDate,
+        doctorId,
+        doctorInfo: {
+          name: doctor.fullName,
+          specialization: doctor.specialization,
+          department: doctor.department,
+        },
+        dayOfWeek,
+        hasWorkingHours: true,
+        totalSlots: workingHour.timeSlots.length,
+        availableCount: availableSlots.length,
+        bookedCount: bookedSlots.length,
+        unavailableCount: unavailableSlots.length,
+        availableSlots,
+        bookedSlots,
+        unavailableSlots,
+        workingHourInfo: {
+          startDate: workingHour.startDate,
+          endDate: workingHour.endDate,
+          isActive: workingHour.isActive,
+        },
+      };
+    } catch (error) {
+      throw new ApiError(
+        500,
+        `Lỗi khi lấy thông tin lịch khám: ${error.message}`
+      );
+    }
+  }
   // Lấy slot trống của bác sĩ theo ngày
   async getDoctorAvailableSlots(doctorId, date) {
-    const doctor = await Doctor.findById(doctorId);
-    if (!doctor) {
-      throw new ApiError(404, "Không tìm thấy bác sĩ");
-    }
-
-    const dayOfWeek = date.getDay();
-
-    // Clone lại ngày để không bị mutation
-    const currentDate = new Date(date);
-    currentDate.setHours(0, 0, 0, 0);
-
-    // Lấy lịch làm việc hợp lệ (trong khoảng startDate -> endDate)
-    const workingHour = await WorkingHour.findOne({
-      doctorId,
-      dayOfWeek,
-      isActive: true,
-      startDate: { $lte: currentDate },
-      endDate: { $gte: currentDate },
-    });
-
-    if (!workingHour) {
-      return [];
-    }
-
-    const startOfDay = new Date(currentDate);
-    const endOfDay = new Date(currentDate);
-    endOfDay.setHours(23, 59, 59, 999);
-
-    // Lấy các appointment đã đặt trong ngày
-    const appointments = await Appointment.find({
-      doctorId,
-      date: { $gte: startOfDay, $lte: endOfDay },
-      status: { $in: ["pending", "confirmed", "in-progress"] },
-    });
-
-    const bookedTimes = appointments.map((appt) => appt.timeSlots.startTime);
-
-    // Trả về những timeSlots khả dụng
-    const availableSlots = workingHour.timeSlots.filter(
-      (slot) => slot.isAvailable && !bookedTimes.includes(slot.startTime)
-    );
-
-    return availableSlots;
+    const result = await this.getDoctorAllSlots(doctorId, date);
+    return result.availableSlots;
   }
-
   // Tạo appointment mới
   async createAppointment(appointmentData) {
     const session = await mongoose.startSession();

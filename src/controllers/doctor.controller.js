@@ -53,7 +53,17 @@ class doctorController {
   });
 
   getDoctorById = asyncHandler(async (req, res) => {
-    const doctor = await doctorService.getDoctorById(req.params.id);
+    const { id, date } = req.params;
+    const doctor = await doctorService.getDoctorById(id, date);
+    res
+      .status(200)
+      .json(new ApiResponse(200, doctor, "Lấy thông tin bác sĩ thành công"));
+  });
+
+  getDoctorAvailableSlots = asyncHandler(async (req, res) => {
+    const { date } = req.query;
+    const { id } = req.params;
+    const doctor = await doctorService.getDoctorSlotAvailability(id, date);
     res
       .status(200)
       .json(new ApiResponse(200, doctor, "Lấy thông tin bác sĩ thành công"));
@@ -298,6 +308,40 @@ class doctorController {
           "Cập nhật lịch làm việc thành công"
         )
       );
+  });
+
+  updateDoctorPaymentMethodController = asyncHandler(async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { paymentMethod } = req.body;
+
+      if (!paymentMethod) {
+        throw new ApiError(400, "Vui lòng cung cấp phương thức thanh toán");
+      }
+
+      const updatedDoctor = await updateDoctorPaymentMethod(id, paymentMethod);
+
+      res
+        .status(200)
+        .json(
+          new ApiResponse(
+            200,
+            updatedDoctor,
+            "Cập nhật phương thức thanh toán thành công"
+          )
+        );
+    } catch (error) {
+      console.error("Lỗi cập nhật phương thức thanh toán:", error);
+      res
+        .status(error.statusCode || 500)
+        .json(
+          new ApiResponse(
+            error.statusCode || 500,
+            null,
+            error.message || "Lỗi máy chủ"
+          )
+        );
+    }
   });
 }
 

@@ -79,7 +79,6 @@ const appointmentSchema = new mongoose.Schema(
     },
     paymentExpireAt: { type: Date, require: true },
     note: { type: String },
-    result: { type: String },
     cancelReason: String,
     completedAt: Date,
     canceledAt: Date,

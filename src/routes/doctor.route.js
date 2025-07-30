@@ -12,6 +12,10 @@ const DoctorController = new doctorController();
 router.get("/", DoctorController.getDoctors);
 router.get("/doctor/:id", DoctorController.getDoctorById);
 router.get(
+  "/doctor/:id/available-slot",
+  DoctorController.getDoctorAvailableSlots
+);
+router.get(
   "/doctor/:doctorId/range",
   DoctorController.getWorkingHoursByDateRange
 );
@@ -146,6 +150,16 @@ router.get(
   verifyToken,
   authorizeRoles("admin", "doctor"),
   DoctorController.getWorkingHourById
+);
+
+/* ──────────────────────────────────────────────────────────────
+   🟠 Cập nhật thông tin bác sĩ
+───────────────────────────────────────────────────────────────── */
+router.put(
+  "/doctors/:id/payment-method",
+  verifyToken,
+  authorizeRoles("admin", "doctor"),
+  DoctorController.updateDoctorPaymentMethodController
 );
 
 export default router;
