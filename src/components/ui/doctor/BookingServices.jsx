@@ -22,6 +22,7 @@ import {
   FileText,
   AlertTriangle,
   LucideEyeOff,
+  Stethoscope,
 } from "lucide-react";
 import {
   fetchDoctorByUserId,
@@ -531,29 +532,20 @@ const BookingServices = () => {
 
   return (
     <div className="min-h-screen w-full">
-      {/* Success/Error Messages */}
-      {successMessage && (
-        <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
-          {successMessage}
-        </div>
-      )}
-      {error && (
-        <div className="fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
-          {error}
-        </div>
-      )}
-
-      <div className="w-full mx-auto p-6">
-        {/* Header */}
+      <div className="w-full p-6">
+        {/* Header */}{" "}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Quản lý dịch vụ
-              </h1>
-              <p className="text-gray-600 mt-1">
-                Quản lý các dịch vụ khám chữa bệnh của bạn
-              </p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-teal-500 rounded-xl">
+                <Stethoscope className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Dịch vụ</h1>
+                <p className="text-gray-600">
+                  Quản lý dịch vụ của bạn khám chữa bệnh của bạn
+                </p>
+              </div>
             </div>
             <div className="flex gap-3">
               <button
@@ -573,81 +565,7 @@ const BookingServices = () => {
               </button>
             </div>
           </div>
-
-          {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-            <div className="bg-white rounded-lg p-4 border border-gray-200">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <BarChart3 className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Tổng dịch vụ</p>
-                  <p className="text-xl font-semibold text-gray-900">
-                    {stats.total}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg p-4 border border-gray-200">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <Eye className="w-5 h-5 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Đang hoạt động</p>
-                  <p className="text-xl font-semibold text-gray-900">
-                    {stats.active}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg p-4 border border-gray-200">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-red-100 rounded-lg">
-                  <EyeOff className="w-5 h-5 text-red-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Tạm dừng</p>
-                  <p className="text-xl font-semibold text-gray-900">
-                    {stats.inactive}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg p-4 border border-gray-200">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Users className="w-5 h-5 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Lượt đặt</p>
-                  <p className="text-xl font-semibold text-gray-900">
-                    {stats.totalBookings}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg p-4 border border-gray-200">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-yellow-100 rounded-lg">
-                  <DollarSign className="w-5 h-5 text-yellow-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Doanh thu</p>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {formatCurrency(stats.totalRevenue)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
-
         {/* Filters and Search */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -710,7 +628,6 @@ const BookingServices = () => {
             </div>
           </div>
         </div>
-
         {/* Services Table */}
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           {loading.fetch ? (
@@ -892,7 +809,6 @@ const BookingServices = () => {
             </>
           )}
         </div>
-
         {/* Pagination */}
         {filteredServices.length > 0 && totalPages > 1 && (
           <div className="mt-6 flex items-center justify-between">

@@ -23,9 +23,9 @@ import {
   Eye,
   AlertCircle,
   Users,
-  TrendingUp,
   DollarSign,
   Activity,
+  Clipboard,
 } from "lucide-react";
 import { updateAppointmentStatus } from "../../../services/booking.service";
 import { useNotify } from "../../../hook/useNotify";
@@ -234,20 +234,25 @@ const BookingManager = () => {
 
   const handleCompleteAppointment = async (appointmentId) => {
     try {
-      await dispatch(
-        updateAppointmentStatus(appointmentId, { status: "completed" })
+      const confirm = await notifyConfirm(
+        "Bạn có chắc chắn muốn hoàn thành đặt khám này không!"
       );
-      setAppointments((prev) =>
-        prev.map((apt) =>
-          apt._id === appointmentId
-            ? {
-                ...apt,
-                status: "completed",
-                completedAt: new Date().toISOString(),
-              }
-            : apt
-        )
-      );
+      if (confirm) {
+        await dispatch(
+          updateAppointmentStatus(appointmentId, { status: "completed" })
+        );
+        setAppointments((prev) =>
+          prev.map((apt) =>
+            apt._id === appointmentId
+              ? {
+                  ...apt,
+                  status: "completed",
+                  completedAt: new Date().toISOString(),
+                }
+              : apt
+          )
+        );
+      }
     } catch (error) {
       console.error("Error completing appointment:", error);
       alert("Có lỗi xảy ra khi hoàn thành lịch hẹn");
@@ -280,16 +285,18 @@ const BookingManager = () => {
   }
 
   return (
-    <div className="min-h-screen w-full  ">
-      <div className="w-full mx-auto bg-light-50 p-6 rounded-lg">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Quản lý lịch hẹn - Bác sĩ
-          </h1>
-          <p className="text-gray-600">
-            Theo dõi và quản lý lịch hẹn của bệnh nhân
-          </p>
+    <div className="min-h-screen w-full bg-light-50 p-6 rounded-lg ">
+      <div className="w-full ">
+        <div className="flex items-center justify-between pb-10">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-teal-500 rounded-xl">
+              <Clipboard className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Lịch hẹn</h1>
+              <p className="text-gray-600">Quản lý lịch hẹn với bệnh nhân</p>
+            </div>
+          </div>
         </div>
 
         {/* Statistics Cards */}
@@ -656,15 +663,20 @@ const BookingManager = () => {
                     </>
                   )}
 
-                  {appointment.status === "confirmed" && (
-                    <button
-                      onClick={() => handleCompleteAppointment(appointment._id)}
-                      className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
-                    >
-                      <CheckCircle className="w-4 h-4" />
-                      Hoàn thành khám
-                    </button>
-                  )}
+                  {appointment.status === "confirmed" &&
+                    (appointment.paymentMethod === "cash" ||
+                      (appointment.paymentMethod !== "cash" &&
+                        appointment.paymentStatus === "paid")) && (
+                      <button
+                        onClick={() =>
+                          handleCompleteAppointment(appointment._id)
+                        }
+                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        Hoàn thành khám
+                      </button>
+                    )}
 
                   <button
                     className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"

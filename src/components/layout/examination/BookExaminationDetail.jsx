@@ -18,7 +18,8 @@ const BookExaminationDetail = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { notifyWarning } = useNotify();
-  const { loading, error, doctor, workingHour } = useSelector(
+  fetchDoctorById;
+  const { loading, error, doctor, workingHour, availableSlots } = useSelector(
     (state) => state.booking
   );
   const { user } = useSelector((state) => state.auth);
@@ -34,7 +35,7 @@ const BookExaminationDetail = () => {
 
   const [showRequireLogin, setShowRequireLogin] = useState(false);
   const [timeSlots, setTimeSlots] = useState([]);
-  console.log({ workingHour, selectedDate });
+  console.log({ availableSlots, workingHour, doctor });
 
   // Tách query string
   const searchParams = new URLSearchParams(location.search);
@@ -54,7 +55,7 @@ const BookExaminationDetail = () => {
 
   useEffect(() => {
     if (id && selectedDate) {
-      dispatch(getAvailableSlots(id, selectedDate));
+      dispatch(getAvailableSlots(id, { date: selectedDate }));
     }
   }, [selectedDate, id]);
 
@@ -68,7 +69,7 @@ const BookExaminationDetail = () => {
     );
     return dayItem ? dayItem.timeSlots : [];
   };
-  console.log({ selectedDate });
+
   const toggleService = (service) => {
     setSelectedServices((prev) => {
       const isAlreadySelected = prev.some((s) => s.name === service.name);
@@ -609,7 +610,7 @@ const BookExaminationDetail = () => {
 
                 {/* Time Selection - Improved */}
                 {selectedDate ? (
-                  timeSlots.length > 0 ? (
+                  availableSlots?.length > 0 ? (
                     <div className="mb-6">
                       <div className="flex items-center justify-between mb-4">
                         <h4 className="font-semibold text-gray-800 flex items-center gap-2">
@@ -620,7 +621,7 @@ const BookExaminationDetail = () => {
 
                       {/* Time Grid */}
                       <div className="grid grid-cols-2 gap-2">
-                        {timeSlots.map((time, index) => {
+                        {availableSlots?.map((time, index) => {
                           const isUnavailable = unavailableTimes.includes(time);
                           const isSelected =
                             `${selectedTime?.startTime} - ${selectedTime?.endTime}` ===
@@ -632,14 +633,19 @@ const BookExaminationDetail = () => {
                               onClick={() =>
                                 !isUnavailable && handleTimeSelect(time)
                               }
-                              disabled={isUnavailable}
+                              title={
+                                time.isBooked && "Thời gian này đã được đặt"
+                              }
+                              disabled={isUnavailable || time.isBooked}
                               className={`p-3 text-sm rounded-lg border text-center transition-all duration-200 
                 ${
                   isUnavailable
-                    ? "bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed"
+                    ? "bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed "
                     : isSelected
-                    ? "bg-blue-500 text-white border-blue-500 shadow-md"
-                    : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300"
+                    ? "bg-blue-500 text-white border-blue-500 shadow-md cursor-pointer"
+                    : time.isBooked
+                    ? "bg-red-200 border-red-400 text-light-50"
+                    : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50 cursor-pointer hover:border-gray-300"
                 }
               `}
                             >

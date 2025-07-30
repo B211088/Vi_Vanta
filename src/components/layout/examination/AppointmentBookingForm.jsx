@@ -13,7 +13,8 @@ const AppointmentBookingForm = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const location = useLocation();
-  const { loading, error, user } = useSelector((state) => state.auth);
+  const { loading, error, user, address } = useSelector((state) => state.auth);
+
   const { selectedServices, doctor, selectedDate, selectedTime, totalPrices } =
     location.state || {};
 
@@ -28,7 +29,6 @@ const AppointmentBookingForm = () => {
     zalo: "",
     usePhoneAsZalo: false,
     address: "",
-
     note: "",
     paymentMethod: "",
     otherUser: {
@@ -42,7 +42,7 @@ const AppointmentBookingForm = () => {
 
   const [promoCode, setPromoCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  console.log({ formData, user, address });
   // Initialize form data when component mounts or user changes
   useEffect(() => {
     if (user && formData.userType === "banThan") {
@@ -52,6 +52,7 @@ const AppointmentBookingForm = () => {
         phone: user.phone || "",
         email: user.email || "",
         gender: user.gender || "",
+        address: `${address.specificAddress} -${address.ward.name} - ${address.district.name} - ${address.province.name}`,
         dateOfBirth: user.dateOfBirth
           ? formatDateYYYYMMDD(user.dateOfBirth)
           : "",
@@ -63,6 +64,7 @@ const AppointmentBookingForm = () => {
         name: "",
         phone: "",
         email: "",
+        address: "",
         gender: "",
         dateOfBirth: "",
       }));
@@ -126,8 +128,6 @@ const AppointmentBookingForm = () => {
       }));
     }
   };
-
-  console.log({ formData, doctor, selectedServices }, selectedServices.reasons);
 
   const validateForm = () => {
     const errors = [];
@@ -532,7 +532,7 @@ const AppointmentBookingForm = () => {
                     {/* Zalo */}
                     <div className="mb-4">
                       <label className="block text-gray-700 font-medium mb-2">
-                        Zalo
+                        2. Zalo - bác sĩ sẽ hỗ trợ bạn thông qua zalo
                       </label>
                       <input
                         type="text"
@@ -540,7 +540,7 @@ const AppointmentBookingForm = () => {
                         value={formData.zalo}
                         onChange={handleInputChange}
                         placeholder="Số Zalo để liên hệ"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full p-3 border border-gray-300 rounded-lg f focus:border-blue-500"
                         disabled={isSubmitting}
                       />
                     </div>
@@ -565,7 +565,7 @@ const AppointmentBookingForm = () => {
                     {/* Address */}
                     <div className="mb-4">
                       <label className="block text-gray-700 font-medium mb-2">
-                        Địa chỉ chi tiết
+                        3. Địa chỉ chi tiết
                       </label>
                       <input
                         type="text"
@@ -573,7 +573,7 @@ const AppointmentBookingForm = () => {
                         value={formData.address}
                         onChange={handleInputChange}
                         placeholder="Địa chỉ chi tiết của bạn"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full p-3 border border-gray-300 rounded-lg  focus:border-blue-500"
                         disabled={isSubmitting}
                       />
                     </div>
@@ -581,7 +581,7 @@ const AppointmentBookingForm = () => {
 
                   <div>
                     <label className="block text-gray-700 font-medium mb-2">
-                      3. Một số lưu ý cho bác sĩ?{" "}
+                      4. Một số lưu ý cho bác sĩ?{" "}
                       <span className="text-red-500">*</span>
                     </label>
                     <textarea
@@ -590,7 +590,7 @@ const AppointmentBookingForm = () => {
                       onChange={handleInputChange}
                       placeholder="Mô tả triệu chứng hoặc lý do bạn muốn khám..."
                       rows="4"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-3 border border-gray-300 rounded-lg  focus:border-blue-500"
                       disabled={isSubmitting}
                       required
                     />

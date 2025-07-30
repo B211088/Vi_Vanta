@@ -84,7 +84,7 @@ const bookingSlice = createSlice({
     // Available slots actions
     getAvailableSlotsSuccess: (state, action) => {
       state.availableSlotsLoading = false;
-      state.availableSlots = action.payload;
+      state.availableSlots = action.payload.availableSlots;
       state.availableSlotsError = null;
     },
     getAvailableSlotsFailure: (state, action) => {

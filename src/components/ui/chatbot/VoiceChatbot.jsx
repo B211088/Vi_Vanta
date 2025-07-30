@@ -379,7 +379,10 @@ const VoiceChatbot = () => {
               )}
             </div>
             <button
-              onClick={handleClose}
+              onClick={() => {
+                handleClose();
+                stopSpeaking();
+              }}
               className="text-white hover:text-gray-200 transition-colors"
             >
               <X size={20} />

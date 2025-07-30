@@ -312,27 +312,13 @@ const WorkingHour = () => {
   }
 
   return (
-    <div className="p-3 w-full min-h-screen">
-      <div className="w-full">
-        {/* Notification */}
-        {notification && (
-          <div
-            className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
-              notification.type === "success" ? "bg-green-500" : "bg-red-500"
-            } text-white`}
-          >
-            <div className="flex items-center gap-2">
-              <AlertCircle className="h-4 w-4" />
-              <span>{notification.message}</span>
-            </div>
-          </div>
-        )}
-
+    <div className=" w-full min-h-screen p-6">
+      <div className="w-full ">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-blue-500 rounded-xl">
+              <div className="p-3 bg-teal-500 rounded-xl">
                 <Calendar className="h-6 w-6 text-white" />
               </div>
               <div>

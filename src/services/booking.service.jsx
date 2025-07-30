@@ -102,24 +102,24 @@ export const fetchDoctorById = (id) => async (dispatch) => {
 };
 
 // Lấy slot trống của bác sĩ
-export const getAvailableSlots = (doctorId, date) => async (dispatch) => {
-  try {
-    dispatch(availableSlotsLoadingStart());
-    const response = await api.get(
-      `/api/v1/booking/doctors/${doctorId}/available-slots`,
-      {
-        params: { date },
-      }
-    );
-    dispatch(getAvailableSlotsSuccess(response.data.data));
-    return { success: true, data: response.data.data };
-  } catch (error) {
-    const errorMessage =
-      error.response?.data.message || "Không thể lấy danh sách slot trống";
-    dispatch(getAvailableSlotsFailure(errorMessage));
-    throw error;
-  }
-};
+export const getAvailableSlots =
+  (doctorId, params = {}) =>
+  async (dispatch) => {
+    try {
+      dispatch(availableSlotsLoadingStart());
+      const response = await api.get(
+        `/api/v1/doctors/doctor/${doctorId}/available-slot`,
+        { params }
+      );
+      dispatch(getAvailableSlotsSuccess(response.data.data));
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      const errorMessage =
+        error.response?.data.message || "Không thể lấy danh sách slot trống";
+      dispatch(getAvailableSlotsFailure(errorMessage));
+      throw error;
+    }
+  };
 
 // Tạo appointment mới
 export const createAppointment = (appointmentData) => async (dispatch) => {

@@ -19,6 +19,8 @@ import {
   Droplet,
   MoonStar,
   HeartPulse,
+  Lock,
+  LogIn,
 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -85,7 +87,9 @@ const AllTools = () => {
             <Link
               to={`/${tool.id}`}
               key={tool.id}
-              className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-105"
+              className={` ${
+                tool.loginRequire ? "" : "bg-white"
+              }rounded-lg shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-105 relative overflow-hidden`}
             >
               <div className="p-6">
                 <div
@@ -104,6 +108,13 @@ const AllTools = () => {
                   <ChevronRight className="h-4 w-4 text-gray-400" />
                 </div>
               </div>
+              {tool.loginRequire && (
+                <div className="absolute inset-0 z-20 bg-[#42424268] flex items-center justify-center">
+                  <div className="flex items-center gap-2 text-xs bg-light-50 text-dark-200 rounded-full p-2 font-bold">
+                    <span>Cần đăng nhập</span> <LogIn className="w-4 h-4" />
+                  </div>
+                </div>
+              )}
             </Link>
           );
         })}
@@ -130,6 +141,7 @@ const healthTools = [
     icon: Scale,
     color: "bg-teal-500",
     category: "Cân nặng",
+    loginRequire: true,
   },
   {
     id: "tools/heart-rate",
@@ -138,6 +150,7 @@ const healthTools = [
     icon: Heart,
     color: "bg-red-500",
     category: "Tim mạch",
+    loginRequire: false,
   },
   {
     id: "tools/vaccine",
@@ -146,6 +159,7 @@ const healthTools = [
     icon: Syringe,
     color: "bg-indigo-500",
     category: "Trẻ em",
+    loginRequire: true,
   },
   {
     id: "tools/body-fat",
@@ -154,6 +168,7 @@ const healthTools = [
     icon: Calculator,
     color: "bg-yellow-500",
     category: "Cân nặng",
+    loginRequire: false,
   },
   {
     id: "tools/due-date",
@@ -163,6 +178,7 @@ const healthTools = [
     icon: Baby,
     color: "bg-pink-400",
     category: "Mang thai",
+    loginRequire: false,
   },
   {
     id: "tools/water-intake",
@@ -171,6 +187,7 @@ const healthTools = [
     icon: Droplets,
     color: "bg-cyan-500",
     category: "Dinh dưỡng",
+    loginRequire: false,
   },
   {
     id: "tools/sleep-caculator",
@@ -179,6 +196,7 @@ const healthTools = [
     icon: Timer,
     color: "bg-purple-500",
     category: "Giấc ngủ",
+    loginRequire: false,
   },
   {
     id: "tools/stress",
@@ -187,6 +205,7 @@ const healthTools = [
     icon: Brain,
     color: "bg-pink-500",
     category: "Tâm lý",
+    loginRequire: false,
   },
   {
     id: "tools/diabetes-risk",
@@ -195,6 +214,7 @@ const healthTools = [
     icon: BarChart3,
     color: "bg-amber-600",
     category: "Chẩn đoán",
+    loginRequire: false,
   },
   {
     id: "tools/anemia-check",
@@ -204,6 +224,7 @@ const healthTools = [
     icon: Droplet,
     color: "bg-red-400",
     category: "Dinh dưỡng",
+    loginRequire: false,
   },
   {
     id: "tools/sleep-quality",
@@ -213,6 +234,7 @@ const healthTools = [
     icon: MoonStar,
     color: "bg-indigo-400",
     category: "Giấc ngủ",
+    loginRequire: false,
   },
   {
     id: "tools/cardiac-risk",
@@ -222,5 +244,6 @@ const healthTools = [
     icon: HeartPulse,
     color: "bg-rose-600",
     category: "Tim mạch",
+    loginRequire: false,
   },
 ];

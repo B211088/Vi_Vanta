@@ -329,8 +329,14 @@ const Appointment = () => {
                           )}`}
                         >
                           {appointment.status === "pending"
-                            ? "Đang chờ"
-                            : appointment.status}
+                            ? "Đang chờ xác nhận "
+                            : appointment.status === "in-progress"
+                            ? "Đang thực hiện"
+                            : appointment.status === "confirmed"
+                            ? "Đã Xác nhận"
+                            : appointment.status === "completed"
+                            ? "Đã hoàn thành"
+                            : "Đã hủy"}
                         </span>
                         <span
                           className={`px-3 py-1 rounded-full text-sm font-medium ${getPaymentStatusColor(
@@ -467,7 +473,8 @@ const Appointment = () => {
                       </button>
                     </>
                   )}
-                  {(appointment.paymentStatus === "unpaid" ||
+                  {((appointment.paymentMethod !== "cash" &&
+                    appointment.paymentStatus === "unpaid") ||
                     appointment.paymentStatus === "pending") && (
                     <button
                       className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"

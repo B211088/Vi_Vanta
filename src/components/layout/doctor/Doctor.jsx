@@ -3,7 +3,15 @@ import Header from "../Header";
 import { useTheme } from "../../../hook/useTheme";
 import { useState } from "react";
 import { useLocation, Link, Outlet } from "react-router-dom";
-import { CalendarArrowUp, ClipboardPlus, Clock } from "lucide-react";
+import {
+  Banknote,
+  CalendarArrowUp,
+  ClipboardPlus,
+  Clock,
+  IdCardIcon,
+  User,
+  UserPen,
+} from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { fetchDoctorByUserId } from "../../../services/doctor.service";
@@ -56,15 +64,6 @@ const Doctor = () => {
                 />
                 <span>{doctor?.name}</span>
               </div>
-              {/* 
-              <div className="w-full px-1">
-                <h3 className="text-sm">Chuyên khoa</h3>
-                <div className="text-sm flex flex-wrap gap-1">
-                  <div className="p-1 border-1 w-fit border-dark-800 rounded-md">
-                    {doctor.specialty?.join(", ")}
-                  </div>
-                </div>
-              </div> */}
             </div>
 
             {nav.map((option) => (
@@ -169,5 +168,32 @@ const nav = [
         icon: Clock,
       },
     ],
+  },
+  {
+    id: "info",
+    path: "/doctor/info",
+    name: "Quản lý hồ sơ",
+    icon: UserPen,
+    items: [
+      {
+        id: "profile",
+        path: "profile",
+        name: "Thông tin cá nhân",
+        icon: User,
+      },
+      {
+        id: "payment",
+        path: "payment",
+        name: "Thanh toán",
+        icon: IdCardIcon,
+      },
+    ],
+  },
+  {
+    id: "finance",
+    path: "/doctor/finance",
+    name: "Tài chính",
+    icon: Banknote,
+    items: [],
   },
 ];
