@@ -12,7 +12,7 @@
     "dev": "nodemon server.js",
     "chroma": "chroma run --host localhost --port 8000",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepare": "node ./scripts/setup-env.js",
+    "prepare": "node src/scripts/setup-env.js",
     "build": "node ./src/server.mjs"
   
   },
