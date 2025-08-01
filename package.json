@@ -6,13 +6,14 @@
   "author": "truongchinguyen",
   "type": "module",
   "main": "server.js",
-  "scripts": {
-    "start": "nodemon src/server.mjs",
-    "dev": "nodemon server.js",
-    "chroma": "chroma run --host localhost --port 8000",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "patch-package"
-  },
+"scripts": {
+  "start": "nodemon src/server.mjs",        
+  "prod": "node src/server.mjs",          
+  "dev": "nodemon server.js",
+  "chroma": "chroma run --host localhost --port 8000",
+  "test": "echo \"Error: no test specified\" && exit 1",
+  "postinstall": "patch-package"
+},
   "devDependencies": {
     "argon": "^2.0.21",
     "body-parser": "^2.2.0",

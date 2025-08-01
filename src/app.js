@@ -53,9 +53,9 @@ app.use(express.urlencoded({ extended: true, limit: "500mb" }));
 app.use(
   cors({
     origin: [
-      "http://localhost:5173",
-      "http://localhost:5174",
-      "http://localhost:8000",
+      process.env.CLIENT_URL,
+      process.env.ADMIN_CLIENT_URL,
+      process.env.CHROMA_SERVER_URL,
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
