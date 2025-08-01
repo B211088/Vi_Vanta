@@ -26,6 +26,7 @@ import {
   fetchMostViewedArticles,
 } from "../../../services/article.service";
 import { Link } from "react-router-dom";
+import { fetchAllTopics } from "../../../services/topic.service";
 
 // Responsive Skeleton Loading Component
 const ArticlesSkeleton = () => {
@@ -119,6 +120,7 @@ const ArticlesSkeleton = () => {
 
 const ArticlesSection = () => {
   const dispatch = useDispatch();
+
   const { loading, articlesAttribute } = useSelector((state) => state.article);
   const [activeTab, setActiveTab] = useState("featured");
   const [searchQuery, setSearchQuery] = useState("");

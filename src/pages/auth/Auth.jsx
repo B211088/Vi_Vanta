@@ -10,62 +10,26 @@ const Auth = () => {
   const isLoginPage = location.pathname.includes("login");
   const { isDarkMode } = useTheme();
   return (
-    <Background>
-      <ButtonToggleTheme />
-      <div className="w-full flex p-[30px] justify-center items-center ">
+    <div className="min-h-screen flex justify-center bg-light-50 p-20">
+      {" "}
+      <div className="w-full flex p-[30px] justify-center ">
         <div
           style={{ maxHeight: "calc(100vh - 60px)" }}
-          className={`w-10/12 h-full flex items-center justify-center ${
+          className={`w-9/12 h-full flex items-center justify-center border-1 border-dark-800 r ${
             isDarkMode ? "bg-light-50" : "bg-dark-300"
           }  rounded-xl overflow-hidden `}
         >
-          <div className="w-5/12 h-full flex flex-col justify-center  px-[30px] py-[20px] ">
-            <div className="w-full flex flex-col h-full items-center justify-between ">
-              <div className="w-full flex flex-col items-center">
-                <div
-                  className={`w-full flex gap-[5px] ${
-                    isDarkMode ? "bg-dark-800" : "bg-dark-600"
-                  } px-[5px] py-[6px] rounded-sm my-[20px] relative`}
-                >
-                  <div
-                    className={`absolute w-6/12 h-[calc(100%-10px)] top-[5px]  ${
-                      isDarkMode ? "bg-light-50" : " bg-dark-400 "
-                    } rounded-sm transition-all duration-300 ease-in-out ${
-                      isLoginPage ? "left-[5px]" : "left-[calc(50%+-5px)]"
-                    }`}
-                  />
-                  <Link
-                    to="login"
-                    className={`w-6/12 flex items-center justify-center px-[10px] py-[5px] rounded-sm text-sm cursor-pointer relative z-10 transition-colors duration-300
-                      ${
-                        isLoginPage
-                          ? isDarkMode
-                            ? "text-dark-50 font-bold"
-                            : "text-light-50 font-bold"
-                          : isDarkMode
-                          ? "text-dark-50 font-normal"
-                          : "text-light-50 font-normal"
-                      }`}
-                  >
-                    <span>Đăng nhập</span>
-                  </Link>
-                  <Link
-                    to="register"
-                    className={`w-6/12 flex items-center justify-center px-[10px] py-[5px] rounded-sm text-sm cursor-pointer relative z-10 transition-colors duration-300
-                      ${
-                        !isLoginPage
-                          ? isDarkMode
-                            ? "text-dark-50 font-bold"
-                            : "text-light-50 font-bold"
-                          : isDarkMode
-                          ? "text-dark-50 font-normal"
-                          : "text-light-50 font-normal"
-                      }`}
-                  >
-                    <span>Đăng ký</span>
-                  </Link>
-                </div>
-              </div>
+          <div className="w-4/12 h-full flex ">
+            <div className="w-full h-full relative">
+              <img
+                src={banner}
+                className="object-cover w-full min-h-full   border-dark-700"
+                alt=""
+              />
+            </div>
+          </div>{" "}
+          <div className="w-8/12 h-full flex flex-col items-center justify-center  px-[30px] py-[20px] ">
+            <div className="w-8/12 flex flex-col h-full items-center justify-center">
               <Outlet />
               <div className="w-full flex flex-col ">
                 <div className="w-full flex items-center gap-[5px] font-light text-sm py-[10px]">
@@ -81,21 +45,29 @@ const Auth = () => {
                     </p>
                   </div>
                 </div>
+                <div className="w-full flex  mt-5 text-sm">
+                  {isLoginPage ? (
+                    <div className="w-full flex justify-center gap-1">
+                      <span>Bạn chưa có tài khoản? </span>
+                      <Link to="register" className="font-bold text-teal-500">
+                        Đăng ký
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="w-full flex gap-1 justify-center">
+                      <span>Bạn chưa có tài khoản? </span>
+                      <Link to="login" className="font-bold text-teal-500">
+                        Đăng nhập
+                      </Link>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </div>
-          <div className="w-7/12 h-full flex ">
-            <div className="w-full h-full p-[10px] relative">
-              <img
-                src={banner}
-                className="object-cover w-full max-h-full rounded-[10px] border-1 border-dark-700"
-                alt=""
-              />
             </div>
           </div>
         </div>
       </div>
-    </Background>
+    </div>
   );
 };
 

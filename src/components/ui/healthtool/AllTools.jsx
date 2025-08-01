@@ -24,10 +24,11 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
 const AllTools = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Tất cả");
-
+  const { user } = useSelector((state) => state.auth);
   const categories = [
     "Tất cả",
     "Cân nặng",
@@ -108,8 +109,8 @@ const AllTools = () => {
                   <ChevronRight className="h-4 w-4 text-gray-400" />
                 </div>
               </div>
-              {tool.loginRequire && (
-                <div className="absolute inset-0 z-20 bg-[#42424268] flex items-center justify-center">
+              {!user && tool.loginRequire && (
+                <div className="absolute inset-0 z-20 bg-[#4242422d] flex items-center justify-center">
                   <div className="flex items-center gap-2 text-xs bg-light-50 text-dark-200 rounded-full p-2 font-bold">
                     <span>Cần đăng nhập</span> <LogIn className="w-4 h-4" />
                   </div>

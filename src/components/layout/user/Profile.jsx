@@ -9,7 +9,7 @@ const Profile = () => {
   const [updateUserProfileModal, setUpdateUserProfileModal] = useState(false);
   const [uploadUserAvatarModal, setUploadUserAvatarModal] = useState(false);
   const [updataUserAddressModal, setUpdataUserAddressModa] = useState(false);
-  console.log({ user });
+
   return (
     <div className="flex-1 flex flex-col gap-[20px] pl-[20px] overflow-hidden">
       {updateUserProfileModal && (

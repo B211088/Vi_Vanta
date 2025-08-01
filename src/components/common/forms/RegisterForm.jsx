@@ -5,6 +5,7 @@ import { useTheme } from "../../../hook/useTheme";
 import { useNotify } from "../../../hook/useNotify";
 import { registerUser } from "../../../services/auth.service";
 import { clearError } from "../../../store/slices/authSlice";
+import { KeySquare, Mail } from "lucide-react";
 
 const RegisterForm = () => {
   const dispatch = useDispatch();
@@ -119,14 +120,29 @@ const RegisterForm = () => {
     }
   };
   return (
-    <form onSubmit={handleSubmit} className="w-full flex flex-col gap-[16px]">
+    <form
+      onSubmit={handleSubmit}
+      className="w-full flex flex-col gap-5 font-nunito"
+    >
+      {" "}
+      <div className="w-full flex flex-col items-center mb-2">
+        <h1 className="font-bold text-2xl">
+          Trở thành thành viên của chúng tôi
+        </h1>
+        <p className="text-sm text-dark-300 py-2">
+          Đăng ký tài khoản để sử dụng thêm nhiều chức năng của vivanta
+        </p>
+      </div>
       <div className="w-full flex flex-col">
-        <span className="text-sm font-bold pb-[5px]">Email*</span>
         <div
           className={`w-full flex items-center border-[1px] ${
             isDarkMode ? " border-dark-600 " : "bg-dark-400 border-transparent"
           }  rounded-sm`}
         >
+          {" "}
+          <div className="p-2">
+            <Mail className="w-4 h-4 text-dark-400" />
+          </div>
           <input
             className="flex-1  text-sm px-[5px] py-[8px] outline-none"
             placeholder="Nhập email của bạn"
@@ -139,12 +155,14 @@ const RegisterForm = () => {
         </div>
       </div>
       <div className="w-full flex flex-col">
-        <span className="text-sm font-bold pb-[5px]">Password*</span>
         <div
           className={`w-full flex items-center border-[1px] ${
             isDarkMode ? " border-dark-600 " : "bg-dark-400 border-transparent"
           }  rounded-sm`}
         >
+          <div className="p-2">
+            <KeySquare className="w-4 h-4 text-dark-400" />
+          </div>
           <input
             className="flex-1  text-sm px-[5px] py-[8px] outline-none"
             placeholder="Nhập mật khẩu của bạn"
@@ -155,7 +173,7 @@ const RegisterForm = () => {
             onChange={handleChange}
           />
           <div
-            className="px-[8px] flex justify-center items-center cursor-pointer"
+            className="px-2  flex justify-center items-center cursor-pointer text-sm text-dark-400"
             onClick={handleToggleShowPassword}
           >
             {showPassword ? (
@@ -165,7 +183,7 @@ const RegisterForm = () => {
             )}
           </div>
         </div>
-        <div className="mt-2 text-[0.7rem]">
+        <div className="mt-2 text-xs p-2">
           <div className="space-y-1">
             <div
               className={`flex items-center gap-2 ${
@@ -231,12 +249,14 @@ const RegisterForm = () => {
         </div>
       </div>
       <div className="w-full flex flex-col">
-        <span className="text-sm font-bold pb-[5px]">Confirm Password*</span>
         <div
           className={`w-full flex items-center border-[1px] ${
             isDarkMode ? " border-dark-600 " : "bg-dark-400 border-transparent"
           }  rounded-sm`}
         >
+          <div className="p-2">
+            <KeySquare className="w-4 h-4 text-dark-400" />
+          </div>
           <input
             className="flex-1  text-sm px-[5px] py-[8px] outline-none"
             placeholder="Nhập lại mật khẩu của bạn"
@@ -246,7 +266,7 @@ const RegisterForm = () => {
             onChange={handleChange}
           />
           <div
-            className="px-[8px] flex justify-center items-center cursor-pointer"
+            className="px-2 flex justify-center items-center cursor-pointer text-sm text-dark-400"
             onClick={handleToggleShowConfirmpassword}
           >
             {showConfimpassword ? (

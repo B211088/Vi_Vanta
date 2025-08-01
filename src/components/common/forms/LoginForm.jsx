@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../../hook/useTheme";
 import { useNotify } from "../../../hook/useNotify";
 import { loginUser } from "../../../services/auth.service";
+import { KeySquare, Mail } from "lucide-react";
 
 const LoginForm = () => {
   const dispatch = useDispatch();
@@ -72,7 +73,9 @@ const LoginForm = () => {
 
     try {
       const response = await dispatch(loginUser(formData));
+      notifySuccess(response.data.message);
     } catch (err) {
+      notifyError(err.response.data.message);
       if (err.response.data.active === false) {
         navigate("/confirm_account/send_code", {
           state: { email: formData.email },
@@ -106,16 +109,29 @@ const LoginForm = () => {
     }
   };
   return (
-    <form onSubmit={handleSubmit} className="w-full flex flex-col gap-[16px]">
-      <div className="w-full flex flex-col">
-        <span className="text-sm font-bold pb-[5px]">Email*</span>
+    <form
+      onSubmit={handleSubmit}
+      className="w-full flex flex-col gap-5 font-nunito"
+    >
+      <div className="w-full flex flex-col ">
+        <div className="w-full flex flex-col items-center mb-5">
+          <h1 className="font-bold text-2xl">
+            Chào mừng bạn trở lại với vivanta
+          </h1>
+          <p className="text-sm text-dark-300 py-2">
+            Hãy đăng nhập tài khoản để tiếp tục
+          </p>
+        </div>
         <div
           className={`w-full flex items-center border-[1px] ${
             isDarkMode ? " border-dark-600 " : "bg-dark-400 border-transparent"
           }  rounded-sm`}
         >
+          <div className="p-2">
+            <Mail className="w-4 h-4 text-dark-400" />
+          </div>
           <input
-            className="flex-1  text-sm px-[5px] py-[8px] outline-none"
+            className="flex-1  text-sm px-[5px] py-[8px] outline-none text-dark-200"
             placeholder="Nhập email của bạn"
             type="email"
             required
@@ -126,14 +142,16 @@ const LoginForm = () => {
         </div>
       </div>
       <div className="w-full flex flex-col">
-        <span className="text-sm font-bold pb-[5px]">Password*</span>
         <div
           className={`w-full flex items-center border-[1px] ${
             isDarkMode ? " border-dark-600 " : "bg-dark-400 border-transparent"
           }  rounded-sm`}
         >
+          <div className="p-2">
+            <KeySquare className="w-4 h-4 text-dark-400" />
+          </div>
           <input
-            className="flex-1  text-sm px-[5px] py-[8px] outline-none "
+            className="flex-1  text-sm px-[5px] py-[8px] outline-none focus:boder-1 bo "
             placeholder="Nhập mật khẩu của bạn"
             type={showPassword ? "text" : "password"}
             name="password"
@@ -142,7 +160,7 @@ const LoginForm = () => {
             onChange={handleChange}
           />
           <div
-            className="px-[8px] flex justify-center items-center cursor-pointer"
+            className="px-2 text-sm flex justify-center items-center cursor-pointer text-dark-400"
             onClick={handleToggleShowPassword}
           >
             {showPassword ? (
@@ -153,70 +171,6 @@ const LoginForm = () => {
           </div>
         </div>
       </div>{" "}
-      <div className="mt-2 text-[0.7rem]">
-        <div className="space-y-1">
-          <div
-            className={`flex items-center gap-2 ${
-              passwordChecks.minLength ? "text-green-500" : ""
-            }`}
-          >
-            <i
-              className={`fas ${
-                passwordChecks.minLength ? "fa-check" : "fa-times"
-              }`}
-            ></i>
-            <span>Tối thiểu 12 ký tự</span>
-          </div>
-          <div
-            className={`flex items-center gap-2 ${
-              passwordChecks.hasUpperCase ? "text-green-500" : ""
-            }`}
-          >
-            <i
-              className={`fas ${
-                passwordChecks.hasUpperCase ? "fa-check" : "fa-times"
-              }`}
-            ></i>
-            <span>Ít nhất 1 chữ cái in hoa (A–Z)</span>
-          </div>
-          <div
-            className={`flex items-center gap-2 ${
-              passwordChecks.hasLowerCase ? "text-green-500" : ""
-            }`}
-          >
-            <i
-              className={`fas ${
-                passwordChecks.hasLowerCase ? "fa-check" : "fa-times"
-              }`}
-            ></i>
-            <span>Ít nhất 1 chữ cái thường (a–z)</span>
-          </div>
-          <div
-            className={`flex items-center gap-2 ${
-              passwordChecks.hasNumber ? "text-green-500" : ""
-            }`}
-          >
-            <i
-              className={`fas ${
-                passwordChecks.hasNumber ? "fa-check" : "fa-times"
-              }`}
-            ></i>
-            <span>Ít nhất 1 chữ số (0–9)</span>
-          </div>
-          <div
-            className={`flex items-center gap-2 ${
-              passwordChecks.hasSpecialChar ? "text-green-500" : ""
-            }`}
-          >
-            <i
-              className={`fas ${
-                passwordChecks.hasSpecialChar ? "fa-check" : "fa-times"
-              }`}
-            ></i>
-            <span>Ít nhất 1 ký tự đặc biệt: @, #, $, !, &</span>
-          </div>
-        </div>
-      </div>
       <div className="w-full flex items-center gap-[5px]  rounded-sm ">
         <input
           className="cursor-pointer"

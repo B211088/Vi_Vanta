@@ -42,6 +42,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchUserHealthInfo } from "../../services/health.service";
 import VoiceChatbot from "../../components/ui/chatbot/VoiceChatbot";
+import ArticlesSectionTopic from "../../components/ui/article/ArticlesSectionTopic";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -258,30 +259,7 @@ const Home = () => {
       <ArticlesSection />
       <VoiceChatbot />
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-teal-50 to-emerald-50 py-20">
-        <div className="max-w-7xl mx-auto px-6 text-center">
-          <h1 className="text-4xl sm:text-6xl font-bold text-gray-900 mb-6">
-            Chăm sóc sức khỏe
-            <span className="text-teal-600"> thông minh</span>
-          </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-            Nền tảng chăm sóc sức khỏe toàn diện với AI, công cụ đo lường chính
-            xác và đội ngũ bác sĩ chuyên khoa
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="vivanta-ai"
-              className="bg-teal-500 text-white px-8 py-3 rounded-lg hover:bg-teal-600 transition-colors font-semibold"
-            >
-              Bắt đầu ngay
-            </Link>
-            <button className="border border-teal-500 text-teal-600 px-8 py-3 rounded-lg hover:bg-teal-50 transition-colors font-semibold">
-              Tìm hiểu thêm
-            </button>
-          </div>
-        </div>
-      </section>
-
+      <ArticlesSectionTopic />
       {/* Health Tools Section */}
       <section id="tools" className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-6">
@@ -330,34 +308,6 @@ const Home = () => {
           </div>
         </div>
       </section>
-
-      {/* Stats Section */}
-      <section className="py-16 bg-teal-50">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Được tin tưởng bởi hàng ngàn người dùng
-            </h2>
-            <p className="text-xl text-gray-600">
-              Những con số ấn tượng về hiệu quả của dịch vụ
-            </p>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center group">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-lg mb-4 group-hover:scale-110 transition-transform duration-300">
-                  <stat.icon className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-3xl font-bold text-gray-900 mb-2">
-                  {stat.number}
-                </h3>
-                <p className="text-gray-600">{stat.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Features Section */}
       <section id="features" className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-6">
@@ -392,7 +342,6 @@ const Home = () => {
           </div>
         </div>
       </section>
-
       {/* Benefits Section */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6">
@@ -423,7 +372,6 @@ const Home = () => {
           </div>
         </div>
       </section>
-
       {/* Testimonials Section */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-6">
@@ -468,8 +416,33 @@ const Home = () => {
             ))}
           </div>
         </div>
+      </section>{" "}
+      {/* Stats Section */}
+      <section className="py-16 bg-teal-50">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+              Được tin tưởng bởi hàng ngàn người dùng
+            </h2>
+            <p className="text-xl text-gray-600">
+              Những con số ấn tượng về hiệu quả của dịch vụ
+            </p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {stats.map((stat, index) => (
+              <div key={index} className="text-center group">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-lg mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <stat.icon className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-3xl font-bold text-gray-900 mb-2">
+                  {stat.number}
+                </h3>
+                <p className="text-gray-600">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
-
       {/* FAQ Section */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-4xl mx-auto px-6">
@@ -513,7 +486,6 @@ const Home = () => {
           </div>
         </div>
       </section>
-
       {/* CTA Section */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-6">
@@ -544,7 +516,6 @@ const Home = () => {
           </div>
         </div>
       </section>
-
       {/* Footer */}
       <Footer />
     </div>
