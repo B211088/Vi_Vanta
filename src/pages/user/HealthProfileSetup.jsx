@@ -26,7 +26,10 @@ import ActivityLevelSelect from "../../components/features/ActivityLevelSelect";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllTopics } from "../../services/topic.service";
 import GoalSelect from "../../components/features/GoalSelect";
-import { createHealthInfo } from "../../services/health.service";
+import {
+  createHealthInfo,
+  updateHealthInfo,
+} from "../../services/health.service";
 import { updateUserProfile } from "../../services/auth.service";
 import { useNavigate } from "react-router-dom";
 
@@ -220,8 +223,6 @@ const HealthProfileSetup = () => {
     phone: "",
     birthDate: "",
     gender: "male",
-
-    // Thông tin sức khỏe
     height: 0,
     weight: 0,
     waist: 0,
@@ -231,13 +232,9 @@ const HealthProfileSetup = () => {
     goal: "maintain",
     age: 0,
     bloodType: "unknown",
-    chronicDiseases: [],
-    heartRate: 0,
-    allergies: [],
-
-    // Topics từ Redux state
-    selectedTopics: [],
+    concerns: [],
   });
+  console.log(formData);
 
   useEffect(() => {
     dispatch(fetchAllTopics());
@@ -385,18 +382,18 @@ const HealthProfileSetup = () => {
 
   const handleTopicToggle = useCallback((topicId) => {
     setFormData((prev) => {
-      const isSelected = prev.selectedTopics.includes(topicId);
+      const isSelected = prev.concerns.includes(topicId);
 
-      if (!isSelected && prev.selectedTopics.length >= 5) {
+      if (!isSelected && prev.concerns.length >= 5) {
         console.error("Bạn chỉ có thể chọn tối đa 5 chủ đề");
         return prev;
       }
 
       return {
         ...prev,
-        selectedTopics: isSelected
-          ? prev.selectedTopics.filter((id) => id !== topicId)
-          : [...prev.selectedTopics, topicId],
+        concerns: isSelected
+          ? prev.concerns.filter((id) => id !== topicId)
+          : [...prev.concerns, topicId],
       };
     });
   }, []);
@@ -442,10 +439,8 @@ const HealthProfileSetup = () => {
         neck,
         activityLevel,
         goal,
-        age,
         bloodType,
-        chronicDiseases,
-        heartRate,
+        concerns,
         allergies,
         name,
         birthDate,
@@ -458,10 +453,11 @@ const HealthProfileSetup = () => {
           dateOfBirth: birthDate,
           gender,
           phone,
+          concerns,
         })
       );
       await dispatch(
-        createHealthInfo({
+        updateHealthInfo({
           height,
           weight,
           waist,
@@ -471,8 +467,6 @@ const HealthProfileSetup = () => {
           goal,
           age: calculateAge(birthDate),
           bloodType,
-          chronicDiseases,
-          heartRate,
           allergies,
         })
       );
@@ -524,7 +518,7 @@ const HealthProfileSetup = () => {
             Thông tin cá nhân
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
             <InputField
               label="Họ và tên"
               icon={User}
@@ -629,7 +623,7 @@ const HealthProfileSetup = () => {
           </h2>
 
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
               <div>
                 <ValueSlider
                   label="chiều cao"
@@ -700,26 +694,13 @@ const HealthProfileSetup = () => {
               </InputField>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <InputField label="Nhịp tim (bpm)" icon={Monitor}>
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.heartRate || ""}
-                  onChange={(e) =>
-                    handleDirectValueChange("heartRate", Number(e.target.value))
-                  }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  placeholder="Tùy chọn"
-                />
-              </InputField>
-
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
               <div>
                 <label className="flex items-center text-sm font-medium text-gray-700 mb-4">
                   <Droplet className="w-4 h-4 mr-2 text-red-500" />
                   Nhóm máu
                 </label>
-                <div className="grid grid-cols-5 gap-3">
+                <div className="w-full   grid grid-cols-5 gap-3">
                   {BLOOD_TYPES.map((blood) => (
                     <label
                       key={blood.value}
@@ -821,116 +802,18 @@ const HealthProfileSetup = () => {
   const renderHealthConditions = useCallback(
     () => (
       <div className="space-y-6">
-        {/* Health Guide */}
-        <div className="bg-teal-50 rounded-lg p-6 border border-teal-200">
-          <div
-            onClick={() => setShowGuide(!showGuide)}
-            className="flex items-center justify-between cursor-pointer"
-          >
-            <h3 className="text-md font-semibold text-teal-800">
-              Hướng dẫn thiết lập hồ sơ sức khỏe
-            </h3>
-            <button className="text-teal-600 hover:text-teal-800">
-              <Info className="h-5 w-5" />
-            </button>
-          </div>
-
-          {showGuide && (
-            <div className="text-sm text-teal-700 space-y-2 mt-3">
-              <p>
-                <strong>1. Tại sao cần thông tin này?</strong>
-              </p>
-              <p>
-                Thông tin về bệnh mãn tính và dị ứng giúp chúng tôi cung cấp lời
-                khuyên phù hợp và an toàn cho tình trạng sức khỏe của bạn.
-              </p>
-
-              <p>
-                <strong>2. Bảo mật thông tin:</strong>
-              </p>
-              <ul className="list-disc pl-5 space-y-1">
-                <li>Tất cả thông tin được bảo mật tuyệt đối</li>
-                <li>Chỉ sử dụng để tư vấn cá nhân hóa</li>
-                <li>Không chia sẻ với bên thứ ba</li>
-              </ul>
-
-              <p>
-                <strong>3. Chủ đề quan tâm:</strong>
-              </p>
-              <p>
-                Lựa chọn các chủ đề bạn muốn nhận thông tin và theo dõi để có
-                trải nghiệm phù hợp nhất.
-              </p>
-            </div>
-          )}
-        </div>
-
         <div className="bg-white rounded-lg p-8 shadow-sm border border-gray-200">
           <h2 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
             <Activity className="h-5 w-5 mr-3 text-teal-600" />
-            Tình trạng sức khỏe & Quan tâm
+            Chuyên mục bạn quan tâm
           </h2>
 
           <div className="space-y-8">
             <div>
               <h3 className="text-md font-semibold text-gray-700 mb-4">
-                Bệnh mãn tính (nếu có)
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {CHRONIC_DISEASES.map((disease) => (
-                  <label
-                    key={disease}
-                    className={`flex items-center p-3 border rounded-lg cursor-pointer transition-all ${
-                      formData.chronicDiseases.includes(disease)
-                        ? "border-red-300 bg-red-50"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={formData.chronicDiseases.includes(disease)}
-                      onChange={() =>
-                        handleArrayToggle("chronicDiseases", disease)
-                      }
-                      className="mr-2 text-red-600"
-                    />
-                    <span className="text-sm">{disease}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-md font-semibold text-gray-700 mb-4">
-                Dị ứng (nếu có)
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {ALLERGIES.map((allergy) => (
-                  <label
-                    key={allergy}
-                    className={`flex items-center p-3 border rounded-lg cursor-pointer transition-all ${
-                      formData.allergies.includes(allergy)
-                        ? "border-orange-300 bg-orange-50"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={formData.allergies.includes(allergy)}
-                      onChange={() => handleArrayToggle("allergies", allergy)}
-                      className="mr-2 text-orange-600"
-                    />
-                    <span className="text-sm">{allergy}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-md font-semibold text-gray-700 mb-4">
                 Chủ đề sức khỏe quan tâm{" "}
                 <span className="text-sm text-teal-500">
-                  {formData.selectedTopics.length}/5
+                  {formData.concerns.length}/5
                 </span>
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -938,12 +821,12 @@ const HealthProfileSetup = () => {
                   <label
                     key={topic._id}
                     className={`flex flex-col items-center p-4 border rounded-lg cursor-pointer transition-all ${
-                      formData.selectedTopics.includes(topic._id)
+                      formData.concerns.includes(topic._id)
                         ? "border-teal-300 bg-teal-50"
                         : "border-gray-200 hover:border-gray-300"
                     } ${
-                      !formData.selectedTopics.includes(topic._id) &&
-                      formData.selectedTopics.length >= 5
+                      !formData.concerns.includes(topic._id) &&
+                      formData.concerns.length >= 5
                         ? "opacity-50 cursor-not-allowed"
                         : ""
                     }`}
@@ -955,65 +838,25 @@ const HealthProfileSetup = () => {
                     />
                     <input
                       type="checkbox"
-                      checked={formData.selectedTopics.includes(topic._id)}
+                      checked={formData.concerns.includes(topic._id)}
                       onChange={() => handleTopicToggle(topic._id)}
                       className="sr-only"
                       disabled={
-                        !formData.selectedTopics.includes(topic._id) &&
-                        formData.selectedTopics.length >= 5
+                        !formData.concerns.includes(topic._id) &&
+                        formData.concerns.length >= 5
                       }
                     />
                     <div className="text-2xl mb-2">{topic.icon}</div>
                     <div className="text-sm font-medium text-center">
                       {topic.name}
                     </div>
-                    {formData.selectedTopics.includes(topic._id) && (
+                    {formData.concerns.includes(topic._id) && (
                       <CheckCircle className="w-4 h-4 text-teal-600 mt-2" />
                     )}
                   </label>
                 ))}
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Medical Info Banner */}
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-teal-100">
-          <div className="flex items-center space-x-4 mb-4">
-            <Shield className="h-6 w-6 text-teal-600" />
-            <h3 className="text-lg font-semibold text-gray-800">
-              Thông tin y tế quan trọng
-            </h3>
-          </div>
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="flex items-center space-x-3 p-3 bg-teal-50 rounded-lg">
-              <Info className="h-5 w-5 text-teal-600" />
-              <div>
-                <p className="font-medium text-teal-800">Độ chính xác cao</p>
-                <p className="text-sm text-teal-600">Dựa trên chuẩn y khoa</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3 p-3 bg-teal-50 rounded-lg">
-              <Users className="h-5 w-5 text-teal-600" />
-              <div>
-                <p className="font-medium text-teal-800">Bảo mật tuyệt đối</p>
-                <p className="text-sm text-teal-600">Thông tin được bảo vệ</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3 p-3 bg-cyan-50 rounded-lg">
-              <Star className="h-5 w-5 text-cyan-600" />
-              <div>
-                <p className="font-medium text-cyan-800">Tư vấn cá nhân hóa</p>
-                <p className="text-sm text-cyan-600">Phù hợp với từng người</p>
-              </div>
-            </div>
-          </div>
-          <div className="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-            <p className="text-sm text-yellow-800">
-              <strong>Lưu ý:</strong> Đây chỉ là công cụ hỗ trợ. Hãy luôn tham
-              khảo ý kiến bác sĩ để có lời khuyên chính xác nhất cho tình trạng
-              sức khỏe của bạn.
-            </p>
           </div>
         </div>
       </div>
@@ -1023,7 +866,7 @@ const HealthProfileSetup = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 font-['Nunito']">
-      <div className="max-w-5xl mx-auto px-4 py-8">
+      <div className="max-w-3xl mx-auto px-4 py-8">
         {/* Header */}
         <HeaderTool
           title="Thiết lập Hồ sơ Sức khỏe"

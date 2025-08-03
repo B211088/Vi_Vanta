@@ -74,7 +74,6 @@ const UpdateUserAddress = ({ closeModal }) => {
         className="w-5/12 max-w-[600px] flex flex-col bg-light-50 p-[26px] rounded-lg"
         onClick={(e) => e.stopPropagation()}
       >
-        {" "}
         <h1 className="font-bold text-2xl pb-[20px]">
           Cập nhật địa chỉ của bạn
         </h1>

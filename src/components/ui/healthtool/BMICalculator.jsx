@@ -812,7 +812,7 @@ const BMICalculator = () => {
                   Đang tính toán dữ liệu sức khỏe...
                 </span>
               </div>
-            )}{" "}
+            )}
             <div className="bg-white rounded-lg p-8 shadow-sm border border-gray-200">
               <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
                 <Star className="h-6 w-6 mr-3 text-teal-600" />

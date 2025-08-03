@@ -8,6 +8,7 @@ import {
   formatDateYYYYMMDD,
 } from "../../../utils/formatDate";
 import { createAppointment } from "../../../services/booking.service";
+import { formatAddress } from "../../../utils/formatAddress";
 
 const AppointmentBookingForm = () => {
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ const AppointmentBookingForm = () => {
     email: "",
     gender: "",
     dateOfBirth: "",
-    patientType: "benhNhanMoi", // 'benhNhanMoi' or 'benhNhanCu'
+    patientType: "benhNhanMoi",
     zalo: "",
     usePhoneAsZalo: false,
     address: "",
@@ -39,6 +40,8 @@ const AppointmentBookingForm = () => {
       email: "",
     },
   });
+
+  console.log({ doctor });
 
   const [promoCode, setPromoCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -128,6 +131,7 @@ const AppointmentBookingForm = () => {
       }));
     }
   };
+  // Helper function to format address
 
   const validateForm = () => {
     const errors = [];
@@ -433,9 +437,11 @@ const AppointmentBookingForm = () => {
                       {/* Display user info */}
                       <div className="flex items-center gap-3 mb-4">
                         <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
-                          <span className="text-white font-bold text-lg">
-                            {user?.fullName?.charAt(0)?.toUpperCase() || "U"}
-                          </span>
+                          <img
+                            src={user.avatar.url}
+                            alt=""
+                            className="rounded-full object-cover aspect-square"
+                          />
                         </div>
                         <div>
                           <h4 className="font-semibold text-gray-800">
@@ -611,7 +617,7 @@ const AppointmentBookingForm = () => {
                   <div className="flex justify-center py-3">
                     <img
                       className="w-12 h-12 aspect-square object-cover rounded-full"
-                      src={doctor?.userId?.avatar?.url || "/default-avatar.png"}
+                      src={doctor?.avatar?.url || "/default-avatar.png"}
                       alt="Doctor avatar"
                       onError={(e) => {
                         e.target.src = "/default-avatar.png";
@@ -658,9 +664,8 @@ const AppointmentBookingForm = () => {
                           <p className="text-gray-700 font-medium">
                             {doctor?.infoClinic?.name || "Phòng khám"}
                           </p>
-                          <p className="text-gray-600">
-                            {doctor?.infoClinic?.address ||
-                              "Địa chỉ phòng khám"}
+                          <p className="text-gray-600 text-sm py-2">
+                            {formatAddress(doctor.infoClinic.address)}
                           </p>
                         </div>
                       </div>

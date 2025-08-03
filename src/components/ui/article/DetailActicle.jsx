@@ -225,7 +225,7 @@ const DetailArticle = () => {
                       <div className="flex items-center gap-1">
                         <User className="w-3 h-3 md:w-4 md:h-4" />
                         <span className="truncate max-w-[120px] md:max-w-none">
-                          {article.author.fullName}
+                          {article?.author?.fullName}
                         </span>
                       </div>
                     </div>
@@ -303,13 +303,13 @@ const DetailArticle = () => {
                         <p className="text-xs md:text-sm text-gray-600">
                           Tác giả:{" "}
                           <span className="font-semibold">
-                            {article.author.fullName}
+                            {article?.author?.fullName}
                           </span>
                         </p>
                         <p className="text-xs md:text-sm text-gray-600">
                           Email:{" "}
                           <span className="font-semibold break-all">
-                            {article.author.email}
+                            {article?.author?.email}
                           </span>
                         </p>
                       </div>

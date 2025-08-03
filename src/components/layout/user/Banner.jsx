@@ -21,7 +21,7 @@ import {
   Search,
   ChevronLeft,
 } from "lucide-react";
-
+import { Link } from "react-router-dom";
 const slides = [
   {
     id: 1,
@@ -29,8 +29,7 @@ const slides = [
     subtitle: "Toàn Diện",
     description:
       "Đồng hành cùng bạn trên hành trình chăm sóc sức khỏe với dịch vụ chuyên nghiệp, tận tâm và công nghệ hiện đại nhất.",
-    primaryButton: "Đặt Lịch Khám",
-    secondaryButton: "Hotline: 1900 1234",
+
     theme: "teal",
     mainIcon: Heart,
     floatingIcons: [Shield, Star, Activity],
@@ -47,9 +46,11 @@ const slides = [
     description:
       "Đặt lịch khám bệnh trực tuyến dễ dàng với các bác sĩ chuyên khoa hàng đầu. Tiết kiệm thời gian, tối ưu trải nghiệm.",
     primaryButton: "Đặt Lịch Ngay",
-    secondaryButton: "Xem Bác Sĩ",
+
     theme: "blue",
     mainIcon: Calendar,
+    primaryPath: "book-examination",
+
     floatingIcons: [Stethoscope, Clock, CheckCircle],
     stats: [
       { number: "500+", label: "Bác sĩ chuyên khoa" },
@@ -64,7 +65,7 @@ const slides = [
     description:
       "Sử dụng AI và công nghệ tiên tiến để đánh giá sức khỏe ban đầu, tư vấn và định hướng chăm sóc phù hợp.",
     primaryButton: "Kiểm Tra Ngay",
-    secondaryButton: "Tìm Hiểu Thêm",
+    primaryPath: "tools/all",
     theme: "purple",
     mainIcon: Brain,
     floatingIcons: [Search, Target, TrendingUp],
@@ -76,20 +77,16 @@ const slides = [
   },
   {
     id: 4,
-    title: "Đội Ngũ Chuyên Gia",
-    subtitle: "Kinh Nghiệm Hàng Đầu",
+    title: "Trở thành bác sĩ trên nền tảng",
+    subtitle: "Hợp tác khám chữa bệnh cùng chúng tôi",
     description:
-      "Được phục vụ bởi đội ngũ bác sĩ, chuyên gia y tế giàu kinh nghiệm với phương pháp điều trị hiện đại nhất.",
-    primaryButton: "Gặp Chuyên Gia",
-    secondaryButton: "Liên Hệ Tư Vấn",
+      "Đăng ký để trở thành bác sĩ, tiếp cận hàng nghìn bệnh nhân và xây dựng hồ sơ chuyên nghiệp trên hệ thống chăm sóc sức khỏe hiện đại.",
+    primaryButton: "Đăng ký ngay",
+
     theme: "teal",
     mainIcon: Users,
     floatingIcons: [Award, Stethoscope, Zap],
-    stats: [
-      { number: "15+", label: "Năm kinh nghiệm" },
-      { number: "100+", label: "Chuyên gia" },
-      { number: "50K+", label: "Ca điều trị" },
-    ],
+    primaryPath: "register-doctor",
   },
 ];
 
@@ -310,42 +307,26 @@ const Banner = () => {
                 className="flex flex-col sm:flex-row gap-4 pt-6 animate-fadeInLeft"
                 style={{ animationDelay: "0.6s" }}
               >
-                <button
-                  className={`group bg-gradient-to-r ${theme.primary} text-white px-10 py-4 cursor-pointer rounded-2xl font-bold hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 flex items-center justify-center space-x-3`}
-                >
-                  <Calendar className="w-5 h-5" />
-                  <span className="text-base">{slide.primaryButton}</span>
-                  <ChevronRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
-                </button>
-
-                <button
-                  className={`group bg-white/90 backdrop-blur-sm ${theme.text} px-10 py-4 cursor-pointer rounded-2xl font-bold border-2 border-${slide.theme}-200 hover:bg-${slide.theme}-50 hover:border-${slide.theme}-300 hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center justify-center space-x-3`}
-                >
-                  <Phone className="w-5 h-5" />
-                  <span className="text-base">{slide.secondaryButton}</span>
-                </button>
-              </div>
-
-              {/* Trust Indicators */}
-              <div
-                className="flex items-center justify-between pt-6 animate-fadeInLeft"
-                style={{ animationDelay: "0.8s" }}
-              >
-                {slide.stats.map((stat, index) => (
-                  <div
-                    key={index}
-                    className="text-center group hover:scale-110 transition-transform duration-300"
+                {slide.primaryButton && (
+                  <Link
+                    to={`/${slide.primaryPath || "#"}`}
+                    className={`group bg-gradient-to-r ${theme.primary} text-white px-10 py-4 cursor-pointer rounded-2xl font-bold hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 flex items-center justify-center space-x-3`}
                   >
-                    <div
-                      className={`text-3xl font-bold ${theme.text} group-hover:animate-pulse`}
-                    >
-                      {stat.number}
-                    </div>
-                    <div className="text-sm text-gray-600 font-medium">
-                      {stat.label}
-                    </div>
-                  </div>
-                ))}
+                    <Calendar className="w-5 h-5" />
+                    <span className="text-base">{slide.primaryButton}</span>
+                    <ChevronRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
+                  </Link>
+                )}
+
+                {slide.secondaryButton && (
+                  <Link
+                    to={`/${slide.secondaryButton || "#"}`}
+                    className={`group bg-white/90 backdrop-blur-sm ${theme.text} px-10 py-4 cursor-pointer rounded-2xl font-bold border-2 border-${slide.theme}-200 hover:bg-${slide.theme}-50 hover:border-${slide.theme}-300 hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center justify-center space-x-3`}
+                  >
+                    <Phone className="w-5 h-5" />
+                    <span className="text-base">{slide.secondaryButton}</span>
+                  </Link>
+                )}
               </div>
             </div>
 

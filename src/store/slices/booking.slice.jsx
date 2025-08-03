@@ -160,6 +160,44 @@ const bookingSlice = createSlice({
       state.currentAppointmentLoading = true;
       state.currentAppointmentError = null;
     },
+    updateAppointmentPaymentStatusStart: (state) => {
+      state.currentAppointmentLoading = true;
+      state.currentAppointmentError = null;
+    },
+
+    updateAppointmentPaymentStatusSuccess: (state, action) => {
+      state.currentAppointmentLoading = false;
+      state.currentAppointmentError = null;
+
+      // Update current appointment
+      if (
+        state.currentAppointment &&
+        state.currentAppointment._id === action.payload._id
+      ) {
+        state.currentAppointment = action.payload;
+      }
+
+      // Update in doctor appointments list
+      const doctorIndex = state.doctorAppointments.findIndex(
+        (apt) => apt._id === action.payload._id
+      );
+      if (doctorIndex !== -1) {
+        state.doctorAppointments[doctorIndex] = action.payload;
+      }
+
+      // Update in user appointments list
+      const userIndex = state.userAppointments.findIndex(
+        (apt) => apt._id === action.payload._id
+      );
+      if (userIndex !== -1) {
+        state.userAppointments[userIndex] = action.payload;
+      }
+    },
+
+    updateAppointmentPaymentStatusFailure: (state, action) => {
+      state.currentAppointmentLoading = false;
+      state.currentAppointmentError = action.payload;
+    },
 
     // Cancel appointment actions
     cancelAppointmentSuccess: (state, action) => {
@@ -334,6 +372,10 @@ export const {
   updateAppointmentStatusFailure,
   updateAppointmentStatusLoadingStart,
 
+  // Update appointment payment status
+  updateAppointmentPaymentStatusStart,
+  updateAppointmentPaymentStatusSuccess,
+  updateAppointmentPaymentStatusFailure,
   // Cancel appointment
   cancelAppointmentSuccess,
   cancelAppointmentFailure,

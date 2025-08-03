@@ -19,6 +19,8 @@ import {
   ArrowUp,
   ArrowDown,
 } from "lucide-react";
+import { formatAddress } from "../../utils/formatAddress";
+import { convertMarkdownToJSX } from "../../utils/convertMarkdownToJSX";
 
 const Appointment = () => {
   const navigate = useNavigate();
@@ -423,7 +425,7 @@ const Appointment = () => {
                         {appointment.doctorId.infoClinic.clinicName}
                       </p>
                       <p className="text-sm text-gray-600">
-                        {appointment.doctorId.infoClinic.address}
+                        {formatAddress(appointment.doctorId.infoClinic.address)}
                       </p>
                       <p className="text-sm text-gray-600">
                         {appointment.doctorId.infoClinic.phone}
@@ -448,7 +450,7 @@ const Appointment = () => {
                             </div>
                             {service.description && (
                               <p className="text-xs text-gray-600 ml-6">
-                                {service.description}
+                                {convertMarkdownToJSX(service.description)}
                               </p>
                             )}
                             <p className="text-sm font-semibold text-blue-600 ml-6">
@@ -463,9 +465,6 @@ const Appointment = () => {
 
                 {/* Action Buttons */}
                 <div className="mt-6 pt-4 border-t border-gray-200 flex flex-wrap gap-3">
-                  <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                    Xem chi tiết
-                  </button>
                   {appointment.status === "pending" && (
                     <>
                       <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">

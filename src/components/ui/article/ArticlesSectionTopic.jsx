@@ -85,9 +85,8 @@ const ArticlesSkeleton = () => {
 const ArticlesSectionTopic = () => {
   const dispatch = useDispatch();
   const { topics } = useSelector((state) => state.topic);
-  const { loading, articlesByTopic, articlesAttribute } = useSelector(
-    (state) => state.article
-  );
+  const { topicArticlesLoading, articlesByTopic, articlesAttribute } =
+    useSelector((state) => state.article);
   const [activeTab, setActiveTab] = useState("featured");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [viewMode, setViewMode] = useState("grid");
@@ -129,7 +128,7 @@ const ArticlesSectionTopic = () => {
   }, [topics]);
 
   // Show skeleton loading when loading is true
-  if (loading) {
+  if (topicArticlesLoading) {
     return <ArticlesSkeleton />;
   }
 

@@ -12,6 +12,8 @@ import {
   fetchDoctorById,
   getAvailableSlots,
 } from "../../../services/booking.service";
+import Loading from "../../../pages/Loading";
+import { formatAddress } from "../../../utils/formatAddress";
 
 const BookExaminationDetail = () => {
   const location = useLocation();
@@ -261,6 +263,10 @@ const BookExaminationDetail = () => {
     return days;
   };
 
+  if (!doctor) {
+    return <Loading />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 font-nunito">
       {showRequireLogin && (
@@ -289,8 +295,12 @@ const BookExaminationDetail = () => {
                   <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
                     <img
                       className="object-cover aspect-square h-full w-full"
-                      src={doctor?.userId?.avatar.url}
-                      alt=""
+                      src={
+                        doctor?.userId?.avatar?.url ||
+                        doctor?.avatar?.url ||
+                        "/default-avatar.jpg"
+                      }
+                      alt="Doctor Avatar"
                     />
                   </div>
                   <div className="flex-1">
@@ -306,49 +316,82 @@ const BookExaminationDetail = () => {
                       </div>
                     </div>
                     <div className="mb-3">
-                      {doctor.specialty.map((spec, index) => (
-                        <span
-                          key={index}
-                          className="inline-block bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm mr-2 mb-1"
-                        >
-                          {spec}
-                        </span>
-                      ))}
+                      {doctor.specialty &&
+                        doctor.specialty.map((spec, index) => (
+                          <span
+                            key={index}
+                            className="inline-block bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm mr-2 mb-1"
+                          >
+                            {spec}
+                          </span>
+                        ))}
                     </div>
                     <div className="flex items-center gap-2  mb-3">
                       <button className="border-1 border-vivanta-600 bg-vivanta-50 font-semibold px-4 py-1 rounded-full text-sm hover:bg-blue-600 transition">
                         Đặt lịch khám
                       </button>
                       <span className="text-gray-600 text-sm">
-                        {doctor.targetPatients.join(", ")}
+                        {doctor.targetPatients &&
+                          doctor.targetPatients.join(", ")}
                       </span>
                     </div>
                   </div>
                 </div>
               </div>
-
-              {/* Highlights Section */}
-              <div className="bg-blue-50 rounded-lg p-6 mb-6">
-                <h3 className="font-bold text-lg mb-3 text-blue-800">
-                  Điểm nổi bật nhất
-                </h3>
-                <div className="space-y-2">
-                  {doctor.highlights
-                    .split("•")
-                    .filter((item) => item.trim())
-                    .map((highlight, index) => (
+              {doctor.info && (
+                <div className="shadow-md rounded-lg p-6 mb-6">
+                  <h3 className="font-bold text-lg mb-3 text-blue-800">
+                    Thông tin mô tả
+                  </h3>
+                  <div className="space-y-2">
+                    <div className="flex  gap-2">
+                      <span className="text-blue-600 font-bold text-[0.4rem] mt-[5px]">
+                        <i className="fa-solid fa-circle"></i>
+                      </span>
+                      <span className="text-gray-700 text-sm text-justify">
+                        {doctor.info}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}{" "}
+              {doctor.highlights && (
+                <div className="shadow-md rounded-lg p-6 mb-6">
+                  <h3 className="font-bold text-lg mb-3 text-blue-800">
+                    Điểm nổi bật
+                  </h3>
+                  <div className="space-y-2">
+                    <div className="flex  gap-2">
+                      <span className="text-blue-600 font-bold text-[0.4rem] mt-[5px]">
+                        <i className="fa-solid fa-circle"></i>
+                      </span>
+                      <span className="text-gray-700 text-sm text-justify">
+                        {doctor.highlights}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {/* Highlights Section - Only show if strengths exist */}
+              {doctor.strengths && doctor.strengths.length > 0 && (
+                <div className="bg-blue-50 rounded-lg p-6 mb-6">
+                  <h3 className="font-bold text-lg mb-3 text-blue-800">
+                    Điểm mạnh
+                  </h3>
+                  <div className="space-y-2">
+                    {doctor.strengths.map((strength, index) => (
                       <div key={index} className="flex  gap-2">
                         <span className="text-blue-600 font-bold text-[0.4rem] mt-[5px]">
                           <i className="fa-solid fa-circle"></i>
                         </span>
                         <span className="text-gray-700 text-sm">
-                          {highlight.trim()}
+                          {strength}
                         </span>
                       </div>
                     ))}
+                  </div>
                 </div>
-              </div>
-
+              )}
               {/* Tab Navigation */}
               <div className="bg-white rounded-lg shadow-md mb-6">
                 <div className="flex border-b border-dark-700   ">
@@ -370,7 +413,7 @@ const BookExaminationDetail = () => {
                         : "text-gray-600 hover:text-gray-800"
                     }`}
                   >
-                    Đánh giá (169)
+                    Đánh giá (0)
                   </button>
                 </div>
 
@@ -381,7 +424,10 @@ const BookExaminationDetail = () => {
                         Thông tin bác sĩ
                       </h3>
                       <div className="prose text-gray-700 mb-6 text-sm text-justify">
-                        <p>{doctor.info}</p>
+                        <p>
+                          {doctor.info ||
+                            "Chưa có thông tin chi tiết về bác sĩ."}
+                        </p>
                       </div>
                     </div>
                   )}
@@ -395,105 +441,125 @@ const BookExaminationDetail = () => {
                   )}
                 </div>
               </div>
-
               {/* Strengths Section */}
-              <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                  <i className="fa-solid fa-shield-heart text-blue-500"></i>
-                  Thế mạnh chuyên môn
-                </h3>
-                <div className="space-y-4">
-                  {doctor.strengths.map((strength, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-3 py-1 px-2 text-sm bg-gray-50 rounded-lg"
-                    >
-                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                        <i className="fa-solid fa-check text-blue-600 text-sm"></i>
+              {doctor.strengths && doctor.strengths.length > 0 && (
+                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                  <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                    <i className="fa-solid fa-shield-heart text-blue-500"></i>
+                    Thế mạnh chuyên môn
+                  </h3>
+                  <div className="space-y-4">
+                    {doctor.strengths.map((strength, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-3 py-1 px-2 text-sm bg-gray-50 rounded-lg"
+                      >
+                        <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                          <i className="fa-solid fa-check text-blue-600 text-sm"></i>
+                        </div>
+                        <span className="text-gray-700">{strength}</span>
                       </div>
-                      <span className="text-gray-700">{strength}</span>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-
+              )}
               {/* Experience & Education */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div className="bg-white rounded-lg shadow-md p-6">
-                  <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                    <i className="fa-solid fa-briefcase text-green-500"></i>
-                    Kinh nghiệm làm việc
-                  </h3>
-                  <div className="space-y-3">
-                    {doctor.experiences.map((exp, index) => (
-                      <div key={index} className="flex items-start gap-2">
-                        <span className="text-green-600 font-bold text-xs">
-                          {" "}
-                          <i className="fa-regular fa-circle-dot"></i>
-                        </span>
-                        <span className="text-gray-700 text-sm">{exp}</span>
-                      </div>
-                    ))}
+                {/* Experience */}
+                {doctor.experiences && doctor.experiences.length > 0 && (
+                  <div className="bg-white rounded-lg shadow-md p-6">
+                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                      <i className="fa-solid fa-briefcase text-green-500"></i>
+                      Kinh nghiệm làm việc
+                    </h3>
+                    <div className="space-y-3">
+                      {doctor.experiences.map((exp, index) => (
+                        <div key={index} className="flex items-start gap-2">
+                          <span className="text-green-600 font-bold text-xs">
+                            {" "}
+                            <i className="fa-regular fa-circle-dot"></i>
+                          </span>
+                          <span className="text-gray-700 text-sm">{exp}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
-                <div className="bg-white rounded-lg shadow-md p-6">
-                  <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                    <i className="fa-solid fa-graduation-cap text-purple-500"></i>
-                    Quá trình đào tạo
-                  </h3>
-                  <div className="space-y-3">
-                    {doctor.educations.map((edu, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <span className="text-purple-600 font-bold text-xs">
-                          <i className="fa-regular fa-circle-dot"></i>
-                        </span>
-                        <span className="text-gray-700 text-sm">{edu}</span>
-                      </div>
-                    ))}
+                {/* Education */}
+                {doctor.educations && doctor.educations.length > 0 && (
+                  <div className="bg-white rounded-lg shadow-md p-6">
+                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                      <i className="fa-solid fa-graduation-cap text-purple-500"></i>
+                      Quá trình đào tạo
+                    </h3>
+                    <div className="space-y-3">
+                      {doctor.educations.map((edu, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <span className="text-purple-600 font-bold text-xs">
+                            <i className="fa-regular fa-circle-dot"></i>
+                          </span>
+                          <span className="text-gray-700 text-sm">{edu}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {/* If no experience or education, show message */}
+                {(!doctor.experiences || doctor.experiences.length === 0) &&
+                  (!doctor.educations || doctor.educations.length === 0) && (
+                    <div className="col-span-2 bg-white rounded-lg shadow-md p-6">
+                      <p className="text-gray-500 text-center">
+                        Chưa có thông tin về kinh nghiệm và quá trình đào tạo.
+                      </p>
+                    </div>
+                  )}
               </div>
-
               {/* Languages */}
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                  <i className="fa-solid fa-language text-orange-500"></i>
-                  Ngôn ngữ
-                </h3>
-                <div className="flex gap-2">
-                  {doctor.languages.map((lang, index) => (
-                    <span
-                      key={index}
-                      className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm"
-                    >
-                      {lang}
-                    </span>
-                  ))}
+              {doctor.languages && doctor.languages.length > 0 && (
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                    <i className="fa-solid fa-language text-orange-500"></i>
+                    Ngôn ngữ
+                  </h3>
+                  <div className="flex gap-2">
+                    {doctor.languages.map((lang, index) => (
+                      <span
+                        key={index}
+                        className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm"
+                      >
+                        {lang}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-
+              )}
               {/* Clinic Info */}
-              <div className="bg-white rounded-lg shadow-md p-6 mt-6">
-                <h3 className="font-bold text-lg mb-4">Thông tin địa chỉ</h3>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <i className="fa-solid fa-hospital text-blue-500 mt-1"></i>
-                    <div>
-                      <p className="font-semibold text-gray-800">
-                        {doctor.infoClinic.clinicName}
-                      </p>
-                      <p className="text-gray-600 text-sm py-2">
-                        {doctor.infoClinic.address}
-                      </p>
-                      <p className="w-fit text-gray-600 text-sm px-2 py-1 border-1 border-dark-800 rounded-md">
-                        <i className="fa-solid fa-phone mr-2"></i>
-                        {doctor.infoClinic.phone}
-                      </p>
+              {doctor.infoClinic && (
+                <div className="bg-white rounded-lg shadow-md p-6 mt-6">
+                  <h3 className="font-bold text-lg mb-4">Thông tin địa chỉ</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <i className="fa-solid fa-hospital text-blue-500 mt-1"></i>
+                      <div>
+                        <p className="font-semibold text-gray-800">
+                          {doctor.infoClinic.clinicName}
+                        </p>
+                        <p className="text-gray-600 text-sm py-2">
+                          {formatAddress(doctor.infoClinic.address) || ""}
+                        </p>
+                        {doctor.infoClinic.phone && (
+                          <p className="w-fit text-gray-600 text-sm px-2 py-1 border-1 border-dark-800 rounded-md">
+                            <i className="fa-solid fa-phone mr-2"></i>
+                            {doctor.infoClinic.phone}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Right Column - Booking */}
@@ -504,41 +570,51 @@ const BookExaminationDetail = () => {
                 {/* Service Selection */}
                 <div className="mb-6">
                   <h4 className="font-semibold mb-3">Chọn dịch vụ</h4>
-                  <div className="space-y-2">
-                    {doctor.services.map((service, index) => (
-                      <div
-                        key={index}
-                        className={`cursor-pointer border-1 rounded-lg p-3 ${
-                          isSelected(service)
-                            ? "border-blue-600 bg-blue-50"
-                            : "border-gray-300"
-                        }`}
-                        onClick={() => toggleService(service)}
-                      >
-                        <div className="flex justify-between items-start text-sm">
-                          <div>
-                            <h5 className="font-bold text-gray-800">
-                              {service.name}
-                            </h5>
-                            <p className="text-sm text-gray-600 mt-1 line-clamp-5">
-                              {service.description}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-bold text-blue-600 truncate">
-                              {formatPrice(service.price)} đ
-                            </p>
+                  {doctor.services && doctor.services.length > 0 ? (
+                    <div className="space-y-2">
+                      {doctor.services.map((service, index) => (
+                        <div
+                          key={index}
+                          className={`cursor-pointer border-1 rounded-lg p-3 ${
+                            isSelected(service)
+                              ? "border-blue-600 bg-blue-50"
+                              : "border-gray-300"
+                          }`}
+                          onClick={() => toggleService(service)}
+                        >
+                          <div className="flex justify-between items-start text-sm">
+                            <div>
+                              <h5 className="font-bold text-gray-800">
+                                {service.name}
+                              </h5>
+                              <p className="text-sm text-gray-600 mt-1 line-clamp-5">
+                                {service.description}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold text-blue-600 truncate">
+                                {formatPrice(service.price)} đ
+                              </p>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center text-gray-500 py-4">
+                      Chưa có dịch vụ nào được cung cấp
+                    </div>
+                  )}
 
                   {/* Nếu bạn cần xem các dịch vụ đã chọn */}
-                  <div className="mt-4 text-sm text-gray-700">
-                    <strong>Dịch vụ đã chọn:</strong>{" "}
-                    {selectedServices.map((service) => service.name).join(", ")}
-                  </div>
+                  {selectedServices.length > 0 && (
+                    <div className="mt-4 text-sm text-gray-700">
+                      <strong>Dịch vụ đã chọn:</strong>{" "}
+                      {selectedServices
+                        .map((service) => service.name)
+                        .join(", ")}
+                    </div>
+                  )}
                 </div>
 
                 <div className="mb-6">
@@ -701,7 +777,7 @@ const BookExaminationDetail = () => {
                   </div>
                   <div
                     onClick={handleBooking}
-                    className="w-full flex items-center justify-center bg-blue-500 text-white py-2 rounded-lg font-semibold text-sm hover:bg-blue-600 transition"
+                    className="w-full flex items-center justify-center bg-blue-500 text-white py-2 rounded-lg font-semibold text-sm hover:bg-blue-600 transition cursor-pointer"
                   >
                     <span> TIẾP TỤC ĐẶT LỊCH</span>
                   </div>

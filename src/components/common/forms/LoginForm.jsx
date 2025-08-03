@@ -73,10 +73,17 @@ const LoginForm = () => {
 
     try {
       const response = await dispatch(loginUser(formData));
-      notifySuccess(response.data.message);
+      console.log({ response });
+
+      if (response.haveHealthInfo === false) {
+        navigate("/health_setup", {
+          state: { email: formData.email },
+        });
+      }
+      notifySuccess(response.message);
     } catch (err) {
-      notifyError(err.response.data.message);
-      if (err.response.data.active === false) {
+      notifyError(err?.response?.data.message);
+      if (err?.response?.data.active === false) {
         navigate("/confirm_account/send_code", {
           state: { email: formData.email },
         });

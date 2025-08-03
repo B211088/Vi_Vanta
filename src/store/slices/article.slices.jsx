@@ -90,7 +90,6 @@ const articleSlice = createSlice({
       state.searchError = action.payload;
     },
 
-    // Featured Articles
     fetchArticlesByAttributeStart: (state) => {
       state.articlesAttributeLoading = true;
       state.articlesAttributeError = null;

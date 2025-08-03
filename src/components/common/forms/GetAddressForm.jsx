@@ -85,7 +85,7 @@ const GetAddressForm = ({ onChangeAddress }) => {
       <div className="w-full flex flex-col">
         <span className="text-sm font-bold pb-[5px]">Tỉnh</span>
         <select
-          className={`w-full flex items-center border-[1px] py-[6px] outline-none text-sm ${
+          className={`w-full flex items-center border-[1px] py-3 px-2 outline-none text-sm ${
             isDarkMode ? "border-dark-600" : "bg-dark-400 border-transparent"
           } rounded-sm`}
           value={currentAddress.province || ""}
@@ -103,7 +103,7 @@ const GetAddressForm = ({ onChangeAddress }) => {
       <div className="w-full flex flex-col">
         <span className="text-sm font-bold pb-[5px]">Huyện</span>
         <select
-          className={`w-full flex items-center border-[1px] py-[6px] outline-none text-sm ${
+          className={`w-full flex items-center border-[1px] py-3  px-2 outline-none text-sm ${
             isDarkMode ? "border-dark-600" : "bg-dark-400 border-transparent"
           } rounded-sm`}
           name="district"
@@ -121,7 +121,7 @@ const GetAddressForm = ({ onChangeAddress }) => {
       <div className="w-full flex flex-col">
         <span className="text-sm font-bold pb-[5px]">Xã</span>
         <select
-          className={`w-full flex items-center border-[1px] py-[6px] outline-none text-sm ${
+          className={`w-full flex items-center border-[1px] py-3 px-2 outline-none text-sm ${
             isDarkMode ? "border-dark-600" : "bg-dark-400 border-transparent"
           } rounded-sm`}
           name="ward"

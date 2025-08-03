@@ -215,50 +215,7 @@ const ServiceModal = ({ isOpen, onClose, service, onSubmit, isEditing }) => {
               Kích hoạt dịch vụ ngay
             </label>
           </div>
-          <div className="space-y-3">
-            <label className="block text-sm font-medium text-gray-700">
-              Các câu hỏi trước buổi khám
-            </label>
 
-            {/* Nhập câu hỏi */}
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Nhập câu hỏi..."
-                value={newReason}
-                onChange={(e) => setNewReason(e.target.value)}
-                className="flex-1 px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                type="button"
-                onClick={handleAddReason}
-                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-              >
-                Thêm
-              </button>
-            </div>
-
-            {/* Danh sách câu hỏi đã thêm */}
-            {formData?.reasons?.length > 0 && (
-              <ul className="space-y-2">
-                {formData?.reasons?.map((q, index) => (
-                  <li
-                    key={index}
-                    className="flex items-center justify-between bg-gray-100 p-2 rounded"
-                  >
-                    <span>{q}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveReason(index)}
-                      className="text-red-500 hover:text-red-700 text-sm"
-                    >
-                      Xóa
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
           <div className="flex gap-3 pt-4 border-t">
             <button
               type="button"

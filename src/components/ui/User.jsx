@@ -61,18 +61,7 @@ const User = () => {
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-[5px]">
-        <div
-          className={`w-[38px] h-[38px] flex items-center justify-center ${
-            isDarkMode ? "bg-dark-800" : "bg-dark-400"
-          } rounded-full relative cursor-pointer`}
-        >
-          <i className="fa-regular fa-comment-dots text-xl"></i>
-          <div className="w-[16px] h-[16px] absolute top-[2px] right-[2px] text-[0.5rem] bg-red-500 text-light-50 rounded-full flex items-center justify-center">
-            {0}
-          </div>
-        </div>
-      </div>
+
       <div className=" flex items-center gap-[5px]  group relative">
         <div className="w-[38px] h-[38px]  flex items-center justify-center bg-dark-800 rounded-full  overflow-hidden relative cursor-pointer">
           <img
@@ -89,7 +78,7 @@ const User = () => {
           </div>
         </div>
         <div
-          className={` absolute  hidden group-hover:flex group-hover:flex-col top-[100%] right-[0%]  z-20 ${
+          className={` absolute  hidden group-hover:flex group-hover:flex-col top-[100%] right-[0%]  z-50 ${
             isDarkMode ? "bg-light-50" : "bg-dark-400"
           } rounded-sm shadow-md `}
         >

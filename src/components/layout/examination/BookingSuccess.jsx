@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Header from "../Header";
 import Footer from "../../../pages/user/Footer";
+import { formatAddress } from "../../../utils/formatAddress";
 
 const BookingSuccess = () => {
   const navigate = useNavigate();
@@ -151,8 +152,9 @@ const BookingSuccess = () => {
                   {appointmentData?.doctorId?.infoClinic?.name || "Phòng khám"}
                 </h4>
                 <p className="text-gray-600 text-sm">
-                  {appointmentData?.doctorId?.infoClinic?.address ||
-                    "Địa chỉ phòng khám"}
+                  {formatAddress(
+                    appointmentData?.doctorId?.infoClinic?.address
+                  ) || "Địa chỉ phòng khám"}
                 </p>
               </div>
             </div>

@@ -243,16 +243,7 @@ const HealthInfo = () => {
   const handleEdit = () => setIsEditing(true);
   const handleCancel = () => setIsEditing(false);
   const handleSave = () => {
-    // Save logic here
     setIsEditing(false);
-  };
-
-  const handleArrayChange = (field, value) => {
-    const items = value
-      .split(",")
-      .map((item) => item.trim())
-      .filter((item) => item);
-    setEditData({ ...editData, [field]: items });
   };
 
   const StatCard = ({
@@ -634,40 +625,6 @@ const HealthInfo = () => {
                 ]}
                 disabled={!isEditing}
               />
-            </div>
-
-            <div className="space-y-3">
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-700">
-                  Bệnh mãn tính (phân cách bằng dấu phẩy)
-                </label>
-                <input
-                  type="text"
-                  value={editData.chronicDiseases.join(", ")}
-                  onChange={(e) =>
-                    handleArrayChange("chronicDiseases", e.target.value)
-                  }
-                  placeholder="VD: Cao huyết áp, Tiểu đường"
-                  disabled={!isEditing}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 disabled:bg-gray-50 text-sm"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-700">
-                  Dị ứng (phân cách bằng dấu phẩy)
-                </label>
-                <input
-                  type="text"
-                  value={editData.allergies.join(", ")}
-                  onChange={(e) =>
-                    handleArrayChange("allergies", e.target.value)
-                  }
-                  placeholder="VD: Hải sản, Phấn hoa"
-                  disabled={!isEditing}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 disabled:bg-gray-50 text-sm"
-                />
-              </div>
             </div>
           </div>
         </div>

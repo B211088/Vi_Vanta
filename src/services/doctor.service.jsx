@@ -82,6 +82,18 @@ const api = axios.create({
   withCredentials: true,
 });
 
+export const registerDoctor = (payload) => async (dispatch) => {
+  try {
+    const response = await api.post(`/api/v1/doctors/register`, payload);
+    return response.data;
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message || "Không thể đăng ký trở thành bác sĩ!";
+    dispatch(fetchDoctorFailure(errorMessage));
+    throw error;
+  }
+};
+
 export const fetchDoctors =
   (params = {}) =>
   async (dispatch) => {

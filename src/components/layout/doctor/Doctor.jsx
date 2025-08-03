@@ -58,11 +58,13 @@ const Doctor = () => {
             >
               <div className="text-sm flex items-center gap-2 font-semibold text-primary-700">
                 <img
-                  src={doctor?.userId.avatar.url}
+                  src={doctor?.avatar.url}
                   className="w-10 h-10 rounded-full object-cover"
                   alt=""
                 />
-                <span>{doctor?.name}</span>
+                <span>
+                  {doctor?.title}. {doctor?.name}
+                </span>
               </div>
             </div>
 

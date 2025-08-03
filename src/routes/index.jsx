@@ -39,6 +39,7 @@ import PaymentReturn from "../components/layout/examination/PaymentReturn";
 import BookingServices from "../components/ui/doctor/BookingServices";
 import BookingSuccess from "../components/layout/examination/BookingSuccess";
 import DoctorProtectedRoute from "./DoctorProtectedRoute";
+import DoctorRegistration from "../components/ui/doctor/DoctorRegistration";
 
 const Home = lazy(() => import("../pages/user/Home"));
 const Auth = lazy(() => import("../pages/auth/Auth"));
@@ -328,6 +329,15 @@ const router = createBrowserRouter([
     element: (
       <Suspense fallback={<Loading />}>
         <HealthProfileSetup />
+      </Suspense>
+    ),
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "register-doctor",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <DoctorRegistration />
       </Suspense>
     ),
     errorElement: <ErrorPage />,

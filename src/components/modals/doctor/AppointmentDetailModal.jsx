@@ -29,6 +29,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useNotify } from "../../../hook/useNotify";
 import { updateAppointmentStatus } from "../../../services/doctor.service";
+import { convertMarkdownToJSX } from "../../../utils/convertMarkdownToJSX";
 
 // Mock data based on your structure
 
@@ -474,7 +475,7 @@ const AppointmentDetailModal = ({ appointmentData, closeModal }) => {
                               </div>
                               {service.description && (
                                 <p className="text-gray-600 text-sm mb-3">
-                                  {service.description}
+                                  {convertMarkdownToJSX(service.description)}
                                 </p>
                               )}
                             </div>

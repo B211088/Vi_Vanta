@@ -7,6 +7,7 @@ const initialState = {
   loading: false,
   error: null,
   address: null,
+  concerns: [],
 };
 
 const authSlice = createSlice({

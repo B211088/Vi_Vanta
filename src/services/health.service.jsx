@@ -131,7 +131,7 @@ export const getSimpleHealthAdvice = (healthData) => async (dispatch) => {
 export const updateHealthInfo = (healthData) => async (dispatch) => {
   try {
     dispatch(updateHealthStart());
-    const response = await api.post("api/v1/health/me", healthData);
+    const response = await api.put("api/v1/health/me", healthData);
 
     dispatch(updateHealthSuccess(response.data));
     return { success: true, data: response.data };

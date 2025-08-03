@@ -50,6 +50,9 @@ import {
   fetchDoctorStart,
   fetchDoctorSuccess,
   fetchDoctorFailure,
+  updateAppointmentPaymentStatusStart,
+  updateAppointmentPaymentStatusSuccess,
+  updateAppointmentPaymentStatusFailure,
 } from "../store/slices/booking.slice";
 
 const api = axios.create({
@@ -85,6 +88,7 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
 export const fetchDoctorById = (id) => async (dispatch) => {
   try {
     dispatch(fetchDoctorStart());
@@ -176,6 +180,25 @@ export const updateAppointmentStatus =
     }
   };
 
+// Cập nhật trạng thái appointment
+export const updateAppointmentPaymentStatus =
+  (appointmentId, payload) => async (dispatch) => {
+    try {
+      dispatch(updateAppointmentPaymentStatusStart());
+      const response = await api.put(
+        `/api/v1/booking/appointments/${appointmentId}/payment-status`,
+        payload
+      );
+      dispatch(updateAppointmentPaymentStatusSuccess(response.data.data));
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      const errorMessage =
+        error.response?.data.message ||
+        "Không thể cập nhật trạng thái lịch khám";
+      dispatch(updateAppointmentPaymentStatusFailure(errorMessage));
+      throw error;
+    }
+  };
 // Hủy appointment
 export const cancelAppointment = (appointmentId) => async (dispatch) => {
   try {

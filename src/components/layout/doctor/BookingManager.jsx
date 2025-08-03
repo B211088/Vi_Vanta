@@ -26,10 +26,16 @@ import {
   DollarSign,
   Activity,
   Clipboard,
+  RefreshCcwIcon,
+  RotateCcw,
 } from "lucide-react";
-import { updateAppointmentStatus } from "../../../services/booking.service";
+import {
+  updateAppointmentPaymentStatus,
+  updateAppointmentStatus,
+} from "../../../services/booking.service";
 import { useNotify } from "../../../hook/useNotify";
 import AppointmentDetailModal from "../../modals/doctor/AppointmentDetailModal";
+import { convertMarkdownToJSX } from "../../../utils/convertMarkdownToJSX";
 
 const BookingManager = () => {
   const navigate = useNavigate();
@@ -46,7 +52,7 @@ const BookingManager = () => {
   const [detailAppointmentData, setDetailAppointmentData] = useState(null);
   const { notifySuccess, notifyWarning, notifyError, notifyConfirm } =
     useNotify();
-  console.log({ detailAppointmentData });
+
   useEffect(() => {
     dispatch(fetchDoctorByUserId());
   }, [dispatch]);
@@ -283,6 +289,401 @@ const BookingManager = () => {
       </div>
     );
   }
+  // Thêm vào component BookingManager
+
+  // Helper function để kiểm tra thời gian
+  const isAppointmentTimeReached = (appointmentDate, timeSlot) => {
+    if (!appointmentDate || !timeSlot?.startTime) return false;
+
+    const now = new Date();
+    const appointmentDateTime = new Date(appointmentDate);
+
+    // Parse time từ string "HH:MM"
+    const [hours, minutes] = timeSlot.startTime.split(":");
+    appointmentDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+    return now >= appointmentDateTime;
+  };
+
+  // Helper function để kiểm tra xem có thể hoàn thành không
+  const canCompleteAppointment = (appointment) => {
+    const isTimeReached = isAppointmentTimeReached(
+      appointment.date,
+      appointment.timeSlots
+    );
+    const isConfirmed = appointment.status === "confirmed";
+
+    // Nếu thanh toán tiền mặt, cần phải xác nhận đã thanh toán trước
+    if (
+      appointment.paymentMethod === "cash" ||
+      appointment.paymentMethod === "COD"
+    ) {
+      return (
+        isTimeReached && isConfirmed && appointment.paymentStatus === "paid"
+      );
+    }
+
+    // Nếu thanh toán online, cần đã thanh toán
+    return isTimeReached && isConfirmed && appointment.paymentStatus === "paid";
+  };
+
+  // Helper function để xác định các nút cần hiển thị
+  const getAvailableActions = (appointment) => {
+    const actions = [];
+    const now = new Date();
+    const appointmentDate = new Date(appointment.date);
+    const isTimeReached = isAppointmentTimeReached(
+      appointment.date,
+      appointment.timeSlots
+    );
+
+    // Luôn có nút xem chi tiết
+    actions.push("view_detail");
+
+    switch (appointment.status) {
+      case "pending":
+        // Chỉ cho phép xác nhận/từ chối nếu chưa quá thời gian khám
+        if (appointmentDate >= now.setHours(0, 0, 0, 0)) {
+          actions.push("confirm", "cancel");
+        } else {
+          // Nếu đã quá ngày thì tự động hủy hoặc chỉ cho phép hủy
+          actions.push("cancel");
+        }
+        break;
+
+      case "confirmed":
+        // Nút xác nhận thanh toán cho tiền mặt
+        if (
+          (appointment.paymentMethod === "cash" ||
+            appointment.paymentMethod === "COD") &&
+          appointment.paymentStatus !== "paid"
+        ) {
+          actions.push("confirm_payment");
+        }
+
+        // Nút in hóa đơn nếu đã thanh toán
+        if (appointment.paymentStatus === "paid") {
+          actions.push("print_invoice");
+        }
+
+        // Nút hoàn thành khám nếu đủ điều kiện
+        if (canCompleteAppointment(appointment)) {
+          actions.push("complete");
+        }
+
+        // Nút hủy nếu chưa đến giờ khám
+        if (!isTimeReached) {
+          actions.push("cancel");
+        }
+
+        // Nút báo vắng nếu đã quá giờ khám 30 phút mà chưa hoàn thành
+        if (isTimeReached) {
+          const [hours, minutes] = appointment.timeSlots.startTime.split(":");
+          const appointmentDateTime = new Date(appointment.date);
+          appointmentDateTime.setHours(
+            parseInt(hours),
+            parseInt(minutes),
+            0,
+            0
+          );
+          const timeDiff = now - appointmentDateTime;
+          const thirtyMinutes = 30 * 60 * 1000;
+
+          if (timeDiff > thirtyMinutes) {
+            actions.push("mark_absent");
+          }
+        }
+        break;
+
+      case "completed":
+        // Chỉ có nút xem chi tiết và in hóa đơn
+        actions.push("print_invoice");
+        break;
+
+      case "cancelled":
+        const cancelTime = new Date(
+          appointment.cancelledAt || appointment.updatedAt
+        );
+        const hoursSinceCanceled = (now - cancelTime) / (1000 * 60 * 60);
+
+        if (hoursSinceCanceled < 24 && appointmentDate > now) {
+          actions.push("reactivate");
+        }
+        break;
+
+      default:
+        break;
+    }
+
+    // Luôn có nút gọi điện
+    if (appointment.patientInfo?.phone) {
+      actions.push("call");
+    }
+
+    return actions;
+  };
+
+  // Hàm xử lý xác nhận thanh toán
+  const handleConfirmPayment = async (appointmentId) => {
+    try {
+      const confirm = await notifyConfirm(
+        "Xác nhận bệnh nhân đã thanh toán tiền mặt?"
+      );
+      if (confirm) {
+        await dispatch(
+          updateAppointmentPaymentStatus(appointmentId, {
+            paymentStatus: "paid",
+            doctorId: doctor._id,
+          })
+        );
+        setAppointments((prev) =>
+          prev.map((apt) =>
+            apt._id === appointmentId
+              ? {
+                  ...apt,
+                  paymentStatus: "paid",
+                  paidAt: new Date().toISOString(),
+                }
+              : apt
+          )
+        );
+        notifySuccess("Đã xác nhận thanh toán thành công!");
+      }
+    } catch (error) {
+      console.error("Error confirming payment:", error);
+      notifyError("Có lỗi xảy ra khi xác nhận thanh toán");
+    }
+  };
+
+  // Hàm xử lý báo vắng
+  const handleMarkAbsent = async (appointmentId) => {
+    try {
+      const confirm = await notifyConfirm(
+        "Xác nhận bệnh nhân vắng mặt? Lịch hẹn sẽ được đánh dấu là đã hủy."
+      );
+      if (confirm) {
+        await dispatch(
+          updateAppointmentStatus(appointmentId, {
+            status: "cancelled",
+            cancelReason: "Bệnh nhân vắng mặt",
+            absentMarked: true,
+          })
+        );
+        setAppointments((prev) =>
+          prev.map((apt) =>
+            apt._id === appointmentId
+              ? {
+                  ...apt,
+                  status: "cancelled",
+                  cancelReason: "Bệnh nhân vắng mặt",
+                  absentMarked: true,
+                  cancelledAt: new Date().toISOString(),
+                }
+              : apt
+          )
+        );
+        notifyWarning("Đã đánh dấu bệnh nhân vắng mặt");
+      }
+    } catch (error) {
+      console.error("Error marking absent:", error);
+      notifyError("Có lỗi xảy ra khi đánh dấu vắng mặt");
+    }
+  };
+
+  // Hàm xử lý tái kích hoạt
+  const handleReactivateAppointment = async (appointmentId) => {
+    try {
+      const confirm = await notifyConfirm(
+        "Tái kích hoạt lịch hẹn này? Trạng thái sẽ chuyển về chờ xác nhận."
+      );
+      if (confirm) {
+        await dispatch(
+          updateAppointmentStatus(appointmentId, {
+            status: "pending",
+            cancelReason: null,
+            reactivatedAt: new Date().toISOString(),
+          })
+        );
+        setAppointments((prev) =>
+          prev.map((apt) =>
+            apt._id === appointmentId
+              ? {
+                  ...apt,
+                  status: "pending",
+                  cancelReason: null,
+                  reactivatedAt: new Date().toISOString(),
+                }
+              : apt
+          )
+        );
+        notifySuccess("Đã tái kích hoạt lịch hẹn thành công!");
+      }
+    } catch (error) {
+      console.error("Error reactivating appointment:", error);
+      notifyError("Có lỗi xảy ra khi tái kích hoạt lịch hẹn");
+    }
+  };
+  const handlePrintInvoice = (appointment) => {
+    // Logic in hóa đơn - có thể mở window mới hoặc tải PDF
+    const printWindow = window.open("", "_blank");
+    printWindow.document.write(`
+    <html>
+      <head>
+        <title>Hóa đơn khám bệnh</title>
+        <style>
+          body { font-family: Arial, sans-serif; }
+          .invoice { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { text-align: center; margin-bottom: 30px; }
+          .info { margin-bottom: 20px; }
+          .services { width: 100%; border-collapse: collapse; }
+          .services th, .services td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        </style>
+      </head>
+      <body>
+        <div class="invoice">
+          <div class="header">
+            <h2>HÓA ĐƠN KHÁM BỆNH</h2>
+            <p>Mã lịch hẹn: ${appointment._id}</p>
+          </div>
+          <div class="info">
+            <p><strong>Bệnh nhân:</strong> ${
+              appointment.patientInfo?.fullName
+            }</p>
+            <p><strong>Ngày khám:</strong> ${formatDate(appointment.date)}</p>
+            <p><strong>Giờ khám:</strong> ${
+              appointment.timeSlots?.startTime
+            } - ${appointment.timeSlots?.endTime}</p>
+            <p><strong>Phương thức thanh toán:</strong> ${getPaymentMethodText(
+              appointment.paymentMethod
+            )}</p>
+          </div>
+          <table class="services">
+            <tr><th>Dịch vụ</th><th>Giá tiền</th></tr>
+            ${
+              appointment.services
+                ?.map(
+                  (service) =>
+                    `<tr><td>${service.name}</td><td>${formatCurrency(
+                      service.price
+                    )}</td></tr>`
+                )
+                .join("") || ""
+            }
+            <tr><td><strong>Tổng cộng</strong></td><td><strong>${formatCurrency(
+              appointment.totalFee
+            )}</strong></td></tr>
+          </table>
+        </div>
+      </body>
+    </html>
+  `);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  // Component render nút actions được cập nhật
+  const renderActionButtons = (appointment) => {
+    const availableActions = getAvailableActions(appointment);
+
+    return (
+      <div className="mt-6 pt-4 border-t border-gray-200 flex flex-wrap gap-3">
+        {availableActions.includes("view_detail") && (
+          <button
+            onClick={() => {
+              setDetailAppointmentData(appointment);
+              setDetailAppointmentModal(true);
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+          >
+            <Eye className="w-4 h-4" />
+            Xem chi tiết
+          </button>
+        )}
+
+        {availableActions.includes("confirm") && (
+          <button
+            onClick={() => handleConfirmAppointment(appointment._id)}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+          >
+            <CheckCircle className="w-4 h-4" />
+            Xác nhận
+          </button>
+        )}
+
+        {availableActions.includes("cancel") && (
+          <button
+            onClick={() => handleCancelAppointment(appointment._id)}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+          >
+            <XCircle className="w-4 h-4" />
+            {appointment.status === "pending" ? "Từ chối" : "Hủy lịch"}
+          </button>
+        )}
+
+        {availableActions.includes("confirm_payment") && (
+          <button
+            onClick={() => handleConfirmPayment(appointment._id)}
+            className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2"
+          >
+            <DollarSign className="w-4 h-4" />
+            Xác nhận đã thanh toán
+          </button>
+        )}
+
+        {availableActions.includes("print_invoice") && (
+          <button
+            onClick={() => handlePrintInvoice(appointment)}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
+          >
+            <FileText className="w-4 h-4" />
+            In hóa đơn
+          </button>
+        )}
+
+        {availableActions.includes("complete") && (
+          <button
+            onClick={() => handleCompleteAppointment(appointment._id)}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+          >
+            <CheckCircle className="w-4 h-4" />
+            Hoàn thành khám
+          </button>
+        )}
+
+        {availableActions.includes("mark_absent") && (
+          <button
+            onClick={() => handleMarkAbsent(appointment._id)}
+            className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2"
+          >
+            <AlertCircle className="w-4 h-4" />
+            Báo vắng
+          </button>
+        )}
+
+        {availableActions.includes("reactivate") && (
+          <button
+            onClick={() => handleReactivateAppointment(appointment._id)}
+            className="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors flex items-center gap-2"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Tái kích hoạt
+          </button>
+        )}
+
+        {availableActions.includes("call") && (
+          <button
+            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
+            onClick={() =>
+              window.open(`tel:${appointment.patientInfo?.phone}`, "_self")
+            }
+          >
+            <Phone className="w-4 h-4" />
+            Gọi điện
+          </button>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen w-full bg-light-50 p-6 rounded-lg ">
@@ -403,6 +804,14 @@ const BookingManager = () => {
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
                 />
+              </div>
+              <div
+                onClick={() => {
+                  dispatch(getDoctorAppointments(doctor._id));
+                }}
+                className="border-1 border-dark-800 flex items-center justify-center px-3 rounded-lg cursor-pointer"
+              >
+                <RotateCcw className="w-4 h-4" />
               </div>
             </div>
 
@@ -604,7 +1013,7 @@ const BookingManager = () => {
                             </div>
                             {service.description && (
                               <p className="text-sm text-gray-600 mt-1 ml-6">
-                                {service.description}
+                                {convertMarkdownToJSX(service.description)}
                               </p>
                             )}
                             <div className="flex items-center gap-4 mt-2 ml-6 text-xs text-gray-500">
@@ -630,66 +1039,7 @@ const BookingManager = () => {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="mt-6 pt-4 border-t border-gray-200 flex flex-wrap gap-3">
-                  <button
-                    onClick={() => {
-                      setDetailAppointmentData(appointment);
-                      setDetailAppointmentModal(true);
-                    }}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-                  >
-                    <Eye className="w-4 h-4" />
-                    Xem chi tiết
-                  </button>
-
-                  {appointment.status === "pending" && (
-                    <>
-                      <button
-                        onClick={() =>
-                          handleConfirmAppointment(appointment._id)
-                        }
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-                      >
-                        <CheckCircle className="w-4 h-4" />
-                        Xác nhận
-                      </button>
-                      <button
-                        onClick={() => handleCancelAppointment(appointment._id)}
-                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
-                      >
-                        <XCircle className="w-4 h-4" />
-                        Từ chối
-                      </button>
-                    </>
-                  )}
-
-                  {appointment.status === "confirmed" &&
-                    (appointment.paymentMethod === "cash" ||
-                      (appointment.paymentMethod !== "cash" &&
-                        appointment.paymentStatus === "paid")) && (
-                      <button
-                        onClick={() =>
-                          handleCompleteAppointment(appointment._id)
-                        }
-                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
-                      >
-                        <CheckCircle className="w-4 h-4" />
-                        Hoàn thành khám
-                      </button>
-                    )}
-
-                  <button
-                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                    onClick={() =>
-                      window.open(
-                        `tel:${appointment.patientInfo?.phone}`,
-                        "_self"
-                      )
-                    }
-                  >
-                    Gọi điện
-                  </button>
-                </div>
+                {renderActionButtons(appointment)}
 
                 {/* Timestamps */}
                 <div className="mt-4 pt-4 border-t border-gray-100">
