@@ -54,15 +54,18 @@ export const loginUser = async (email, password) => {
     const token = jwt.sign(
       { userId: user._id, roles: user.roles },
       JWT_SECRET,
-      {
-        expiresIn: JWT_EXPIRATION,
-      }
+      { expiresIn: JWT_EXPIRATION }
     );
 
-    return { userInfo: user, token };
+    const health = await Health.findOne({ userId: user._id });
+    const haveHealthInfo = !!health;
+
+    // Convert mongoose document to plain object
+    const userInfo = user.toObject();
+
+    return { userInfo, token, haveHealthInfo };
   } catch (error) {
     console.error("Lỗi đăng nhập", error.message);
-    // Nếu error đã là instance của Error, lấy message
     throw new Error(error.message || "Lỗi đăng nhập");
   }
 };
@@ -110,9 +113,10 @@ export const removeRoles = async (userId, rolesRemove) => {
 };
 
 export const getUserProfile = async (userId) => {
-  const userProfile = await User.findById(userId).select(
-    "-__v -passwordHash -updatedAt -createdAt"
-  );
+  const userProfile = await User.findById(userId)
+    .select("-__v -passwordHash -updatedAt -createdAt")
+    .populate("concerns", "_id name image");
+
   if (!userProfile) {
     throw new Error("Không tìm thấy người dùng!");
   }
@@ -121,25 +125,19 @@ export const getUserProfile = async (userId) => {
 };
 
 export const setUserProfile = async (payload, userId) => {
-  const { fullName, phone, gender, dateOfBirth } = payload;
-
   const user = await User.findById(userId);
 
   if (!user) {
     throw new Error("Người dùng không tồn tại!");
   }
-  const updateData = {};
-
-  if (fullName) updateData.fullName = fullName;
-  if (phone) updateData.phone = phone;
-  if (gender) updateData.gender = gender;
-  if (dateOfBirth) updateData.dateOfBirth = dateOfBirth;
 
   const updatedUser = await User.findByIdAndUpdate(
     userId,
-    { $set: updateData },
+    { $set: payload },
     { new: true }
-  ).select("-__v -updatedAt -createdAt");
+  )
+    .select("-__v -updatedAt -createdAt")
+    .populate("concerns", "_id name image");
 
   if (updatedUser.modifiedCount === 0) {
     throw new Error("Không có thay đổi nào được thực hiện.");
@@ -176,11 +174,10 @@ export const updateUserAvatar = async (userId, avatar) => {
       }
     }
 
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { avatar },
-      { new: true }
-    ).select("-__v -createdAt -updatedAt");
+    const user = await User.findByIdAndUpdate(userId, { avatar }, { new: true })
+      .populate("concerns", "_id name image")
+      .select("-__v -createdAt -updatedAt");
+
     return user;
   } catch (error) {
     console.error("Error updating user avatar:", error);
@@ -229,6 +226,7 @@ export const hanldeUpdateUserAddress = async (userId, payload) => {
       .populate("provinceId", "name")
       .populate("districtId", "name")
       .populate("wardId", "name")
+      .populate("concerns", "_id name image")
       .select("-__v -createdAt -updatedAt");
 
     if (!updatedAddress) {
@@ -287,21 +285,10 @@ export const setDoctorProfileHandle = async (userId, payload) => {
 
 export const updateDoctorProfileHandle = async (userId, payload) => {
   try {
-    const { specialty, hospital, licenseNumber, education, experienceYears } =
-      payload;
-
-    const doctorProfile = {
-      specialty,
-      hospital,
-      licenseNumber,
-      education,
-      experienceYears,
-    };
-
     const doctorData = await Doctor.findOneAndUpdate(
       { userId },
       {
-        $set: doctorProfile,
+        $set: payload,
       },
       {
         new: true,

@@ -9,13 +9,7 @@ import {
   getClinicsHandle,
   getClinicByIdAndStatusHandle,
 } from "../services/clinic.service.js";
-import {
-  addStaffToClinic,
-  updateStaffRole,
-  removeStaffFromClinic,
-  getClinicStaff,
-  toggleStaffStatus,
-} from "../services/clinicStaff.service.js";
+
 import { uploads } from "../utils/uploadImagesToCloud.js";
 
 // Đăng ký phòng khám mới
@@ -160,21 +154,6 @@ export const rejectClinic = async (req, res) => {
   }
 };
 
-// Mời nhân viên vào phòng khám
-export const inviteStaffById = async (req, res) => {
-  try {
-    const clinicId = req.params.clinicId;
-    const userId = req.body.userId;
-    if (!clinicId || !userId) {
-      return res.status(400).json({ message: "Thiếu clinicId hoặc userId!" });
-    }
-    const staff = await inviteStaffByIdHandle(clinicId, userId);
-    res.status(201).json({ message: "Mời nhân viên thành công", staff });
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-};
-
 // Lấy thông tin phòng khám theo ID
 export const getClinicById = async (req, res) => {
   try {
@@ -238,130 +217,5 @@ export const deleteClinic = async (req, res) => {
     res.json({ message: "Xóa phòng khám thành công", clinic });
   } catch (error) {
     res.status(400).json({ message: error.message });
-  }
-};
-
-export const addStaff = async (req, res) => {
-  try {
-    const { clinicId } = req.params;
-    const { userId, role } = req.body;
-
-    if (!clinicId || !userId) {
-      return res.status(400).json({
-        message: "Thiếu thông tin clinicId hoặc userId!",
-      });
-    }
-
-    const staff = await addStaffToClinic(clinicId, userId, role);
-    res.status(201).json({
-      message: "Thêm nhân viên thành công",
-      data: staff,
-    });
-  } catch (error) {
-    res.status(error.statusCode || 400).json({
-      message: error.message,
-    });
-  }
-};
-
-export const updateRole = async (req, res) => {
-  try {
-    const { clinicId } = req.params;
-    const { userId, role } = req.body;
-
-    if (!clinicId || !userId || !role) {
-      return res.status(400).json({
-        message: "Thiếu thông tin cần thiết!",
-      });
-    }
-
-    const staff = await updateStaffRole(clinicId, userId, role);
-    res.json({
-      message: "Cập nhật vai trò thành công",
-      data: staff,
-    });
-  } catch (error) {
-    res.status(error.statusCode || 400).json({
-      message: error.message,
-    });
-  }
-};
-
-export const removeStaff = async (req, res) => {
-  try {
-    const { clinicId } = req.params;
-    const { userId } = req.body;
-
-    if (!clinicId || !userId) {
-      return res.status(400).json({
-        message: "Thiếu thông tin clinicId hoặc userId!",
-      });
-    }
-
-    const result = await removeStaffFromClinic(clinicId, userId);
-    res.json({
-      message: result.message,
-    });
-  } catch (error) {
-    res.status(error.statusCode || 400).json({
-      message: error.message,
-    });
-  }
-};
-
-export const getStaffList = async (req, res) => {
-  try {
-    const { clinicId } = req.params;
-    const { role, isActive, page, limit, sortBy, order } = req.query;
-
-    if (!clinicId) {
-      return res.status(400).json({
-        message: "Thiếu thông tin clinicId!",
-      });
-    }
-
-    const options = {
-      role,
-      isActive: isActive === "true",
-      page: parseInt(page),
-      limit: parseInt(limit),
-      sortBy,
-      order,
-    };
-
-    const result = await getClinicStaff(clinicId, options);
-    res.json({
-      message: "Lấy danh sách nhân viên thành công",
-      ...result,
-    });
-  } catch (error) {
-    res.status(error.statusCode || 400).json({
-      message: error.message,
-    });
-  }
-};
-
-export const toggleStatus = async (req, res) => {
-  try {
-    const { clinicId } = req.params;
-    const { userId } = req.body;
-
-    if (!clinicId || !userId) {
-      return res.status(400).json({
-        message: "Thiếu thông tin clinicId hoặc userId!",
-      });
-    }
-
-    const staff = await toggleStaffStatus(clinicId, userId);
-    res.json({
-      message: `${
-        staff.isActive ? "Kích hoạt" : "Vô hiệu hóa"
-      } tài khoản nhân viên thành công`,
-      data: staff,
-    });
-  } catch (error) {
-    res.status(error.statusCode || 400).json({
-      message: error.message,
-    });
   }
 };

@@ -45,6 +45,7 @@ export const login = async (req, res) => {
       success: true,
       message: "Đăng nhập thành công!",
       user: user.userInfo,
+      haveHealthInfo: user.haveHealthInfo,
     });
   } catch (error) {
     if (error.message === "Chưa xác nhận email") {
@@ -55,7 +56,6 @@ export const login = async (req, res) => {
       });
     }
 
-    // Các lỗi khác
     res.status(400).json({
       success: false,
       message: error.message || "Đăng nhập thất bại",

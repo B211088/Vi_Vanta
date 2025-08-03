@@ -68,7 +68,7 @@ router.post(
 );
 
 // Cập nhật thông tin tài khoản
-router.put("/update/profile", sanitizeInputMiddleware, verifyToken, setProfile);
+router.put("/update/profile", verifyToken, setProfile);
 
 // Cập nhật ảnh đại diện
 router.put(

@@ -246,6 +246,40 @@ export const getAppointmentById = async (req, res) => {
 };
 
 // Cập nhật trạng thái appointment
+export const updateAppointmentPaymentStatus = async (req, res) => {
+  try {
+    const { appointmentId } = req.params;
+    const { paymentStatus, doctorId } = req.body;
+
+    const validStatuses = ["unpaid", "paid"];
+    if (!validStatuses.includes(paymentStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: "Trạng thái không hợp lệ",
+      });
+    }
+
+    const appointment =
+      await bookingAppointmentService.updateAppointmentPaymentStatus(
+        appointmentId,
+        paymentStatus,
+        doctorId
+      );
+
+    res.status(200).json({
+      success: true,
+      message: "Cập nhật trạng thái thành công",
+      data: appointment,
+    });
+  } catch (error) {
+    console.error("Error updating appointment status:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server khi cập nhật trạng thái",
+    });
+  }
+};
+
 export const updateAppointmentStatus = async (req, res) => {
   try {
     const { appointmentId } = req.params;
@@ -398,37 +432,15 @@ export const getUserAppointments = async (req, res) => {
       if (endDate) filter.date.$lte = new Date(endDate);
     }
 
-    const [appointments, total] = await Promise.all([
-      Appointment.find(filter)
-        .populate([
-          {
-            path: "doctorId",
-            select: "name specialty infoClinic userId",
-            populate: {
-              path: "userId",
-              select: "avatar",
-            },
-          },
-          {
-            path: "services",
-          },
-        ])
-        .sort({ date: -1, "timeSlots.startTime": -1 })
-        .skip(skip)
-        .limit(parseInt(limit)),
-      Appointment.countDocuments(filter),
-    ]);
-
+    const appointments = await bookingAppointmentService.getUserAppointments(
+      userId,
+      page,
+      limit,
+      { status, startDate, endDate }
+    );
     res.status(200).json({
       success: true,
-      data: {
-        appointments,
-        pagination: {
-          current: parseInt(page),
-          pages: Math.ceil(total / limit),
-          total,
-        },
-      },
+      data: appointments,
     });
   } catch (error) {
     console.error("Error getting user appointments:", error);

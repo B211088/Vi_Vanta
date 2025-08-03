@@ -6,55 +6,164 @@ import WorkingHour from "../models/workingHour.model.js";
 
 import { ApiError } from "../utils/ApiResponse.js";
 
-export const registerDoctor = async (doctorData) => {
-  // Kiểm tra userId đã đăng ký chưa
-  const existed = await Doctor.findOne({ userId: doctorData.userId });
-  if (existed) throw new ApiError(400, "Bạn đã gửi yêu cầu hoặc đã là bác sĩ!");
+export const registerDoctor = async ({ payload, userId }) => {
+  console.log("Service received payload:", JSON.stringify(payload, null, 2));
+
+  const existed = await Doctor.findOne({ userId });
+  if (existed) {
+    throw new ApiError(400, "Bạn đã gửi yêu cầu hoặc đã là bác sĩ!");
+  }
+
+  // Ensure all required fields are present
+  const doctorData = {
+    userId,
+    name: payload.name,
+    avatar: payload.avatar,
+    title: payload.title,
+    info: payload.info,
+    highlights: payload.highlights,
+    infoClinic: {
+      clinicName: payload.infoClinic.clinicName,
+      phone: payload.infoClinic.phone,
+      address: {
+        specificAddress: payload.infoClinic.address.specificAddress,
+        provinceId: payload.infoClinic.address.provinceId,
+        districtId: payload.infoClinic.address.districtId,
+        wardId: payload.infoClinic.address.wardId,
+        // Optional fields
+        ...(payload.infoClinic.address.province && {
+          province: payload.infoClinic.address.province,
+        }),
+        ...(payload.infoClinic.address.district && {
+          district: payload.infoClinic.address.district,
+        }),
+        ...(payload.infoClinic.address.ward && {
+          ward: payload.infoClinic.address.ward,
+        }),
+      },
+      // Optional clinic fields
+      ...(payload.infoClinic.description && {
+        description: payload.infoClinic.description,
+      }),
+      ...(payload.infoClinic.website && {
+        website: payload.infoClinic.website,
+      }),
+    },
+    // Optional array fields
+    ...(payload.specialty && { specialty: payload.specialty }),
+    ...(payload.targetPatients && { targetPatients: payload.targetPatients }),
+    ...(payload.strengths && { strengths: payload.strengths }),
+    ...(payload.experiences && { experiences: payload.experiences }),
+    ...(payload.educations && { educations: payload.educations }),
+    ...(payload.languages && { languages: payload.languages }),
+    ...(payload.paymentMethods && { paymentMethods: payload.paymentMethods }),
+    // Other optional fields
+    ...(payload.description && { description: payload.description }),
+    ...(payload.consultation_fee && {
+      consultation_fee: payload.consultation_fee,
+    }),
+    ...(payload.years_of_experience && {
+      years_of_experience: payload.years_of_experience,
+    }),
+    ...(payload.license_number && { license_number: payload.license_number }),
+  };
+
+  console.log(
+    "Final doctor data before save:",
+    JSON.stringify(doctorData, null, 2)
+  );
 
   const doctor = new Doctor(doctorData);
   return await doctor.save();
 };
 
 export const getDoctors = async (query = {}) => {
-  const {
-    page = 1,
-    limit = 10,
-    status,
-    search,
-    sortBy = "createdAt",
-    sortOrder = "desc",
-  } = query;
-  const filter = {};
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      status,
+      search,
+      location,
+      specialty,
+      sortBy = "createdAt",
+      sortOrder = "desc",
+      isAdmin = false,
+    } = query;
 
-  if (status && isAdmin) filter.status = status;
-  if (search) filter.$text = { $search: search };
+    const filter = {};
 
-  const skip = (page - 1) * limit;
-  const sortOptions = { [sortBy]: sortOrder === "desc" ? -1 : 1 };
+    if (status && isAdmin) {
+      filter.status = status;
+    }
+    if (search && search.trim() !== "") {
+      const keyword = search.trim();
+      filter.$or = [
+        { name: { $regex: keyword, $options: "i" } },
+        { "infoClinic.clinicName": { $regex: keyword, $options: "i" } },
+      ];
+    }
 
-  const [doctors, total] = await Promise.all([
-    Doctor.find(filter)
-      .select("_id name userId specialty infoClinic rate")
-      .populate("userId", "avatar")
-      .sort(sortOptions)
-      .skip(skip)
-      .limit(parseInt(limit))
-      .lean(),
-    Doctor.countDocuments(filter),
-  ]);
-  return {
-    doctors,
-    pagination: {
-      page: parseInt(page),
-      limit: parseInt(limit),
-      total,
-      pages: Math.ceil(total / limit),
-    },
-  };
+    if (location && location !== "all") {
+      filter["infoClinic.address.provinceId"] = location;
+    }
+    if (specialty && specialty !== "all") {
+      filter["specialty"] = specialty;
+    }
+    const skip = (page - 1) * limit;
+    const sortOptions = { [sortBy]: sortOrder === "desc" ? -1 : 1 };
+
+    const [doctors, total] = await Promise.all([
+      Doctor.find(filter)
+        .select("_id name userId specialty infoClinic rate avatar")
+        .populate({
+          path: "infoClinic.address.wardId",
+          select: "name",
+        })
+        .populate({
+          path: "infoClinic.address.districtId",
+          select: "name",
+        })
+        .populate({
+          path: "infoClinic.address.provinceId",
+          select: "name",
+        })
+        .sort(sortOptions)
+        .skip(skip)
+        .limit(parseInt(limit))
+        .lean(),
+      Doctor.countDocuments(filter),
+    ]);
+    return {
+      doctors,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    };
+  } catch (error) {
+    console.error("Lỗi trong doctorService.getDoctors:", error);
+    throw new Error("Không thể lấy danh sách bác sĩ");
+  }
 };
 
 export const getPendingDoctors = async () => {
-  return Doctor.find({ status: "pending" }).lean();
+  return Doctor.find({ status: "pending" })
+    .populate({
+      path: "infoClinic.address.wardId",
+      select: "name",
+    })
+    .populate({
+      path: "infoClinic.address.districtId",
+      select: "name",
+    })
+    .populate({
+      path: "infoClinic.address.provinceId",
+      select: "name",
+    })
+    .lean();
 };
 
 export const approveDoctor = async (id) => {
@@ -99,7 +208,20 @@ export const rejectDoctor = async (id) => {
 };
 
 export const getDoctorById = async (id) => {
-  const doctor = await Doctor.findById(id).populate("userId", "avatar").lean();
+  const doctor = await Doctor.findById(id)
+    .populate({
+      path: "infoClinic.address.wardId",
+      select: "name",
+    })
+    .populate({
+      path: "infoClinic.address.districtId",
+      select: "name",
+    })
+    .populate({
+      path: "infoClinic.address.provinceId",
+      select: "name",
+    })
+    .lean();
   const workingHour = await WorkingHour.find({
     doctorId: id,
     isActive: true,
@@ -322,8 +444,7 @@ export const getDoctorSlotAvailabilityRange = async (
 export const getDoctorByUserId = async (userId) => {
   try {
     const doctor = await Doctor.findOne({ userId })
-      .populate("userId", "avatar")
-      .lean();
+    .lean();
     if (!doctor) throw new ApiError(404, "Không tìm thấy bác sĩ");
 
     return doctor;

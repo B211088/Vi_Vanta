@@ -4,25 +4,16 @@ import {
   getClinics,
   getClinicById,
   getClinicByIdAndStatus,
-  inviteStaffById,
   registerClinic,
   rejectClinic,
   updateClinicBasicInfo,
   verifyClinic,
-  addStaff,
-  updateRole,
-  removeStaff,
-  getStaffList,
-  toggleStatus,
 } from "../controllers/clinic.controller.js";
 
 import upload from "../middlewares/uploadMiddleware.js";
 
 import verifyToken from "../middlewares/verifyToken.js";
-import {
-  authorizeRoles,
-  authorizeClinicStaff,
-} from "../middlewares/authorizeRoles.js";
+import { authorizeRoles } from "../middlewares/authorizeRoles.js";
 
 const router = express.Router();
 
@@ -59,63 +50,9 @@ router.post("/reject/:id", verifyToken, authorizeRoles("admin"), rejectClinic);
 router.get("/:id", getClinicById);
 
 // Cập nhật thông tin cơ bản
-router.put(
-  "/:id/basic-info",
-  verifyToken,
-  authorizeClinicStaff(["owner", "admin"]),
-  updateClinicBasicInfo
-);
+router.put("/:id/basic-info", verifyToken, updateClinicBasicInfo);
 
 // Xóa phòng khám
-router.delete(
-  "/:id",
-  verifyToken,
-  authorizeClinicStaff(["owner", "admin"]),
-  deleteClinic
-);
-
-// Mời nhân viên
-router.post(
-  "/:clinicId/invite-staff",
-  verifyToken,
-  authorizeClinicStaff(["owner", "admin"]),
-  inviteStaffById
-);
-
-// Staff Management Routes
-router.post(
-  "/:clinicId/staff",
-  verifyToken,
-  authorizeClinicStaff(["owner", "admin"]),
-  addStaff
-);
-
-router.put(
-  "/:clinicId/staff/role",
-  verifyToken,
-  authorizeClinicStaff(["owner", "admin"]),
-  updateRole
-);
-
-router.delete(
-  "/:clinicId/staff",
-  verifyToken,
-  authorizeClinicStaff(["owner", "admin"]),
-  removeStaff
-);
-
-router.get(
-  "/:clinicId/staff",
-  verifyToken,
-  authorizeClinicStaff(["owner", "admin", "manager"]),
-  getStaffList
-);
-
-router.patch(
-  "/:clinicId/staff/status",
-  verifyToken,
-  authorizeClinicStaff(["owner", "admin"]),
-  toggleStatus
-);
+router.delete("/:id", verifyToken, deleteClinic);
 
 export default router;

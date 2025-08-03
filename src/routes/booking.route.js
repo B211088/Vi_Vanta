@@ -12,6 +12,7 @@ import {
   vnpayReturnHandler,
   processPayment,
   getDoctorSlots,
+  updateAppointmentPaymentStatus,
 } from "../controllers/booking.controller.js";
 import verifyToken from "../middlewares/verifyToken.js";
 
@@ -36,6 +37,13 @@ router.patch(
   verifyToken,
   authorizeRoles("doctor", "admin"),
   updateAppointmentStatus
+);
+
+router.put(
+  "/appointments/:appointmentId/payment-status",
+  verifyToken,
+  authorizeRoles("doctor", "admin"),
+  updateAppointmentPaymentStatus
 );
 
 // Hủy appointment

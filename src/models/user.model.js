@@ -5,7 +5,7 @@ import {
   URL_AVATAR_DEFAULT,
 } from "../config/auth.config.js";
 import AutoIncrementFactory from "mongoose-sequence";
-
+const { Schema } = mongoose;
 const AutoIncrement = AutoIncrementFactory(mongoose);
 const userSchema = new mongoose.Schema(
   {
@@ -64,10 +64,12 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    health: {
-      type: Boolean,
-      default: false,
-    },
+    concerns: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Topic",
+      },
+    ],
   },
   {
     timestamps: true,

@@ -1,4 +1,4 @@
-import { Clinic, ClinicStaff, User, Notification } from "../models/index.js";
+import { Clinic, User, Notification } from "../models/index.js";
 import { deleteFromCloudinary } from "../utils/uploadImagesToCloud.js";
 // Hàm chuyển đổi payload từ form-data sang object chuẩn cho Clinic
 function normalizeClinicPayload(payload) {

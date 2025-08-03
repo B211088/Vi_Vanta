@@ -1,8 +1,5 @@
-// services/bookingService.js
-
 import mongoose from "mongoose";
 import Doctor from "../models/doctor.model.js";
-import TimeSlot from "../models/timeSlot.model.js";
 import WorkingHour from "../models/workingHour.model.js";
 import Appointment from "../models/appointment.model.js";
 import { ApiError } from "../utils/ApiResponse.js";
@@ -262,54 +259,6 @@ class BookingAppointmentService {
     }
   }
 
-  // Kiểm tra slot có sẵn không
-  async checkSlotAvailability(doctorId, date, time, session = null) {
-    const timeSlot = await TimeSlot.findOne({
-      doctorId,
-      date: {
-        $gte: new Date(date.setHours(0, 0, 0, 0)),
-        $lt: new Date(date.setHours(23, 59, 59, 999)),
-      },
-    }).session(session);
-
-    if (!timeSlot) return true;
-
-    const bookedSlot = timeSlot.timeSlots.find(
-      (slot) => slot.time === time && slot.isBooked
-    );
-
-    return !bookedSlot;
-  }
-
-  // Cập nhật TimeSlot
-  async updateTimeSlot(doctorId, date, time, appointmentId, session) {
-    const filter = {
-      doctorId,
-      date: {
-        $gte: new Date(date.setHours(0, 0, 0, 0)),
-        $lt: new Date(date.setHours(23, 59, 59, 999)),
-      },
-    };
-
-    const update = {
-      $push: {
-        timeSlots: {
-          time,
-          isBooked: true,
-          appointmentId,
-        },
-      },
-    };
-
-    const options = {
-      upsert: true,
-      new: true,
-      session,
-    };
-
-    await TimeSlot.findOneAndUpdate(filter, update, options);
-  }
-
   // Lấy thông tin appointment
   async getAppointmentById(appointmentId, userId, userRole) {
     const appointment = await Appointment.findById(appointmentId)
@@ -348,6 +297,24 @@ class BookingAppointmentService {
     if (result) {
       appointment.result = result;
     }
+
+    await appointment.save();
+    return appointment.populate("userId", "name phone email");
+  }
+
+  // Cập nhật trạng thái appointment
+  async updateAppointmentPaymentStatus(appointmentId, paymentStatus, doctorId) {
+    const appointment = await Appointment.findById(appointmentId);
+    if (!appointment) {
+      throw new ApiError(404, "Không tìm thấy lịch khám");
+    }
+
+    // Kiểm tra quyền (chỉ bác sĩ của appointment mới được cập nhật)
+    if (appointment.doctorId.toString() !== doctorId) {
+      throw new ApiError(403, "Không có quyền cập nhật");
+    }
+
+    appointment.paymentStatus = paymentStatus;
 
     await appointment.save();
     return appointment.populate("userId", "name phone email");
@@ -398,25 +365,6 @@ class BookingAppointmentService {
     }
   }
 
-  // Giải phóng time slot
-  async releaseTimeSlot(doctorId, date, time, session) {
-    await TimeSlot.updateOne(
-      {
-        doctorId,
-        date: {
-          $gte: new Date(date.setHours(0, 0, 0, 0)),
-          $lt: new Date(date.setHours(23, 59, 59, 999)),
-        },
-      },
-      {
-        $pull: {
-          timeSlots: { time, isBooked: true },
-        },
-      },
-      { session }
-    );
-  }
-
   // Lấy appointment của user
   async getUserAppointments(userId, page, limit, filters) {
     const query = { userId };
@@ -439,7 +387,15 @@ class BookingAppointmentService {
 
     const [appointments, total] = await Promise.all([
       Appointment.find(query)
-        .populate("doctorId", "name specialty infoClinic rate")
+        .populate("services")
+        .populate({
+          path: "doctorId",
+          select: "name specialty infoClinic rate",
+          populate: {
+            path: "infoClinic.address.wardId infoClinic.address.districtId infoClinic.address.provinceId",
+            select: "name",
+          },
+        })
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),

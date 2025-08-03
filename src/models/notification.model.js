@@ -16,8 +16,8 @@ const notificationSchema = new Schema(
       default: "system",
     },
     isRead: { type: Boolean, default: false },
-    relatedId: Schema.Types.ObjectId, // ID của appointment, payment, etc.
-    relatedModel: String, // "Appointment", "Payment", etc.
+    relatedId: Schema.Types.ObjectId,
+    relatedModel: String,
   },
   { timestamps: true }
 );

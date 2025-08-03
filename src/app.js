@@ -14,17 +14,9 @@ import "./helpers/autoCancelAppointments.js";
 import authRouter from "./routes/auth.route.js";
 import addressRouter from "./routes/address.route.js";
 import userRoutes from "./routes/user.route.js";
-
-import pregnancyRouter from "./routes/pregnancy.route.js";
 import healthRouter from "./routes/health.route.js";
-import menstrualCycleRouter from "./routes/menstrualCycle.route.js";
-import medicationRouter from "./routes/medication.route.js";
-import medicationCategoryRouter from "./routes/medicationCategory.route.js";
 import childrenRouter from "./routes/children.route.js";
-
 import clinicRouter from "./routes/clinic.route.js";
-import exerciseRouter from "./routes/exercise.route.js";
-import medicationReminderRouter from "./routes/medicationReminder.route.js";
 import ragRouter from "./routes/ragOpenAI.routes.js";
 import aiChatRoutes from "./routes/openAIChatBot.route.js";
 import collectionRoutes from "./routes/collection.route.js";
@@ -93,15 +85,9 @@ if (process.env.NODE_ENV === "development") {
 
 app.use("/api/v1/user", authRouter);
 app.use("/api/v1/address", addressRouter);
-app.use("/api/v1/pregnancy", pregnancyRouter);
 app.use("/api/v1/health", healthRouter);
-app.use("/api/v1/menstrual-cycle", menstrualCycleRouter);
-app.use("/api/v1/medication", medicationRouter);
-app.use("/api/v1/medication-categories", medicationCategoryRouter);
 app.use("/api/v1/children", childrenRouter);
 app.use("/api/v1/clinics", clinicRouter);
-app.use("/api/v1/exercises", exerciseRouter);
-app.use("/api/v1/medication-reminders", medicationReminderRouter);
 app.use("/api/v1/rag/openai", ragRouter);
 app.use("/api/v1/openai-chat-bot", aiChatRoutes);
 app.use("/api/v1/collections", collectionRoutes);

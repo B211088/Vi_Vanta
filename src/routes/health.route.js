@@ -24,7 +24,7 @@ router.get("/", verifyToken, authorizeRoles("admin"), getAllHealth);
 router.post("/", sanitizeInputMiddleware, verifyToken, createHealth);
 
 // Cập nhật thông tin sức khỏe
-router.post("/me", sanitizeInputMiddleware, verifyToken, updateUserHealth);
+router.put("/me", sanitizeInputMiddleware, verifyToken, updateUserHealth);
 
 // Xóa thông tin sức khỏe
 router.delete("/:healthId", verifyToken, authorizeRoles("admin"), deleteHealth);

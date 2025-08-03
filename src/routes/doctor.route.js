@@ -2,6 +2,7 @@ import express from "express";
 import doctorController from "../controllers/doctor.controller.js";
 import verifyToken from "../middlewares/verifyToken.js";
 import { authorizeRoles } from "../middlewares/authorizeRoles.js";
+import upload from "../middlewares/uploadImageMiddleware.js";
 
 const router = express.Router();
 const DoctorController = new doctorController();
@@ -31,6 +32,7 @@ router.post(
   "/register",
   verifyToken,
   authorizeRoles("user"),
+  upload.single("avatar"),
   DoctorController.registerDoctor
 );
 
