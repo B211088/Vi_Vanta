@@ -7,6 +7,7 @@ import Footer from "../../../pages/user/Footer";
 import Loading from "../../../pages/Loading";
 import { Link } from "react-router-dom";
 import { getCollectionActive } from "../../../services/chatbot.service";
+import VoiceChatbot from "../chatbot/VoiceChatbot";
 
 const AllTopics = () => {
   const { isDarkMode } = useTheme();
@@ -28,6 +29,7 @@ const AllTopics = () => {
       }`}
     >
       <Header />
+      <VoiceChatbot />
       <div
         style={{ minHeight: "calc(100vh - 63px)" }}
         className="container flex flex-col items-center gap-10 mx-auto py-10 px-6 "

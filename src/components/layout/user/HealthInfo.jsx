@@ -562,7 +562,7 @@ const HealthInfo = () => {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3">
               <InputField
                 label="Nhóm máu"
                 value={editData.bloodType}
@@ -575,16 +575,6 @@ const HealthInfo = () => {
                   { value: "AB", label: "AB" },
                   { value: "O", label: "O" },
                 ]}
-                disabled={!isEditing}
-              />
-              <InputField
-                label="Nhịp tim (bpm)"
-                value={editData.heartRate}
-                onChange={(value) =>
-                  setEditData({ ...editData, heartRate: value })
-                }
-                type="number"
-                placeholder="Nhịp tim"
                 disabled={!isEditing}
               />
             </div>

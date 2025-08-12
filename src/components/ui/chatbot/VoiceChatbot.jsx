@@ -7,18 +7,22 @@ import {
   Volume2,
   VolumeX,
   Send,
+  BotMessageSquare,
 } from "lucide-react";
-import { useDispatch } from "react-redux";
-import { askChatBot } from "../../../services/chatbot.service";
-import { convertMarkdownToJSX } from "../../../utils/convertMarkdownToJSX";
+import { useDispatch, useSelector } from "react-redux";
 import {
-  cleanTextForSpeech,
-  splitTextIntoChunks,
-} from "../../../utils/cleanTextForSpeech";
+  chatVoice,
+  getChatVoiceMessages,
+} from "../../../services/chatbot.service";
+import { convertMarkdownToJSX } from "../../../utils/convertMarkdownToJSX";
 
-const APIKEY_ZALO = "QRzyNkvKdIQm4KM3b6dynIBHglnLF6pZ";
+import { API_URL } from "../../../config/api.config";
+import { addVoiceMessage } from "../../../store/slices/chatbot.slice";
+
 const VoiceChatbot = () => {
   const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
+  const { loading, voicesMessages } = useSelector((state) => state.chatbot);
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [isListening, setIsListening] = useState(false);
@@ -27,81 +31,131 @@ const VoiceChatbot = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [availableVoices, setAvailableVoices] = useState([]);
   const [selectedVoice, setSelectedVoice] = useState(null);
-  const [zaloVoice, setZaloVoice] = useState("female_south");
-  const [useFallbackTTS, setUseFallbackTTS] = useState(false);
-  const [selectedFallbackVoice, setSelectedFallbackVoice] = useState(null);
+  const [transcript, setTranscript] = useState(""); // Để hiển thị transcript đang được thu
+  const [silenceTimer, setSilenceTimer] = useState(null); // Timer để detect silence
 
   const recognitionRef = useRef(null);
-  const synthesisRef = useRef(null);
   const messagesEndRef = useRef(null);
   const audioRef = useRef(null);
 
-  const APIKEY_ZALO = "QRzyNkvKdIQm4KM3b6dynIBHglnLF6pZ";
-
-  // Zalo voice options
-  const zaloVoiceMapping = {
-    female_south: 1, // Nữ miền Nam
-    male_south: 2, // Nam miền Nam
-    female_north: 3, // Nữ miền Bắc
-    male_north: 4, // Nam miền Bắc
-  };
-
-  // Khởi tạo Speech Recognition
   useEffect(() => {
-    if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
-      const SpeechRecognition =
-        window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
-      recognitionRef.current.lang = "vi-VN";
-
-      recognitionRef.current.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        setInputText(transcript);
-        handleSendMessage(transcript);
-      };
-
-      recognitionRef.current.onend = () => {
-        setIsListening(false);
-      };
-
-      recognitionRef.current.onerror = (event) => {
-        console.error("Speech recognition error:", event.error);
-        setIsListening(false);
-      };
+    if (user) {
+      dispatch(getChatVoiceMessages(user._id));
     }
+  }, [user]);
+
+  useEffect(() => {
+    if (voicesMessages) {
+      setMessages(voicesMessages);
+    }
+  }, [voicesMessages]);
+
+  useEffect(() => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      console.warn("Trình duyệt không hỗ trợ Speech Recognition.");
+      return;
+    }
+
+    recognitionRef.current = new SpeechRecognition();
+
+    // ✅ Cải thiện cấu hình Speech Recognition
+    recognitionRef.current.continuous = true; // Cho phép thu liên tục
+    recognitionRef.current.interimResults = true; // Hiển thị kết quả tạm thời
+    recognitionRef.current.lang = "vi-VN";
+    recognitionRef.current.maxAlternatives = 1;
+
+    // ✅ Xử lý kết quả thu âm
+    recognitionRef.current.onresult = (event) => {
+      let finalTranscript = "";
+      let interimTranscript = "";
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript;
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+
+      // Hiển thị transcript tạm thời
+      setTranscript(finalTranscript + interimTranscript);
+      setInputText(finalTranscript + interimTranscript);
+
+      // ✅ Reset timer khi có âm thanh mới
+      if (silenceTimer) {
+        clearTimeout(silenceTimer);
+      }
+
+      // ✅ Nếu có finalTranscript, gửi ngay lập tức thay vì chờ
+      if (finalTranscript.trim()) {
+        // Delay nhỏ để user có thể thấy text trước khi gửi
+        setTimeout(() => {
+          handleSendMessage(finalTranscript.trim());
+          stopListening();
+        }, 300); // Chỉ delay 300ms để user thấy được text
+      } else if (interimTranscript.trim()) {
+        // Chỉ set timer cho interim results
+        const newTimer = setTimeout(() => {
+          const currentText = inputText.trim();
+          if (currentText) {
+            handleSendMessage(currentText);
+            stopListening();
+          }
+        }, 1500);
+        setSilenceTimer(newTimer);
+      }
+    };
+
+    // ✅ Xử lý khi bắt đầu thu
+    recognitionRef.current.onstart = () => {
+      console.log("Speech recognition started");
+      setTranscript("");
+      setInputText("");
+    };
+
+    // ✅ Xử lý khi kết thúc thu
+    recognitionRef.current.onend = () => {
+      setIsListening(false);
+      if (silenceTimer) {
+        clearTimeout(silenceTimer);
+        setSilenceTimer(null);
+      }
+    };
+
+    // ✅ Xử lý lỗi
+    recognitionRef.current.onerror = (event) => {
+      console.error("Speech recognition error:", event.error);
+      setIsListening(false);
+
+      if (event.error === "no-speech") {
+        // Thử khởi động lại nếu không có tiếng nói
+        setTimeout(() => {
+          if (!isListening) {
+            startListening();
+          }
+        }, 1000);
+      }
+    };
 
     return () => {
       if (recognitionRef.current) {
         recognitionRef.current.abort();
       }
+      if (silenceTimer) {
+        clearTimeout(silenceTimer);
+      }
     };
-  }, []);
-
-  useEffect(() => {
-    if (isOpen) {
-      speakText(
-        "Chào bạn!Đây là trợ lý ảo sức khỏe vivanta, Hãy bắt đầu cuộc trò chuyện bằng cách nhấn micro hoặc gõ tin nhắn."
-      );
-    }
-  }, [isOpen]);
+  }, [silenceTimer]);
 
   // Khởi tạo và load voices
   useEffect(() => {
     const loadVoices = () => {
       const voices = window.speechSynthesis.getVoices();
       setAvailableVoices(voices);
-
-      // Find best Vietnamese voice as fallback
-      const vietnameseVoice = voices.find(
-        (voice) =>
-          voice.lang?.includes("vi") ||
-          voice.name.toLowerCase().includes("vietnamese") ||
-          voice.name.toLowerCase().includes("linh")
-      );
-
-      setSelectedFallbackVoice(vietnameseVoice || voices[0]);
     };
 
     loadVoices();
@@ -111,166 +165,104 @@ const VoiceChatbot = () => {
       window.speechSynthesis.removeEventListener("voiceschanged", loadVoices);
     };
   }, []);
+
   // Auto scroll to bottom
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, isOpen]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  // Tìm giọng Việt Nam tốt nhất
-  // Thay thế hàm findBestVietnameseVoice trong code của bạn
-
-  async function textToSpeechZalo(
-    text,
-    voiceType = "female_south",
-    speed = 1.0
-  ) {
-    try {
-      // Validate input
-      if (!text || text.trim().length === 0) {
-        throw new Error("Text is required for TTS");
-      }
-
-      // Get speaker ID from voice type
-      const speakerId = zaloVoiceMapping[voiceType] || 1;
-
-      // Prepare form data
-      const params = new URLSearchParams();
-      params.append("input", text.trim());
-      params.append("speaker_id", speakerId);
-      params.append("speed", Math.max(0.8, Math.min(1.2, speed))); // Clamp speed between 0.8-1.2
-      params.append("encode_type", 1); // 1 = MP3
-
-      const response = await fetch("https://api.zalo.ai/v1/tts/synthesize", {
-        method: "POST",
-        headers: {
-          apikey: APIKEY_ZALO,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: params,
-      });
-
-      // Check if response is ok
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      // Check for API errors
-      if (data.error_code !== 0) {
-        console.error("Zalo TTS API error:", data.error_message);
-        throw new Error(data.error_message || "Unknown API error");
-      }
-
-      // Validate response data
-      if (!data.data || !data.data.url) {
-        throw new Error("Invalid response: missing audio URL");
-      }
-
-      return data.data.url;
-    } catch (error) {
-      console.error("TTS request failed:", error);
-      throw error;
-    }
-  }
-
-  // Fallback Web Speech TTS
-
-  // Text-to-Speech cải tiến
-  const speakText = async (text) => {
-    if (isSpeaking) return;
-
-    setIsSpeaking(true);
-    const cleanedText = cleanTextForSpeech(text);
-
-    try {
-      if (!useFallbackTTS) {
-        try {
-          // Use selected Zalo voice
-          const audioUrl = await textToSpeechZalo(cleanedText, zaloVoice);
-          await playAudio(audioUrl);
-          return; // Exit if successful
-        } catch (zaloError) {
-          console.warn(
-            "Zalo TTS failed, falling back to Web Speech API:",
-            zaloError
-          );
-          // Fall through to fallback TTS
-        }
-      }
-
-      // Fallback to Web Speech API
-    } catch (error) {
-      console.error("All TTS methods failed:", error);
-    } finally {
-      setIsSpeaking(false);
-    }
+    messagesEndRef.current?.scrollIntoView();
   };
 
   const playAudio = (audioUrl) => {
     return new Promise((resolve, reject) => {
-      // Stop any currently playing audio
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
+        audioRef.current.src = "";
+        audioRef.current.load();
       }
 
       const audio = new Audio();
       audioRef.current = audio;
 
-      // Set up event listeners before setting src
-      audio.onloadeddata = () => {
-        console.log("Audio loaded successfully");
-      };
+      let wasManuallyStopped = false;
 
-      audio.onended = () => {
-        console.log("Audio playback ended");
+      const handleStop = () => {
+        wasManuallyStopped = true;
+        audio.pause();
+        audio.src = "";
+        audio.load();
+        setIsSpeaking(false);
         resolve();
       };
 
-      audio.onerror = (error) => {
-        console.error("Audio playback error:", error);
-        reject(new Error("Audio playback failed"));
-      };
+      window.addEventListener("stop-audio", handleStop);
 
       audio.oncanplaythrough = () => {
-        // Audio is ready to play
-        audio.play().catch(reject);
+        setIsSpeaking(true);
+        audio.play().catch((err) => {
+          if (!wasManuallyStopped) reject(err);
+          setIsSpeaking(false);
+        });
       };
 
-      // Set the audio source (this will trigger loading)
+      audio.onended = () => {
+        setIsSpeaking(false);
+        window.removeEventListener("stop-audio", handleStop);
+        resolve();
+      };
+
+      audio.onerror = (err) => {
+        setIsSpeaking(false);
+        window.removeEventListener("stop-audio", handleStop);
+        if (!wasManuallyStopped) reject(err);
+        else resolve();
+      };
+
       audio.src = audioUrl;
-      audio.load(); // Explicitly load the audio
+      audio.load();
     });
   };
 
-  // Stop speaking
   const stopSpeaking = () => {
+    window.dispatchEvent(new Event("stop-audio"));
+
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
+      audioRef.current.src = "";
+      audioRef.current.load();
     }
-    window.speechSynthesis.cancel();
+
     setIsSpeaking(false);
   };
 
-  // Start voice recognition
+  // ✅ Cải thiện Start voice recognition
   const startListening = () => {
     if (recognitionRef.current && !isListening) {
-      setIsListening(true);
-      recognitionRef.current.start();
+      try {
+        setIsListening(true);
+        setTranscript("");
+        setInputText("");
+        recognitionRef.current.start();
+      } catch (error) {
+        console.error("Error starting recognition:", error);
+        setIsListening(false);
+      }
     }
   };
 
-  // Stop voice recognition
+  // ✅ Cải thiện Stop voice recognition
   const stopListening = () => {
     if (recognitionRef.current && isListening) {
       recognitionRef.current.stop();
       setIsListening(false);
+      if (silenceTimer) {
+        clearTimeout(silenceTimer);
+        setSilenceTimer(null);
+      }
     }
   };
 
@@ -279,47 +271,34 @@ const VoiceChatbot = () => {
     if (!text.trim()) return;
 
     const userMessage = {
-      id: Date.now(),
+      _id: Date.now(),
       role: "user",
       content: text,
-      timestamp: new Date().toISOString(),
     };
+
+    addVoiceMessage(userMessage);
 
     setMessages((prev) => [...prev, userMessage]);
     setInputText("");
+    setTranscript("");
     setIsLoading(true);
 
     try {
-      // Gọi API sử dụng Redux dispatch
       const response = await dispatch(
-        askChatBot({
-          collectionId: "685c69b3e22c9f7ae915310e",
-          conversationContext: null,
-          k: 5,
-          maxToken: 2000,
-          modelId: "68551d30f366945ce68b7e09",
-          prompt:
-            "Bạn là một bác sĩ tư vấn sức khỏe chuyên nghiệp, có kiến thức chuyên môn sâu rộng trong các lĩnh vực nội khoa, nhi khoa, sản khoa, dinh dưỡng và y học tổng quát. Hãy trả lời câu hỏi của người dùng một cách rõ ràng, chính xác, dễ hiểu và mang tính nhân văn.\n\nNguyên tắc tư vấn:\n- Luôn lắng nghe kỹ triệu chứng người dùng mô tả.\n- Nếu triệu chứng không rõ, hãy gợi ý thêm các câu hỏi làm rõ.\n- Tư vấn dựa trên kiến thức y khoa, đưa ra khả năng cao nhất và các bước cần làm tiếp theo.\n- Cảnh báo người dùng đi khám nếu có dấu hiệu nguy hiểm.\n- Không chẩn đoán hay kê đơn thuốc cụ thể nếu không có đầy đủ thông tin.\n\n\nTrả lời với giọng điệu chuyên nghiệp, thân thiện, và dễ hiểu với người không chuyên.\n\n",
-          question: text,
-          similarityThreshold: 0.2,
-          temperature: 0.3,
-        })
+        chatVoice({ question: userMessage.content, userId: user._id || null })
       );
 
-      console.log({ response });
-
-      if (response.success && response.data.answer) {
+      if (response.success && response.answer) {
         const botMessage = {
-          id: Date.now() + 1,
+          _id: Date.now() + 1,
           role: "assistant",
-          content: convertMarkdownToJSX(response.data.answer.content),
-          timestamp: response.data.answer.timestamp,
+          content: response.answer,
         };
 
         setMessages((prev) => [...prev, botMessage]);
-
-        // Tự động phát âm câu trả lời
-        await speakText(response.data.answer.content);
+        const voiceUrl = `${API_URL}${response.file}`;
+        playAudio(voiceUrl);
+        setIsLoading(false);
       } else {
         throw new Error("Invalid response format");
       }
@@ -332,7 +311,6 @@ const VoiceChatbot = () => {
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, errorMessage]);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -356,17 +334,17 @@ const VoiceChatbot = () => {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 w-16 h-16 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center z-50"
+          className="fixed bottom-6 right-6 w-16 h-16 bg-teal-300 hover:bg-teal-500 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center z-50 cursor-pointer"
         >
-          <MessageCircle size={24} />
+          <BotMessageSquare size={24} />
         </button>
       )}
 
       {/* Chat Interface */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 w-96 h-[500px] bg-white rounded-lg shadow-2xl border border-gray-200 flex flex-col z-50">
+        <div className="fixed bottom-6 right-6 w-96 h-[600px] bg-white rounded-lg shadow-2xl border border-gray-200 flex flex-col z-50">
           {/* Header */}
-          <div className="bg-blue-500 text-white p-4 rounded-t-lg flex items-center justify-between">
+          <div className="bg-teal-400 text-white p-4 rounded-t-lg flex items-center justify-between">
             <div>
               <h3 className="font-semibold">Trợ lý AI</h3>
               {selectedVoice && (
@@ -383,7 +361,7 @@ const VoiceChatbot = () => {
                 handleClose();
                 stopSpeaking();
               }}
-              className="text-white hover:text-gray-200 transition-colors"
+              className="text-white hover:text-gray-200 transition-colors cursor-pointer"
             >
               <X size={20} />
             </button>
@@ -391,7 +369,13 @@ const VoiceChatbot = () => {
 
           {/* Messages */}
           <div className="flex-1 p-4 overflow-y-auto space-y-4">
-            {messages.length === 0 && (
+            {loading && (
+              <div className="text-gray-500 text-center py-8">
+                Đang tải cuộc trò chuyện
+              </div>
+            )}
+
+            {!loading && messages.length === 0 && (
               <div className="text-gray-500 text-center py-8">
                 Chào bạn! Hãy bắt đầu cuộc trò chuyện bằng cách nhấn mic hoặc gõ
                 tin nhắn.
@@ -400,22 +384,38 @@ const VoiceChatbot = () => {
 
             {messages.map((message) => (
               <div
-                key={message.id}
+                key={message._id}
                 className={`flex ${
-                  message.role === "user" ? "justify-end" : "justify-start"
+                  message.role === "user"
+                    ? "justify-end text-light-50"
+                    : "justify-start text-dark-50"
                 }`}
               >
                 <div
                   className={`max-w-[80%] p-3 rounded-lg ${
                     message.role === "user"
-                      ? "bg-blue-500 text-white"
+                      ? "bg-teal-300 text-light-50"
                       : "bg-gray-100 text-gray-800"
                   }`}
                 >
-                  <p className="text-sm">{message.content}</p>
+                  <div className="text-sm">
+                    {convertMarkdownToJSX(message.content)}
+                  </div>
                 </div>
               </div>
             ))}
+
+            {/* ✅ Hiển thị transcript đang được thu */}
+            {isListening && transcript && (
+              <div className="flex justify-end">
+                <div className="max-w-[80%] p-3 rounded-lg bg-teal-200 text-teal-800 border-2 border-teal-300 border-dashed">
+                  <div className="text-sm flex items-center">
+                    <span className="animate-pulse mr-2">🎤</span>
+                    {transcript}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {isLoading && (
               <div className="flex justify-start">
@@ -447,7 +447,7 @@ const VoiceChatbot = () => {
                 className={`p-3 rounded-full transition-all duration-200 ${
                   isListening
                     ? "bg-red-500 hover:bg-red-600 text-white animate-pulse"
-                    : "bg-blue-500 hover:bg-blue-600 text-white"
+                    : "bg-teal-500 hover:bg-teal-600 text-white"
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {isListening ? <MicOff size={20} /> : <Mic size={20} />}
@@ -473,14 +473,14 @@ const VoiceChatbot = () => {
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && handleSubmit(e)}
-                placeholder="Nhập tin nhắn..."
-                disabled={isLoading || isListening}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                placeholder={isListening ? "Đang nghe..." : "Nhập tin nhắn..."}
+                disabled={isLoading}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-50"
               />
               <button
                 onClick={handleSubmit}
-                disabled={!inputText.trim() || isLoading || isListening}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                disabled={!inputText.trim() || isLoading}
+                className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <Send size={16} />
               </button>
@@ -488,7 +488,8 @@ const VoiceChatbot = () => {
 
             {/* Status */}
             <div className="text-xs text-gray-500 mt-2 text-center">
-              {isListening && "🎤 Đang nghe..."}
+              {isListening &&
+                "🎤 Đang nghe... (gửi tự động khi hoàn thành câu)"}
               {isSpeaking && "🔊 Đang phát âm..."}
               {isLoading && "⏳ Đang xử lý..."}
               {!selectedVoice &&

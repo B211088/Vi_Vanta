@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import Footer from "../../../pages/user/Footer";
 import { formatDateDDMMYY } from "../../../utils/formatDate";
+import VoiceChatbot from "../chatbot/VoiceChatbot";
 const TopicDetail = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -157,7 +158,7 @@ const TopicDetail = () => {
   return (
     <div className="w-full flex flex-col font-nunito">
       <Header />
-
+      <VoiceChatbot />
       <div className="container mx-auto px-4 py-8">
         <div className="w-full flex items-center gap-2 pb-10">
           <div className="flex items-center gap-2 border-r-1 border-dark-700 pr-2">

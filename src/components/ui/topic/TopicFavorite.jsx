@@ -20,14 +20,14 @@ const TopicFavorite = () => {
 
   return (
     <div className="w-full flex justify-center items-center py-2 px-5">
-      <div className="flex items-center gap-2 py-2 overflow-x-auto">
+      <div className="flex flex-nowrap items-center gap-2 py-2 overflow-x-auto">
         {!loading && topicsCurrent.length > 0 && (
           <Link
             to="/topics"
-            className="flex items-center gap-1 rounded-md px-2 py-1 cursor-pointer bg-dark-900 shadow-sm"
+            className="shrink-0 flex items-center gap-1 rounded-md px-2 py-1 cursor-pointer bg-dark-900 shadow-sm"
           >
             <i className="fa-solid fa-list-ul"></i>
-            <span className="mt-[2px] text-sm text-dark-300 text-nowrap">
+            <span className="mt-[2px] text-sm text-dark-300 whitespace-nowrap">
               Tất cả chuyên mục
             </span>
           </Link>
@@ -38,14 +38,14 @@ const TopicFavorite = () => {
             <Link
               to={`/topic?name=${topic?.name}&id=${topic?._id}`}
               key={topic._id}
-              className="w-fit flex items-center gap-1 text-nowrap rounded-md px-2 py-1 cursor-pointer bg-dark-900 shadow-sm"
+              className="shrink-0 flex items-center gap-1 rounded-md px-2 py-1 cursor-pointer bg-dark-900 shadow-sm"
             >
               <img
                 className="w-5 h-5 aspect-square rounded-sm"
                 src={topic?.image?.url}
                 alt=""
               />
-              <span className="mt-[2px] text-sm text-dark-300">
+              <span className="mt-[2px] text-sm text-dark-300 max-w-[160px] truncate">
                 {topic?.name}
               </span>
             </Link>

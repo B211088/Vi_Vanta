@@ -3,16 +3,26 @@ import { logoutUser } from "../../services/auth.service";
 import { useTheme } from "../../hook/useTheme";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { getNotifycationsByUser } from "../../services/notifycation.service";
+import { Bell } from "lucide-react";
 
 const User = () => {
   const { user } = useSelector((state) => state.auth);
+  const { notifycations, pagination } = useSelector(
+    (state) => state.notifycation
+  );
   const dispatch = useDispatch();
   const { isDarkMode } = useTheme();
   const [openMenus, setOpenMenus] = useState({
     account: true,
     doctor: true,
   });
+  useEffect(() => {
+    dispatch(getNotifycationsByUser({ page: 1, limit: 10 }));
+  }, []);
 
+  console.log(notifycations, pagination);
   // Kiểm tra xem user có role doctor hay không
   const hasRole = (roleName) => {
     return user?.roles?.some(
@@ -51,13 +61,42 @@ const User = () => {
     <div className="flex items-center gap-[15px] font-nunito">
       <div className="flex items-center gap-[5px]">
         <div
-          className={`w-[38px] h-[38px] flex items-center justify-center ${
-            isDarkMode ? "bg-dark-800" : "bg-dark-400"
-          } rounded-full relative cursor-pointer`}
+          className={`w-10 h-10 flex items-center justify-center group relative border-1 border-dark-500  rounded-full  cursor-pointer`}
         >
-          <i className="fa-regular fa-bell text-xl"></i>
+          <Bell className="h-5 w-5" />
           <div className="w-[16px] h-[16px] absolute top-[2px] right-[2px] text-[0.5rem] bg-red-500 text-light-50 rounded-full flex items-center justify-center">
-            {0}
+            {pagination?.total}
+          </div>
+          <div
+            className={` absolute  hidden group-hover:flex group-hover:flex-col top-[100%] right-[0%]  z-50  ${
+              isDarkMode ? "bg-light-50" : "bg-dark-400"
+            } rounded-sm shadow-md `}
+          >
+            <div className="w-100 flex flex-col ">
+              <div class="border-b-1 border-dark-600 p-2 font-bold">
+                Thông báo
+              </div>
+              <div className="w-full  flex flex-col gap-2 p-2 overflow-y-auto sidebar-scroll-none max-h-80">
+                {notifycations.length > 0 ? (
+                  notifycations.length > 0 &&
+                  notifycations.map((notify) => (
+                    <div
+                      key={notify._id}
+                      className="w-full flex flex-col  p-2 rounded-md border-1 border-dark-800"
+                    >
+                      <h1 className="text-sm font-bold">{notify.title}</h1>
+                      <p className="text-sm  text-dark-400 ">
+                        {notify.message}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="w-full flex items-center justify-center text-dark-400  p-2 rounded-md border-1 border-dark-800">
+                    <span>Bạn không có thông báo nào!</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import React from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import Header from "../../components/layout/Header";
+import VoiceChatbot from "../../components/ui/chatbot/VoiceChatbot";
 
 const Account = () => {
   const location = useLocation();
@@ -8,7 +9,7 @@ const Account = () => {
   return (
     <div className="w-full flex flex-col items-center">
       <Header />
-
+      <VoiceChatbot />
       <div className="w-[80%]   flex justify-center font-nunito p-3">
         <div
           style={{ minHeight: "calc(100vh - 60px)" }}

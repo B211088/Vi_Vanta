@@ -27,10 +27,109 @@ import {
   Users,
   Award,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import HeaderTool from "./HeaderTool";
+
+// Cấu hình các mức độ hoạt động
+const activityLevels = {
+  sedentary: {
+    label: "Ít vận động (Ngồi nhiều)",
+    description: "Công việc văn phòng, ít hoạt động thể chất",
+  },
+  light: {
+    label: "Vận động nhẹ (1-3 ngày/tuần)",
+    description: "Đi bộ, yoga, tập thể dục nhẹ",
+  },
+  moderate: {
+    label: "Vận động vừa (3-5 ngày/tuần)",
+    description: "Chạy bộ, bơi lội, gym",
+  },
+  active: {
+    label: "Vận động nhiều (6-7 ngày/tuần)",
+    description: "Tập thể dục đều đặn mỗi ngày",
+  },
+  very_active: {
+    label: "Rất năng động (2 lần/ngày)",
+    description: "Vận động viên, công việc thể lực nặng",
+  },
+};
+
+// Cấu hình khí hậu
+const climates = {
+  cold: {
+    label: "Lạnh (< 15°C)",
+    description: "Môi trường lạnh, cơ thể ít đổ mồ hôi",
+  },
+  temperate: {
+    label: "Ôn hòa (15-25°C)",
+    description: "Thời tiết bình thường",
+  },
+  hot: {
+    label: "Nóng (> 25°C)",
+    description: "Thời tiết nóng, đổ mồ hôi nhiều",
+  },
+  humid: {
+    label: "Ẩm ướt",
+    description: "Độ ẩm cao, khó thoát mồ hôi",
+  },
+};
+
+// Cấu hình tình trạng sức khỏe
+const healthConditions = {
+  normal: {
+    label: "Bình thường",
+    description: "Không có vấn đề sức khỏe đặc biệt",
+  },
+  fever: {
+    label: "Sốt",
+    description: "Cần bù nước do mất qua mồ hôi và hô hấp",
+  },
+  diarrhea: {
+    label: "Tiêu chảy/Nôn",
+    description: "Mất nước qua đường tiêu hóa",
+  },
+  kidney_stones: {
+    label: "Tiền sử sỏi thận",
+    description: "Cần nhiều nước để ngăn ngừa sỏi thận",
+  },
+  diabetes: {
+    label: "Tiểu đường",
+    description: "Đường huyết cao gây mất nước",
+  },
+  heart_disease: {
+    label: "Bệnh tim mạch",
+    description: "Cần hạn chế nước theo chỉ định bác sĩ",
+  },
+  kidney_disease: {
+    label: "Bệnh thận",
+    description: "Cần hạn chế nước theo chỉ định bác sĩ",
+  },
+};
+
+// Cấu hình tình trạng thai kỳ
+const pregnancyStatuses = {
+  none: {
+    label: "Không có thai",
+    description: "Không có thai hoặc cho con bú",
+  },
+  first_trimester: {
+    label: "Thai kỳ 3 tháng đầu",
+    description: "Cần thêm 300ml so với bình thường",
+  },
+  second_trimester: {
+    label: "Thai kỳ 3 tháng giữa",
+    description: "Cần thêm 300ml so với bình thường",
+  },
+  third_trimester: {
+    label: "Thai kỳ 3 tháng cuối",
+    description: "Cần thêm 300ml so với bình thường",
+  },
+  breastfeeding: {
+    label: "Đang cho con bú",
+    description: "Cần thêm 600ml để sản xuất sữa mẹ",
+  },
+};
 
 const WaterIntakeCalculator = () => {
-  const navigate = useNavigate();
   const [showGuide, setShowGuide] = useState(false);
   const [gender, setGender] = useState("");
   const [age, setAge] = useState("");
@@ -52,205 +151,219 @@ const WaterIntakeCalculator = () => {
     const weightNum = parseFloat(weight);
     const heightNum = parseFloat(height);
 
-    // PHƯƠNG PHÁP CHÍNH XÁC THEO CHUẨN Y TẾ QUỐC TẾ
+    // CÔNG THỨC CHÍNH XÁC THEO CHUẨN Y TẾ
 
-    // 1. Lượng nước cơ bản theo WHO và Institute of Medicine (IOM)
-    let baseWater;
+    // 1. Lượng nước uống cơ bản (ml) - CHỈ NƯỚC UỐNG, không bao gồm thức ăn
+    let baseWaterDrinking;
 
     if (ageNum < 0.5) {
-      // 0-6 tháng: toàn bộ qua sữa mẹ
-      baseWater = 700;
+      // 0-6 tháng: chỉ sữa mẹ
+      baseWaterDrinking = 0;
     } else if (ageNum < 1) {
       // 7-12 tháng
-      baseWater = 900;
+      baseWaterDrinking = 600;
     } else if (ageNum < 4) {
-      baseWater = 1300;
+      baseWaterDrinking = 1000;
     } else if (ageNum < 9) {
-      baseWater = 1700;
+      baseWaterDrinking = 1200;
     } else if (ageNum < 14) {
       if (gender === "male") {
-        baseWater = 2400;
+        baseWaterDrinking = 1800;
       } else {
-        baseWater = 2100;
+        baseWaterDrinking = 1600;
       }
     } else if (ageNum < 19) {
       if (gender === "male") {
-        baseWater = 3300;
+        baseWaterDrinking = 2600;
       } else {
-        baseWater = 2300;
+        baseWaterDrinking = 1800;
       }
     } else if (ageNum <= 70) {
+      // NGƯỜI TRƯỞNG THÀNH: áp dụng công thức khoa học
+      // Công thức cơ bản: 35ml/kg cân nặng (cho hoạt động bình thường)
+      baseWaterDrinking = weightNum * 35;
+
+      // Điều chỉnh theo giới tính
       if (gender === "male") {
-        baseWater = 3700;
+        baseWaterDrinking = Math.max(baseWaterDrinking, 2000); // Tối thiểu 2L
+        baseWaterDrinking = Math.min(baseWaterDrinking, 3000); // Tối đa 3L cơ bản
       } else {
-        baseWater = 2700;
+        baseWaterDrinking = Math.max(baseWaterDrinking, 1800); // Tối thiểu 1.8L
+        baseWaterDrinking = Math.min(baseWaterDrinking, 2500); // Tối đa 2.5L cơ bản
       }
     } else {
+      // Người cao tuổi: giảm 15-20%
       if (gender === "male") {
-        baseWater = 3200;
+        baseWaterDrinking = weightNum * 30;
+        baseWaterDrinking = Math.max(baseWaterDrinking, 1800);
+        baseWaterDrinking = Math.min(baseWaterDrinking, 2500);
       } else {
-        baseWater = 2200;
+        baseWaterDrinking = weightNum * 28;
+        baseWaterDrinking = Math.max(baseWaterDrinking, 1600);
+        baseWaterDrinking = Math.min(baseWaterDrinking, 2200);
       }
     }
 
-    // 2. Điều chỉnh theo cân nặng (chỉ cho người trưởng thành bất thường)
+    // 2. Tính BMI và điều chỉnh nhẹ (chỉ cho người trưởng thành)
     if (ageNum >= 18) {
       const bmi = weightNum / (heightNum / 100) ** 2;
 
-      // Điều chỉnh nhẹ cho BMI bất thường
+      // Điều chỉnh nhẹ theo BMI (±100-200ml, không quá lớn)
       if (bmi < 16) {
-        baseWater *= 0.85; // Người gầy nghiêm trọng
+        baseWaterDrinking -= 200; // Người gầy nghiêm trọng
       } else if (bmi < 18.5) {
-        baseWater *= 0.9; // Người gầy
+        baseWaterDrinking -= 100; // Người gầy
       } else if (bmi > 35) {
-        baseWater *= 1.15; // Béo phì độ 2
+        baseWaterDrinking += 300; // Béo phì độ 2
       } else if (bmi > 30) {
-        baseWater *= 1.1; // Béo phì độ 1
+        baseWaterDrinking += 200; // Béo phì độ 1
       } else if (bmi > 25) {
-        baseWater *= 1.05; // Thừa cân nhẹ
+        baseWaterDrinking += 100; // Thừa cân nhẹ
       }
+      // BMI bình thường (18.5-25): không điều chỉnh
     }
 
-    // 3. Điều chỉnh theo hoạt động thể chất (theo ACSM - American College of Sports Medicine)
+    // 3. Điều chỉnh theo hoạt động thể chất
     const activityWaterAdd = {
       sedentary: 0,
-      light: 300, // 30 phút tập nhẹ
-      moderate: 500, // 60 phút tập vừa
-      active: 700, // 90 phút tập mạnh
-      very_active: 1000, // >120 phút tập rất mạnh
+      light: 200, // Tập nhẹ 30-60 phút
+      moderate: 400, // Tập vừa 60-90 phút
+      active: 600, // Tập mạnh 90-120 phút
+      very_active: 800, // Tập rất mạnh >120 phút
     };
 
-    baseWater += activityWaterAdd[activityLevel];
+    baseWaterDrinking += activityWaterAdd[activityLevel];
 
-    // 4. Điều chỉnh theo khí hậu (theo WHO)
+    // 4. Điều chỉnh theo khí hậu
     const climateAdjustment = {
-      cold: -200, // Giảm trong môi trường lạnh
+      cold: -100, // Giảm trong môi trường lạnh
       temperate: 0,
-      hot: 500, // Tăng 500ml trong môi trường nóng
-      humid: 300, // Tăng trong môi trường ẩm
+      hot: 400, // Tăng trong môi trường nóng
+      humid: 200, // Tăng trong môi trường ẩm
     };
 
-    baseWater += climateAdjustment[climate];
+    baseWaterDrinking += climateAdjustment[climate];
 
     // 5. Điều chỉnh theo tình trạng sức khỏe
     const healthAdjustment = {
       normal: 0,
       fever: 500, // +500ml khi sốt
-      diarrhea: 1000, // +1L khi tiêu chảy
-      kidney_stones: 1000, // +1L để ngăn sỏi thận
-      diabetes: 300, // +300ml cho người tiểu đường
-      heart_disease: -500, // Giảm cho bệnh tim (theo chỉ định BS)
-      kidney_disease: -800, // Giảm cho bệnh thận (theo chỉ định BS)
+      diarrhea: 800, // +800ml khi tiêu chảy
+      kidney_stones: 600, // +600ml để ngăn sỏi thận
+      diabetes: 200, // +200ml cho người tiểu đường
+      heart_disease: -300, // Giảm cho bệnh tim (cần BS chỉ định)
+      kidney_disease: -500, // Giảm cho bệnh thận (cần BS chỉ định)
     };
 
-    baseWater += healthAdjustment[healthCondition];
+    baseWaterDrinking += healthAdjustment[healthCondition];
 
-    // 6. Điều chỉnh theo thai kỳ/cho con bú (theo IOM)
+    // 6. Điều chỉnh theo thai kỳ/cho con bú
     const pregnancyAdjustment = {
       none: 0,
-      first_trimester: 300, // +300ml
-      second_trimester: 300, // +300ml
-      third_trimester: 300, // +300ml (tổng 3L)
-      breastfeeding: 700, // +700ml (tổng 3.4L)
+      first_trimester: 300,
+      second_trimester: 300,
+      third_trimester: 300,
+      breastfeeding: 600, // +600ml cho việc cho con bú
     };
 
-    baseWater += pregnancyAdjustment[pregnancyStatus];
+    baseWaterDrinking += pregnancyAdjustment[pregnancyStatus];
 
-    // 7. Giới hạn an toàn theo khuyến cáo y tế
-    if (baseWater < 1000) baseWater = 1000; // Tối thiểu 1L
-    if (baseWater > 4500) baseWater = 4500; // Tối đa 4.5L để tránh ngộ độc nước
+    // 7. Giới hạn an toàn cuối cùng
+    if (baseWaterDrinking < 1000) baseWaterDrinking = 1000; // Tối thiểu 1L
+    if (baseWaterDrinking > 4000) baseWaterDrinking = 4000; // Tối đa 4L
 
-    // Tính BMI
+    // Làm tròn đến 50ml
+    baseWaterDrinking = Math.round(baseWaterDrinking / 50) * 50;
+
+    // Tính BMI để hiển thị
     const bmi = weightNum / (heightNum / 100) ** 2;
 
-    // Phân chia lượng nước trong ngày (theo khuyến cáo y tế)
+    // Phân chia lượng nước trong ngày
     const waterSchedule = [
       {
         time: "6:00 - 8:00",
-        amount: Math.round(baseWater * 0.2), // Bù nước sau ngủ
-        activity: "Thức dậy - bù nước mất qua đêm",
+        amount: Math.round(baseWaterDrinking * 0.2),
+        activity: "Thức dậy - bù nước sau giấc ngủ",
       },
       {
         time: "8:00 - 10:00",
-        amount: Math.round(baseWater * 0.12),
+        amount: Math.round(baseWaterDrinking * 0.12),
         activity: "Sau bữa sáng",
       },
       {
         time: "10:00 - 12:00",
-        amount: Math.round(baseWater * 0.15),
+        amount: Math.round(baseWaterDrinking * 0.15),
         activity: "Giữa buổi sáng",
       },
       {
         time: "12:00 - 14:00",
-        amount: Math.round(baseWater * 0.12),
+        amount: Math.round(baseWaterDrinking * 0.12),
         activity: "Sau bữa trưa",
       },
       {
         time: "14:00 - 16:00",
-        amount: Math.round(baseWater * 0.15),
+        amount: Math.round(baseWaterDrinking * 0.15),
         activity: "Giữa buổi chiều",
       },
       {
         time: "16:00 - 18:00",
-        amount: Math.round(baseWater * 0.13),
+        amount: Math.round(baseWaterDrinking * 0.13),
         activity: "Trước bữa tối",
       },
       {
         time: "18:00 - 20:00",
-        amount: Math.round(baseWater * 0.1),
+        amount: Math.round(baseWaterDrinking * 0.1),
         activity: "Sau bữa tối",
       },
       {
         time: "20:00 - 22:00",
-        amount: Math.round(baseWater * 0.03), // Rất ít trước ngủ
+        amount: Math.round(baseWaterDrinking * 0.03),
         activity: "Trước ngủ (ít để không thức đêm)",
       },
     ];
 
-    // Đánh giá mức độ hydration theo chuẩn y tế
+    // Đánh giá mức độ hydration chính xác hơn
     const getHydrationStatus = (waterAmount) => {
-      const recommendedMin = gender === "male" ? 2500 : 2000;
-      const recommendedMax = gender === "male" ? 3700 : 2700;
+      // Lượng nước lý tưởng theo khoa học
+      const idealMin = weightNum * 30; // 30ml/kg tối thiểu
+      const idealMax = weightNum * 40; // 40ml/kg tối đa bình thường
 
-      if (waterAmount < recommendedMin * 0.6) {
+      if (waterAmount < idealMin * 0.7) {
         return {
           status: "Thiếu nước nghiêm trọng",
           color: "text-red-600",
           icon: "danger",
         };
-      } else if (waterAmount < recommendedMin * 0.8) {
+      } else if (waterAmount < idealMin) {
         return {
           status: "Thiếu nước",
           color: "text-orange-600",
           icon: "warning",
         };
-      } else if (
-        waterAmount >= recommendedMin &&
-        waterAmount <= recommendedMax
-      ) {
+      } else if (waterAmount >= idealMin && waterAmount <= idealMax) {
         return {
-          status: "Tối ưu",
+          status: "Lý tưởng",
           color: "text-green-600",
           icon: "excellent",
         };
-      } else if (waterAmount <= recommendedMax * 1.2) {
+      } else if (waterAmount <= idealMax * 1.3) {
         return {
-          status: "Hơi nhiều",
-          color: "text-yellow-600",
-          icon: "warning",
+          status: "Hơi nhiều nhưng an toàn",
+          color: "text-blue-600",
+          icon: "info",
         };
       } else {
         return {
-          status: "Quá nhiều - có thể nguy hiểm",
+          status: "Quá nhiều - cần giảm",
           color: "text-red-600",
-          icon: "danger",
+          icon: "warning",
         };
       }
     };
 
-    const hydrationStatus = getHydrationStatus(baseWater);
+    const hydrationStatus = getHydrationStatus(baseWaterDrinking);
 
-    // Lợi ích khoa học của việc uống đủ nước
+    // Lợi ích khoa học
     const benefits = [
       "Duy trì cân bằng điện giải trong cơ thể",
       "Hỗ trợ chức năng thận và bài tiết độc tố",
@@ -262,7 +375,7 @@ const WaterIntakeCalculator = () => {
       "Tăng cường miễn dịch và chống nhiễm trùng",
     ];
 
-    // Dấu hiệu thiếu nước theo y khoa
+    // Dấu hiệu thiếu nước
     const dehydrationSigns = [
       "Khát nước và niêm mạc khô",
       "Nước tiểu màu vàng đậm, ít",
@@ -275,31 +388,35 @@ const WaterIntakeCalculator = () => {
     ];
 
     setResult({
-      dailyWater: Math.round(baseWater),
+      dailyWater: Math.round(baseWaterDrinking),
       waterSchedule,
       hydrationStatus,
       bmi: bmi.toFixed(1),
       benefits,
       dehydrationSigns,
       recommendations: getRecommendations(
-        baseWater,
+        baseWaterDrinking,
         gender,
         ageNum,
         activityLevel,
         climate,
         bmi,
-        healthCondition
+        healthCondition,
+        weightNum
       ),
-      glassesNeeded: Math.round(baseWater / 250),
-      bottlesNeeded: Math.round(baseWater / 500),
-      // Thông tin chi tiết tính toán
+      glassesNeeded: Math.round(baseWaterDrinking / 250),
+      bottlesNeeded: Math.round(baseWaterDrinking / 500),
+      // Chi tiết tính toán
       calculationDetails: {
-        baseRecommendation: gender === "male" ? 3700 : 2700,
-        ageAdjustment: ageNum > 70 ? "Giảm do tuổi cao" : "Theo chuẩn IOM",
+        baseFormula: `${weightNum}kg × 35ml = ${Math.round(weightNum * 35)}ml`,
+        finalBase: Math.round(weightNum * 35),
         activityBonus: activityWaterAdd[activityLevel],
         climateAdjustment: climateAdjustment[climate],
         healthAdjustment: healthAdjustment[healthCondition],
         pregnancyAdjustment: pregnancyAdjustment[pregnancyStatus],
+        idealRange: `${Math.round(weightNum * 30)} - ${Math.round(
+          weightNum * 40
+        )}ml`,
       },
     });
   };
@@ -311,35 +428,39 @@ const WaterIntakeCalculator = () => {
     activity,
     climate,
     bmi,
-    health
+    health,
+    weight
   ) => {
     const recommendations = [];
 
-    // Cảnh báo an toàn theo y khoa
-    if (waterAmount < 1500) {
+    // Cảnh báo an toàn
+    const idealMin = weight * 30;
+    const idealMax = weight * 40;
+
+    if (waterAmount < idealMin * 0.7) {
       recommendations.push({
         type: "danger",
-        text: "🚨 NGUY HIỂM: Lượng nước quá thấp có thể gây mất nước nghiêm trọng. Cần uống ngay và tham khảo bác sĩ!",
+        text: "🚨 NGUY HIỂM: Lượng nước quá thấp có thể gây mất nước nghiêm trọng. Cần uống ngay!",
       });
-    } else if (waterAmount > 4000) {
+    } else if (waterAmount > idealMax * 1.5) {
       recommendations.push({
         type: "danger",
-        text: "⚠️ CẢNH BÁO: Lượng nước quá cao có thể gây ngộ độc nước (hyponatremia). Hãy tham khảo bác sĩ!",
+        text: "⚠️ CẢNH BÁO: Lượng nước quá cao có thể gây ngộ độc nước. Hãy giảm bớt!",
       });
     }
 
-    // Khuyến nghị đặc biệt cho bệnh lý
+    // Khuyến nghị cho bệnh lý
     if (health === "heart_disease" || health === "kidney_disease") {
       recommendations.push({
         type: "warning",
-        text: "🏥 QUAN TRỌNG: Với bệnh tim/thận, cần tuân thủ nghiêm ngặt chỉ định của bác sĩ về lượng nước.",
+        text: "🏥 QUAN TRỌNG: Với bệnh tim/thận, cần tuân thủ chỉ định của bác sĩ về lượng nước.",
       });
     }
 
     if (health === "diabetes") {
       recommendations.push({
         type: "info",
-        text: "🩺 Tiểu đường: Uống nước đều đặn giúp kiểm soát đường huyết và ngăn ngừa biến chứng.",
+        text: "🩺 Tiểu đường: Uống nước đều đặn giúp kiểm soát đường huyết.",
       });
     }
 
@@ -355,7 +476,7 @@ const WaterIntakeCalculator = () => {
     if (climate === "hot") {
       recommendations.push({
         type: "warning",
-        text: "🌡️ Thời tiết nóng: Uống nước trước khi khát. Tránh alcohol và caffeine vì có tác dụng lợi tiểu.",
+        text: "🌡️ Thời tiết nóng: Uống nước trước khi khát. Tránh alcohol và caffeine.",
       });
     }
 
@@ -363,24 +484,24 @@ const WaterIntakeCalculator = () => {
     if (age < 18) {
       recommendations.push({
         type: "info",
-        text: "👶 Trẻ em/thanh thiếu niên: Cha mẹ cần theo dõi việc uống nước. Đưa bình nước đến trường.",
+        text: "👶 Trẻ em: Cha mẹ cần theo dõi việc uống nước. Mang bình nước đến trường.",
       });
     } else if (age > 65) {
       recommendations.push({
         type: "info",
-        text: "👴 Người cao tuổi: Cảm giác khát giảm theo tuổi. Cần uống nước đều đặn dù không khát.",
+        text: "👴 Người cao tuổi: Cảm giác khát giảm theo tuổi. Cần uống đều đặn dù không khát.",
       });
     }
 
-    // Khuyến nghị chung từ WHO
+    // Khuyến nghị chung
     recommendations.push({
       type: "info",
-      text: "💡 WHO khuyến cáo: Uống nước sạch, tránh đồ uống có đường. Nước trái cây, trà không đường cũng tính.",
+      text: "💡 Mẹo: Uống nước sạch, tránh đồ ngọt. Nước trái cây tự nhiên, trà không đường cũng tốt.",
     });
 
     recommendations.push({
       type: "info",
-      text: "🔍 Kiểm tra: Nước tiểu màu vàng nhạt = đủ nước. Màu vàng đậm hoặc không màu = cần điều chỉnh.",
+      text: "🔍 Kiểm tra: Nước tiểu màu vàng nhạt = đủ nước. Màu đậm = thiếu nước.",
     });
 
     return recommendations;
@@ -390,6 +511,8 @@ const WaterIntakeCalculator = () => {
     switch (status) {
       case "excellent":
         return <CheckCircle className="h-6 w-6 text-green-600" />;
+      case "info":
+        return <Info className="h-6 w-6 text-blue-600" />;
       case "warning":
         return <AlertTriangle className="h-6 w-6 text-orange-600" />;
       case "danger":
@@ -401,28 +524,12 @@ const WaterIntakeCalculator = () => {
 
   return (
     <div className="w-full min-h-screen px-6 py-8 ">
-      <div className="w-full flex flex-col mb-6">
-        <div
-          onClick={() => navigate(-1)}
-          className="flex items-center text-blue-600 hover:text-blue-800 mr-4 cursor-pointer"
-        >
-          <ArrowLeft className="h-5 w-5 mr-1" />
-          Quay lại
-        </div>
-        <div className="flex items-center space-x-4 mt-2">
-          <div className="p-3 bg-white rounded-xl shadow-sm">
-            <Droplets className="h-7 w-7 text-blue-600" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800">
-              Tính toán lượng nước theo chuẩn y tế
-            </h2>
-            <p className="text-gray-600 mt-1">
-              Dựa trên khuyến cáo WHO, IOM và các tổ chức y tế uy tín
-            </p>
-          </div>
-        </div>
-      </div>
+      <HeaderTool
+        title="Tính toán lượng nước cần thiết"
+        subtitle="Công thức chính xác: 35ml/kg cân nặng + điều chỉnh cá nhân"
+        icon={Droplets}
+        color="blue"
+      />
 
       {/* Hướng dẫn y tế */}
       <div className="mb-6 p-4 bg-blue-100 rounded-lg border border-blue-200">
@@ -431,7 +538,7 @@ const WaterIntakeCalculator = () => {
           className="flex items-center justify-between cursor-pointer"
         >
           <h3 className="text-md font-semibold text-blue-800">
-            Hướng dẫn y tế về uống nước
+            Hướng dẫn khoa học về nước uống
           </h3>
           <button className="text-blue-600 hover:text-blue-800">
             <Info className="h-5 w-5" />
@@ -440,27 +547,22 @@ const WaterIntakeCalculator = () => {
         {showGuide && (
           <div className="text-sm text-blue-700 space-y-2 mt-3">
             <p>
-              <strong>Chuẩn WHO & Institute of Medicine (IOM):</strong>
+              <strong>Công thức khoa học:</strong>
             </p>
             <ul className="list-disc pl-5 space-y-1">
-              <li>Nam trưởng thành: 3.7L/ngày (bao gồm nước từ thức ăn)</li>
-              <li>Nữ trưởng thành: 2.7L/ngày (bao gồm nước từ thức ăn)</li>
-              <li>Khoảng 80% từ đồ uống, 20% từ thức ăn</li>
-              <li>Tăng khi tập thể dục, thời tiết nóng, ốm</li>
+              <li>Cơ bản: 35ml/kg cân nặng (cho hoạt động bình thường)</li>
+              <li>Tối thiểu: 30ml/kg - Tối đa an toàn: 40ml/kg</li>
+              <li>VD: Người 70kg = 70×35 = 2450ml ≈ 2.5L/ngày</li>
+              <li>Tăng thêm khi tập thể dục, thời tiết nóng, ốm</li>
             </ul>
             <p>
-              <strong>Dấu hiệu cần uống nước:</strong>
+              <strong>Lưu ý quan trọng:</strong>
             </p>
             <ul className="list-disc pl-5 space-y-1">
-              <li>Nước tiểu màu vàng đậm</li>
-              <li>Khô miệng, khát nước</li>
-              <li>Mệt mỏi, chóng mặt</li>
-              <li>Đau đầu</li>
+              <li>Đây chỉ tính nước uống thuần túy (không bao gồm thức ăn)</li>
+              <li>Nước tiểu màu vàng nhạt = đủ nước</li>
+              <li>Uống đều trong ngày, không uống cùng lúc quá nhiều</li>
             </ul>
-            <p>
-              <strong>Cảnh báo:</strong> Uống quá nhiều nước ({">"}4.5L/ngày) có
-              thể nguy hiểm!
-            </p>
           </div>
         )}
       </div>
@@ -492,7 +594,7 @@ const WaterIntakeCalculator = () => {
             </div>
             <div className="w-6/12 flex flex-col">
               <label className="text-xs pb-1">Tuổi</label>
-              <div className="w-full flex items-center gap-2 py-2 px-3 text-sm border border-gray-300 rounded-md hover:border-blue-500 cursor-pointer">
+              <div className="w-full flex items-center gap-2 py-2 px-3 text-sm border border-gray-300 rounded-md hover:border-blue-500">
                 <TrendingUp className="text-blue-600 h-5 w-5" />
                 <input
                   type="number"
@@ -571,9 +673,9 @@ const WaterIntakeCalculator = () => {
                 onChange={(e) => setClimate(e.target.value)}
                 className="w-full outline-none cursor-pointer"
               >
-                {Object.entries(climates).map(([key, climate]) => (
+                {Object.entries(climates).map(([key, climateOption]) => (
                   <option key={key} value={key}>
-                    {climate.label}
+                    {climateOption.label}
                   </option>
                 ))}
               </select>
@@ -625,7 +727,7 @@ const WaterIntakeCalculator = () => {
             className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors font-medium"
           >
             <Calculator className="h-5 w-5 inline mr-2" />
-            Tính theo chuẩn y tế
+            Tính theo công thức khoa học
           </button>
         </div>
 
@@ -637,7 +739,7 @@ const WaterIntakeCalculator = () => {
               <div className="flex items-center mb-3">
                 {getStatusIcon(result.hydrationStatus.icon)}
                 <h3 className="text-lg font-semibold ml-2">
-                  Kết quả theo chuẩn y tế
+                  Lượng nước cơ thể cần
                 </h3>
               </div>
               <div className="space-y-3">
@@ -650,8 +752,11 @@ const WaterIntakeCalculator = () => {
                   >
                     {result.hydrationStatus.status}
                   </p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Khoảng lý tưởng: {result.calculationDetails.idealRange}
+                  </p>
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="grid grid-cols-3 gap-2 text-sm">
                   <div className="text-center p-2 bg-white rounded">
                     <p className="font-semibold">{result.glassesNeeded}</p>
                     <p className="text-gray-600">ly (250ml)</p>
@@ -660,33 +765,38 @@ const WaterIntakeCalculator = () => {
                     <p className="font-semibold">{result.bottlesNeeded}</p>
                     <p className="text-gray-600">chai (500ml)</p>
                   </div>
+                  <div className="text-center p-2 bg-white rounded">
+                    <p className="font-semibold">BMI {result.bmi}</p>
+                    <p className="text-gray-600">kg/m²</p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Chi tiết tính toán theo chuẩn y tế */}
+            {/* Chi tiết tính toán */}
             <div className="bg-white p-4 rounded-lg border border-gray-200">
               <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
                 <Info className="h-5 w-5 mr-2 text-blue-600" />
-                Phương pháp tính toán
+                Công thức tính toán chi tiết
               </h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span>Chuẩn IOM/WHO:</span>
+                  <span>Công thức cơ bản:</span>
                   <span className="font-medium">
-                    {result.calculationDetails.baseRecommendation}ml
+                    {result.calculationDetails.baseFormula}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Điều chỉnh tuổi:</span>
+                  <span>Lượng cơ bản:</span>
                   <span className="font-medium">
-                    {result.calculationDetails.ageAdjustment}
+                    {result.calculationDetails.finalBase}ml
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Hoạt động thể chất:</span>
                   <span className="font-medium">
-                    +{result.calculationDetails.activityBonus}ml
+                    {result.calculationDetails.activityBonus > 0 ? "+" : ""}
+                    {result.calculationDetails.activityBonus}ml
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -717,6 +827,11 @@ const WaterIntakeCalculator = () => {
                     </span>
                   </div>
                 )}
+                <hr className="my-2" />
+                <div className="flex justify-between font-semibold">
+                  <span>Tổng cộng:</span>
+                  <span className="text-blue-600">{result.dailyWater}ml</span>
+                </div>
               </div>
             </div>
 
@@ -792,7 +907,7 @@ const WaterIntakeCalculator = () => {
             {/* Khuyến nghị y tế */}
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
               <h4 className="font-semibold text-blue-800 mb-3">
-                Khuyến nghị y tế chuyên môn
+                Khuyến nghị cá nhân hóa
               </h4>
               <div className="space-y-2">
                 {result.recommendations.map((rec, index) => (
@@ -812,32 +927,32 @@ const WaterIntakeCalculator = () => {
               </div>
             </div>
 
-            {/* Cảnh báo y tế quan trọng */}
+            {/* Cảnh báo an toàn */}
             <div className="bg-red-50 p-4 rounded-lg border border-red-200">
               <h4 className="font-semibold text-red-800 mb-2 flex items-center">
                 <AlertTriangle className="h-5 w-5 mr-2" />
-                Cảnh báo y tế quan trọng
+                Lưu ý an toàn quan trọng
               </h4>
               <ul className="text-sm text-red-700 space-y-1">
                 <li>
-                  • <strong>Ngộ độc nước:</strong> Uống {">"}4.5L/ngày có thể
-                  gây hyponatremia (thiếu natri), nguy hiểm tính mạng
+                  • <strong>Không uống quá nhiều cùng lúc:</strong> Tối đa
+                  500ml/giờ để tránh ngộ độc nước
                 </li>
                 <li>
-                  • <strong>Bệnh tim/thận:</strong> Cần tuân thủ nghiêm ngặt chỉ
-                  định bác sĩ về lượng nước
+                  • <strong>Bệnh tim/thận:</strong> Cần tuân thủ chỉ định bác
+                  sĩ, có thể cần hạn chế nước
                 </li>
                 <li>
-                  • <strong>Trẻ em:</strong> Cần giám sát người lớn, không uống
-                  quá nhiều nước một lúc
+                  • <strong>Trẻ em dưới 1 tuổi:</strong> Chủ yếu từ sữa mẹ,
+                  không cần nước thêm
                 </li>
                 <li>
-                  • <strong>Người cao tuổi:</strong> Nguy cơ cao mất nước do cảm
-                  giác khát kém
+                  • <strong>Người cao tuổi:</strong> Dễ mất nước nhưng cảm giác
+                  khát kém, cần uống đều đặn
                 </li>
                 <li>
-                  • <strong>Thuốc:</strong> Một số thuốc (lợi tiểu, lithium) ảnh
-                  hưởng đến cân bằng nước
+                  • <strong>Khi ốm:</strong> Sốt, tiêu chảy cần uống nhiều hơn,
+                  nhưng từ từ
                 </li>
               </ul>
             </div>
@@ -856,34 +971,32 @@ const WaterIntakeCalculator = () => {
           <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-xl">
             <Info className="h-5 w-5 text-blue-600" />
             <div>
-              <p className="font-medium text-blue-800">WHO/IOM Standards</p>
-              <p className="text-sm text-blue-600">Chuẩn quốc tế chính thức</p>
+              <p className="font-medium text-blue-800">Công thức 35ml/kg</p>
+              <p className="text-sm text-blue-600">Chuẩn y học quốc tế</p>
             </div>
           </div>
           <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-xl">
             <Users className="h-5 w-5 text-blue-600" />
             <div>
-              <p className="font-medium text-blue-800">ACSM Guidelines</p>
-              <p className="text-sm text-blue-600">Chuẩn thể thao y học</p>
+              <p className="font-medium text-blue-800">Điều chỉnh cá nhân</p>
+              <p className="text-sm text-blue-600">Theo hoạt động & sức khỏe</p>
             </div>
           </div>
           <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-xl">
             <Award className="h-5 w-5 text-blue-600" />
             <div>
               <p className="font-medium text-blue-800">An toàn tuyệt đối</p>
-              <p className="text-sm text-blue-600">
-                Giới hạn khoa học chặt chẽ
-              </p>
+              <p className="text-sm text-blue-600">Giới hạn 30-40ml/kg</p>
             </div>
           </div>
         </div>
         <div className="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
           <p className="text-sm text-yellow-800">
             <strong>Tuyên bố miễn trừ trách nhiệm:</strong> Đây là công cụ tham
-            khảo dựa trên các chuẩn y tế quốc tế. Kết quả chỉ mang tính chất
-            tham khảo. Luôn tham khảo bác sĩ chuyên khoa để được tư vấn phù hợp
-            với tình trạng sức khỏe cá nhân, đặc biệt nếu bạn có bệnh lý tim
-            mạch, thận hoặc đang dùng thuốc.
+            khảo dựa trên công thức khoa học 35ml/kg cân nặng. Kết quả chỉ mang
+            tính chất tham khảo. Luôn tham khảo bác sĩ chuyên khoa để được tư
+            vấn phù hợp với tình trạng sức khỏe cá nhân, đặc biệt nếu bạn có
+            bệnh lý tim mạch, thận hoặc đang dùng thuốc.
           </p>
         </div>
       </div>
@@ -892,103 +1005,3 @@ const WaterIntakeCalculator = () => {
 };
 
 export default WaterIntakeCalculator;
-
-// Cấu hình các mức độ hoạt động theo ACSM
-const activityLevels = {
-  sedentary: {
-    label: "Ít vận động (Ngồi nhiều)",
-    description: "Công việc văn phòng, ít hoạt động thể chất",
-  },
-  light: {
-    label: "Vận động nhẹ (1-3 ngày/tuần)",
-    description: "Đi bộ, yoga, tập thể dục nhẹ",
-  },
-  moderate: {
-    label: "Vận động vừa (3-5 ngày/tuần)",
-    description: "Chạy bộ, bơi lội, gym",
-  },
-  active: {
-    label: "Vận động nhiều (6-7 ngày/tuần)",
-    description: "Tập thể dục đều đặn mỗi ngày",
-  },
-  very_active: {
-    label: "Rất năng động (2 lần/ngày)",
-    description: "Vận động viên, công việc thể lực nặng",
-  },
-};
-
-// Cấu hình khí hậu theo WHO
-const climates = {
-  cold: {
-    label: "Lạnh (< 15°C)",
-    description: "Môi trường lạnh, cơ thể ít đổ mồ hôi",
-  },
-  temperate: {
-    label: "Ôn hòa (15-25°C)",
-    description: "Thời tiết bình thường",
-  },
-  hot: {
-    label: "Nóng (> 25°C)",
-    description: "Thời tiết nóng, đổ mồ hôi nhiều",
-  },
-  humid: {
-    label: "Ẩm ướt",
-    description: "Độ ẩm cao, khó thoát mồ hôi",
-  },
-};
-
-// Cấu hình tình trạng sức khỏe
-const healthConditions = {
-  normal: {
-    label: "Bình thường",
-    description: "Không có vấn đề sức khỏe đặc biệt",
-  },
-  fever: {
-    label: "Sốt",
-    description: "Cần bù nước do mất qua mồ hôi và hô hấp",
-  },
-  diarrhea: {
-    label: "Tiêu chảy/Nôn",
-    description: "Mất nước qua đường tiêu hóa",
-  },
-  kidney_stones: {
-    label: "Tiền sử sỏi thận",
-    description: "Cần nhiều nước để ngăn ngừa sỏi thận",
-  },
-  diabetes: {
-    label: "Tiểu đường",
-    description: "Đường huyết cao gây mất nước",
-  },
-  heart_disease: {
-    label: "Bệnh tim mạch",
-    description: "Cần hạn chế nước theo chỉ định bác sĩ",
-  },
-  kidney_disease: {
-    label: "Bệnh thận",
-    description: "Cần hạn chế nước theo chỉ định bác sĩ",
-  },
-};
-
-// Cấu hình tình trạng thai kỳ theo IOM
-const pregnancyStatuses = {
-  none: {
-    label: "Không có thai",
-    description: "Không có thai hoặc cho con bú",
-  },
-  first_trimester: {
-    label: "Thai kỳ 3 tháng đầu",
-    description: "Cần thêm 300ml so với bình thường",
-  },
-  second_trimester: {
-    label: "Thai kỳ 3 tháng giữa",
-    description: "Cần thêm 300ml so với bình thường",
-  },
-  third_trimester: {
-    label: "Thai kỳ 3 tháng cuối",
-    description: "Cần thêm 300ml so với bình thường",
-  },
-  breastfeeding: {
-    label: "Đang cho con bú",
-    description: "Cần thêm 700ml để sản xuất sữa mẹ",
-  },
-};

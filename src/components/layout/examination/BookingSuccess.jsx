@@ -102,7 +102,7 @@ const BookingSuccess = () => {
               <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg">
                 <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
                   <img
-                    src={appointmentData?.doctorId.userId.avatar.url}
+                    src={appointmentData?.doctorId.avatar.url}
                     alt=""
                     className="rounded-full object-cover aspect-square"
                   />

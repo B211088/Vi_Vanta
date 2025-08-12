@@ -41,11 +41,9 @@ const AppointmentBookingForm = () => {
     },
   });
 
-  console.log({ doctor });
-
   const [promoCode, setPromoCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  console.log({ formData, user, address });
+
   // Initialize form data when component mounts or user changes
   useEffect(() => {
     if (user && formData.userType === "banThan") {
@@ -679,27 +677,6 @@ const AppointmentBookingForm = () => {
                         {formatPrice(totalPrices || 0)} đ
                       </span>
                     </div>
-                  </div>
-                </div>
-
-                {/* Promo Code */}
-                <div className="mb-4">
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={promoCode}
-                      onChange={(e) => setPromoCode(e.target.value)}
-                      placeholder="Thêm mã giảm giá"
-                      className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      disabled={isSubmitting}
-                    />
-                    <button
-                      type="button"
-                      className="bg-blue-500 text-white px-4 py-3 rounded-lg hover:bg-blue-600 transition font-medium disabled:opacity-50"
-                      disabled={isSubmitting || !promoCode.trim()}
-                    >
-                      Áp dụng
-                    </button>
                   </div>
                 </div>
               </div>

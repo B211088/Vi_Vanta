@@ -564,7 +564,7 @@ const BookExaminationDetail = () => {
 
             {/* Right Column - Booking */}
             <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg shadow-md p-6 sticky top-6">
+              <div className="bg-white rounded-lg shadow-md p-6 ">
                 <h3 className="font-bold text-lg mb-4">Đặt lịch hẹn</h3>
 
                 {/* Service Selection */}

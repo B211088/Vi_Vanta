@@ -25,6 +25,7 @@ import {
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
+import VoiceChatbot from "../chatbot/VoiceChatbot";
 const AllTools = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Tất cả");
@@ -50,7 +51,7 @@ const AllTools = () => {
   });
   return (
     <div className="container max-w-8xl min-h-screen mx-auto px-4 py-8">
-      {/* Search and Filter */}
+      <VoiceChatbot />
       <div className="mb-8">
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="flex-1">
@@ -208,25 +209,25 @@ const healthTools = [
     category: "Tâm lý",
     loginRequire: false,
   },
-  {
-    id: "tools/diabetes-risk",
-    name: "Kiểm tra nguy cơ tiểu đường",
-    description: "Đánh giá nguy cơ mắc tiểu đường dựa trên các chỉ số cá nhân",
-    icon: BarChart3,
-    color: "bg-amber-600",
-    category: "Chẩn đoán",
-    loginRequire: false,
-  },
-  {
-    id: "tools/anemia-check",
-    name: "Đánh giá thiếu máu (thiếu sắt)",
-    description:
-      "Dựa vào triệu chứng và dinh dưỡng để kiểm tra nguy cơ thiếu máu",
-    icon: Droplet,
-    color: "bg-red-400",
-    category: "Dinh dưỡng",
-    loginRequire: false,
-  },
+  // {
+  //   id: "tools/diabetes-risk",
+  //   name: "Kiểm tra nguy cơ tiểu đường",
+  //   description: "Đánh giá nguy cơ mắc tiểu đường dựa trên các chỉ số cá nhân",
+  //   icon: BarChart3,
+  //   color: "bg-amber-600",
+  //   category: "Chẩn đoán",
+  //   loginRequire: false,
+  // },
+  // {
+  //   id: "tools/anemia-check",
+  //   name: "Đánh giá thiếu máu (thiếu sắt)",
+  //   description:
+  //     "Dựa vào triệu chứng và dinh dưỡng để kiểm tra nguy cơ thiếu máu",
+  //   icon: Droplet,
+  //   color: "bg-red-400",
+  //   category: "Dinh dưỡng",
+  //   loginRequire: false,
+  // },
   {
     id: "tools/sleep-quality",
     name: "Đánh giá chất lượng giấc ngủ",
@@ -237,14 +238,14 @@ const healthTools = [
     category: "Giấc ngủ",
     loginRequire: false,
   },
-  {
-    id: "tools/cardiac-risk",
-    name: "Đánh giá nguy cơ tim mạch",
-    description:
-      "Phân tích các yếu tố như tuổi, nhịp tim, huyết áp để đánh giá nguy cơ",
-    icon: HeartPulse,
-    color: "bg-rose-600",
-    category: "Tim mạch",
-    loginRequire: false,
-  },
+  // {
+  //   id: "tools/cardiac-risk",
+  //   name: "Đánh giá nguy cơ tim mạch",
+  //   description:
+  //     "Phân tích các yếu tố như tuổi, nhịp tim, huyết áp để đánh giá nguy cơ",
+  //   icon: HeartPulse,
+  //   color: "bg-rose-600",
+  //   category: "Tim mạch",
+  //   loginRequire: false,
+  // },
 ];

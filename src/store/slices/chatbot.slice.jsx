@@ -10,6 +10,7 @@ const initialState = {
   loading: false,
   error: null,
   collection: null,
+  voicesMessages: [],
 };
 
 const chatbotSlice = createSlice({
@@ -34,7 +35,21 @@ const chatbotSlice = createSlice({
       // Clear section cũ để tránh hiển thị data cũ
       state.section = null;
     },
-
+    fetchVoiceMessageStart: (state) => {
+      state.loading = true;
+      state.error = null;
+    },
+    fetchVoiceMessagesSuccess: (state, action) => {
+      state.loading = false;
+      state.voicesMessages = action.payload;
+    },
+    fetchVoiceMessageFailure: (state, action) => {
+      state.loading = false;
+      state.error = action.payload;
+    },
+    addVoiceMessage: (state, action) => {
+      state.voicesMessages.push(action.payload);
+    },
     fetchSectionSuccess: (state, action) => {
       state.loading = false;
       state.section = action.payload;
@@ -142,6 +157,10 @@ export const {
   fetchCollectionFailure,
   clearSection,
   clearCurrentSection,
+  fetchVoiceMessageStart,
+  fetchVoiceMessagesSuccess,
+  fetchVoiceMessageFailure,
+  addVoiceMessage,
 } = chatbotSlice.actions;
 
 export default chatbotSlice.reducer;

@@ -40,6 +40,7 @@ import BookingServices from "../components/ui/doctor/BookingServices";
 import BookingSuccess from "../components/layout/examination/BookingSuccess";
 import DoctorProtectedRoute from "./DoctorProtectedRoute";
 import DoctorRegistration from "../components/ui/doctor/DoctorRegistration";
+import SearchPage from "../pages/SearchPage";
 
 const Home = lazy(() => import("../pages/user/Home"));
 const Auth = lazy(() => import("../pages/auth/Auth"));
@@ -153,6 +154,15 @@ const router = createBrowserRouter([
     element: (
       <Suspense fallback={<Loading />}>
         <DetailActicle />
+      </Suspense>
+    ),
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/search",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <SearchPage />
       </Suspense>
     ),
     errorElement: <ErrorPage />,

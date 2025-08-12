@@ -5,7 +5,7 @@ import Header from "../Header";
 import Footer from "../../../pages/user/Footer";
 import { processPayment } from "../../../services/booking.service";
 import { formatDateDDMMYY } from "../../../utils/formatDate";
-
+import { formatAddress } from "../../../utils/formatAddress";
 const AppointmentPayment = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -458,8 +458,9 @@ const AppointmentPayment = () => {
                           "Phòng khám"}
                       </p>
                       <p className="text-gray-600">
-                        {appointmentData.doctorId?.infoClinic?.address ||
-                          "Địa chỉ"}
+                        {formatAddress(
+                          appointmentData.doctorId?.infoClinic?.address
+                        ) || "Địa chỉ"}
                       </p>
                     </div>
                   </div>

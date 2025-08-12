@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import Banner from "../user/Banner";
 import BookingBanner from "../../ui/banner/BookingBanner";
 import { getProvinces } from "../../../services/address.service";
+import VoiceChatbot from "../../ui/chatbot/VoiceChatbot";
 
 const BookExamination = () => {
   const dispatch = useDispatch();
@@ -95,7 +96,7 @@ const BookExamination = () => {
     <div className="min-h-screen bg-gray-50 font-nunito">
       <Header />
       <BookingBanner />
-
+      <VoiceChatbot />
       {/* Search Section */}
       <div className="w-full flex bg-light-50">
         <div className="container flex flex-col mx-auto py-6 lg:py-10 px-4 lg:px-6 mt-2">

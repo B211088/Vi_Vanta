@@ -9,6 +9,7 @@ import doctorReducer from "./slices/doctor.slice";
 import healthReducer from "./slices/health.slice";
 import childrenReducer from "./slices/children.slice";
 import bookingReducer from "./slices/booking.slice";
+import notifycationReducer from "./slices/notifycation.slice";
 
 export const rootReducer = combineReducers({
   auth: authReducer,
@@ -20,4 +21,5 @@ export const rootReducer = combineReducers({
   health: healthReducer,
   children: childrenReducer,
   booking: bookingReducer,
+  notifycation: notifycationReducer,
 });

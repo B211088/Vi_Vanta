@@ -4,7 +4,6 @@ import {
   Phone,
   Mail,
   MapPin,
-  Clock,
   Facebook,
   Twitter,
   Instagram,
@@ -23,32 +22,10 @@ const Footer = () => {
 
   return (
     <footer className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden">
-      {/* Top Wave */}
-      <div className="absolute top-0 inset-x-0 transform rotate-180">
-        <svg
-          viewBox="0 0 1200 120"
-          className="w-full h-20 text-slate-900 block"
-          preserveAspectRatio="none"
-        >
-          <path
-            d="M0,60 C300,120 900,0 1200,60 L1200,120 L0,120 Z"
-            fill="currentColor"
-          />
-        </svg>
-      </div>
-
-      {/* Background Pattern */}
+      {/* Background Highlights */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-20 left-20 w-40 h-40 bg-teal-400 rounded-full blur-3xl"></div>
         <div className="absolute bottom-32 right-32 w-32 h-32 bg-emerald-400 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-cyan-400 rounded-full blur-3xl"></div>
-      </div>
-
-      {/* Medical Icons Background */}
-      <div className="absolute inset-0 opacity-10">
-        <Heart className="absolute top-40 right-1/4 w-12 h-12 text-teal-400 animate-pulse" />
-        <Shield className="absolute bottom-40 left-1/4 w-10 h-10 text-emerald-400 animate-pulse" />
-        <Award className="absolute top-60 left-1/3 w-8 h-8 text-cyan-400 animate-pulse" />
       </div>
 
       <div className="relative z-10 pt-24 pb-8">
@@ -66,19 +43,20 @@ const Footer = () => {
                 </h3>
               </div>
               <p className="text-gray-300 mb-6 leading-relaxed text-sm">
-                Đồng hành cùng bạn trên hành trình chăm sóc sức khỏe với dịch vụ
-                chuyên nghiệp, tận tâm và công nghệ hiện đại nhất.
+                Nền tảng chăm sóc sức khỏe toàn diện — theo dõi sức khỏe, đặt
+                lịch khám, và tư vấn y tế thông minh với trợ lý AI. Chúng tôi
+                luôn đồng hành vì một cộng đồng khỏe mạnh.
               </p>
 
               {/* Trust Badges */}
               <div className="flex items-center space-x-4 mb-6">
-                <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2">
+                <div className="flex items-center space-x-2 bg-white/10 rounded-lg px-3 py-2">
                   <Shield className="w-4 h-4 text-teal-400" />
-                  <span className="text-sm text-gray-300">Uy tín</span>
+                  <span className="text-sm text-gray-300">Bảo mật</span>
                 </div>
-                <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2">
+                <div className="flex items-center space-x-2 bg-white/10 rounded-lg px-3 py-2">
                   <Award className="w-4 h-4 text-emerald-400" />
-                  <span className="text-sm text-gray-300">Chuyên nghiệp</span>
+                  <span className="text-sm text-gray-300">Chất lượng</span>
                 </div>
               </div>
 
@@ -86,27 +64,27 @@ const Footer = () => {
               <div className="flex space-x-4">
                 <a
                   href="#"
-                  className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-teal-500 transition-colors duration-300 group"
+                  className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center hover:bg-teal-500 transition-colors"
                 >
-                  <Facebook className="w-5 h-5 text-gray-300 group-hover:text-white" />
+                  <Facebook className="w-5 h-5 text-gray-300 hover:text-white" />
                 </a>
                 <a
                   href="#"
-                  className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-teal-500 transition-colors duration-300 group"
+                  className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center hover:bg-teal-500 transition-colors"
                 >
-                  <Instagram className="w-5 h-5 text-gray-300 group-hover:text-white" />
+                  <Instagram className="w-5 h-5 text-gray-300 hover:text-white" />
                 </a>
                 <a
                   href="#"
-                  className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-teal-500 transition-colors duration-300 group"
+                  className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center hover:bg-teal-500 transition-colors"
                 >
-                  <Youtube className="w-5 h-5 text-gray-300 group-hover:text-white" />
+                  <Youtube className="w-5 h-5 text-gray-300 hover:text-white" />
                 </a>
                 <a
                   href="#"
-                  className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-teal-500 transition-colors duration-300 group"
+                  className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center hover:bg-teal-500 transition-colors"
                 >
-                  <Twitter className="w-5 h-5 text-gray-300 group-hover:text-white" />
+                  <Twitter className="w-5 h-5 text-gray-300 hover:text-white" />
                 </a>
               </div>
             </div>
@@ -115,23 +93,23 @@ const Footer = () => {
             <div>
               <h4 className="text-base font-semibold mb-6 flex items-center">
                 <Heart className="w-4 h-4 text-teal-400 mr-2" />
-                Dịch Vụ
+                Công Cụ & Dịch Vụ
               </h4>
               <ul className="space-y-3">
                 {[
-                  "Khám Tổng Quát",
-                  "Chuyên Khoa Tim Mạch",
-                  "Chuyên Khoa Nhi",
-                  "Chẩn Đoán Hình Ảnh",
-                  "Xét Nghiệm",
-                  "Phẫu Thuật",
+                  "Theo Dõi Sức Khỏe",
+                  "Đặt Lịch Khám Bác Sĩ",
+                  "Tư Vấn Sức Khỏe AI",
+                  "Nhắc Uống Thuốc",
+                  "Theo Dõi Thai Kỳ",
+                  "Quản Lý Hồ Sơ Y Tế",
                 ].map((service) => (
                   <li key={service}>
                     <a
                       href="#"
-                      className="text-gray-300 hover:text-teal-400 transition-colors duration-300 flex items-center group text-sm"
+                      className="text-gray-300 hover:text-teal-400 transition-colors flex items-center text-sm"
                     >
-                      <ChevronRight className="w-3 h-3 mr-2 group-hover:translate-x-1 transition-transform" />
+                      <ChevronRight className="w-3 h-3 mr-2" />
                       {service}
                     </a>
                   </li>
@@ -143,23 +121,22 @@ const Footer = () => {
             <div>
               <h4 className="text-base font-semibold mb-6 flex items-center">
                 <Users className="w-4 h-4 text-emerald-400 mr-2" />
-                Liên Kết
+                Liên Kết Nhanh
               </h4>
               <ul className="space-y-3">
                 {[
                   "Về Chúng Tôi",
-                  "Đội Ngũ Bác Sĩ",
-                  "Tin Tức",
-                  "Góc Sức Khỏe",
-                  "Tuyển Dụng",
-                  "Liên Hệ",
+                  "Đội Ngũ Chuyên Gia",
+                  "Tin Tức Y Tế",
+                  "Cẩm Nang Sức Khỏe",
+                  "Hỗ Trợ & Liên Hệ",
                 ].map((link) => (
                   <li key={link}>
                     <a
                       href="#"
-                      className="text-gray-300 hover:text-emerald-400 transition-colors duration-300 flex items-center group text-sm"
+                      className="text-gray-300 hover:text-emerald-400 transition-colors flex items-center text-sm"
                     >
-                      <ChevronRight className="w-3 h-3 mr-2 group-hover:translate-x-1 transition-transform" />
+                      <ChevronRight className="w-3 h-3 mr-2" />
                       {link}
                     </a>
                   </li>
@@ -175,25 +152,25 @@ const Footer = () => {
               </h4>
               <div className="space-y-4">
                 <div className="flex items-start space-x-3">
-                  <Phone className="w-4 h-4 text-teal-400 mt-1 flex-shrink-0" />
+                  <Phone className="w-4 h-4 text-teal-400 mt-1" />
                   <div>
                     <p className="text-white font-medium text-sm">Hotline</p>
-                    <p className="text-gray-300 text-sm">1900 1234</p>
+                    <p className="text-gray-300 text-sm">1900 6868</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
-                  <Mail className="w-4 h-4 text-emerald-400 mt-1 flex-shrink-0" />
+                  <Mail className="w-4 h-4 text-emerald-400 mt-1" />
                   <div>
                     <p className="text-white font-medium text-sm">Email</p>
-                    <p className="text-gray-300 text-sm">info@vivanta.vn</p>
+                    <p className="text-gray-300 text-sm">support@vivanta.vn</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
-                  <MapPin className="w-4 h-4 text-cyan-400 mt-1 flex-shrink-0" />
+                  <MapPin className="w-4 h-4 text-cyan-400 mt-1" />
                   <div>
                     <p className="text-white font-medium text-sm">Địa chỉ</p>
                     <p className="text-gray-300 text-sm">
-                      123 Đường Sức Khỏe, Quận 1, TP.HCM
+                      123 Sức Khỏe Street, Quận 1, TP.HCM
                     </p>
                   </div>
                 </div>
@@ -203,53 +180,46 @@ const Footer = () => {
 
           {/* Stats Section */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            <div className="text-center p-6 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-              <div className="text-2xl font-bold text-teal-400 mb-2">50K+</div>
-              <div className="text-xs text-gray-300">Khách hàng tin tưởng</div>
+            <div className="text-center p-6 bg-white/5 rounded-xl">
+              <div className="text-2xl font-bold text-teal-400 mb-2">100K+</div>
+              <div className="text-xs text-gray-300">Người dùng hài lòng</div>
             </div>
-            <div className="text-center p-6 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+            <div className="text-center p-6 bg-white/5 rounded-xl">
               <div className="text-2xl font-bold text-emerald-400 mb-2">
-                99%
+                98%
               </div>
-              <div className="text-xs text-gray-300">Hài lòng</div>
+              <div className="text-xs text-gray-300">Đánh giá tích cực</div>
             </div>
-            <div className="text-center p-6 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+            <div className="text-center p-6 bg-white/5 rounded-xl">
               <div className="text-2xl font-bold text-cyan-400 mb-2">24/7</div>
-              <div className="text-xs text-gray-300">Hỗ trợ</div>
+              <div className="text-xs text-gray-300">Tư vấn & hỗ trợ</div>
             </div>
-            <div className="text-center p-6 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-              <div className="text-2xl font-bold text-teal-400 mb-2">15+</div>
-              <div className="text-xs text-gray-300">Năm kinh nghiệm</div>
+            <div className="text-center p-6 bg-white/5 rounded-xl">
+              <div className="text-2xl font-bold text-teal-400 mb-2">20+</div>
+              <div className="text-xs text-gray-300">Chuyên khoa</div>
             </div>
           </div>
 
           {/* Bottom Bar */}
-          <div className="border-t border-white/20 pt-8 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+          <div className="border-t border-white/20 pt-8 flex flex-col md:flex-row justify-between items-center">
             <div className="text-center md:text-left">
               <p className="text-gray-300 text-sm">
-                © 2024 Vivanta Healthcare. Bản quyền thuộc về Vivanta.
+                © 2024 Vivanta Health. Tất cả quyền được bảo lưu.
               </p>
               <p className="text-gray-400 text-xs mt-1">
-                Giấy phép hoạt động số: 123456789 - Cấp bởi Sở Y tế TP.HCM
+                Giấy phép hoạt động số: 123456789 - Cấp bởi Bộ Y Tế
               </p>
             </div>
-
             <div className="flex items-center space-x-6">
-              <a
-                href="#"
-                className="text-gray-400 hover:text-teal-400 text-sm transition-colors duration-300"
-              >
+              <a href="#" className="text-gray-400 hover:text-teal-400 text-sm">
                 Chính sách bảo mật
               </a>
-              <a
-                href="#"
-                className="text-gray-400 hover:text-teal-400 text-sm transition-colors duration-300"
-              >
+              <a href="#" className="text-gray-400 hover:text-teal-400 text-sm">
                 Điều khoản sử dụng
               </a>
               <button
                 onClick={scrollToTop}
-                className="w-10 h-10 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full flex items-center justify-center hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+                className="w-10 h-10 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full flex items-center justify-center hover:shadow-lg"
               >
                 <ArrowUp className="w-5 h-5 text-white" />
               </button>

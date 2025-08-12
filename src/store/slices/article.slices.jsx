@@ -23,6 +23,7 @@ const initialState = {
 
   // Articles by topic
   articlesByTopic: [],
+  paginationSearch: null,
   topicArticlesTotal: 0,
 
   // Related articles
@@ -84,6 +85,7 @@ const articleSlice = createSlice({
         ? action.payload.articles
         : [];
       state.searchTotalResults = action.payload.totalResults || 0;
+      state.paginationSearch = action.payload.pagination;
     },
     searchArticlesFailure: (state, action) => {
       state.searchLoading = false;

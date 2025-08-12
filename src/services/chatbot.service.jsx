@@ -1,6 +1,7 @@
 import axios from "axios";
 import { API_URL } from "../config/api.config";
 import {
+  addVoiceMessage,
   clearCurrentSection,
   clearSection,
   deleteSection,
@@ -16,6 +17,9 @@ import {
   fetchSectionsSuccess,
   fetchSectionStart,
   fetchSectionSuccess,
+  fetchVoiceMessageFailure,
+  fetchVoiceMessagesSuccess,
+  fetchVoiceMessageStart,
 } from "../store/slices/chatbot.slice";
 
 const api = axios.create({
@@ -97,6 +101,33 @@ export const askChatBot = (payload) => async (dispatch) => {
     const errorMessage =
       error.response?.data?.message || "Không thể gửi câu hỏi";
     dispatch(fetchSectionFailure(errorMessage));
+    throw error;
+  }
+};
+
+export const chatVoice = (payload) => async (dispatch) => {
+  try {
+    const response = await api.post(`/api/v1/chatbot/chat-voice`, payload);
+
+    return response.data;
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message || "Không thể gửi câu hỏi";
+    console.log(errorMessage);
+    throw error;
+  }
+};
+
+export const getChatVoiceMessages = (userId) => async (dispatch) => {
+  try {
+    dispatch(fetchVoiceMessageStart());
+    const response = await api.get(`/api/v1/chatbot/voice-messages/${userId}`);
+    dispatch(fetchVoiceMessagesSuccess(response.data.messages));
+    return response.data;
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message || "Không thể gửi câu hỏi";
+    dispatch(fetchVoiceMessageFailure());
     throw error;
   }
 };

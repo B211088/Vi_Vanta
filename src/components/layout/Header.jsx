@@ -1,19 +1,78 @@
 import { Link, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Container from "./Container";
-import { Heart, Menu, X } from "lucide-react";
+import { Heart, Menu, Search, X } from "lucide-react";
 import User from "../ui/User";
 import { useTheme } from "../../hook/useTheme";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { searchArticles } from "../../services/article.service";
+import { useRef } from "react";
+import { getNotifycationsByUser } from "../../services/notifycation.service";
 
 const Header = () => {
+  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const { searchResults } = useSelector((state) => state.article);
+
   const { isDarkMode } = useTheme();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(5);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchValue, setSearchValue] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const debounceTimeout = useRef(null);
+
+  useEffect(() => {
+    if (searchResults) setSearchValue(searchResults);
+  }, [searchResults]);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const handleSearchArticle = async (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current);
+    }
+
+    debounceTimeout.current = setTimeout(async () => {
+      try {
+        if (!value || value.trim() === "") {
+          setIsSearching(false);
+          setSearchValue([]);
+        } else {
+          setIsSearching(true);
+          await dispatch(
+            searchArticles({
+              page,
+              limit,
+              search: value,
+            })
+          );
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }, 500);
+  };
+
+  const handleSearchResultClick = () => {
+    // Clear search results when clicking on an item
+    setSearchValue([]);
+    setSearchTerm("");
+  };
+
+  const handleSearchIconClick = () => {
+    if (searchTerm.trim() !== "") {
+      // Navigate to search page with search term
+      setSearchValue([]);
+      setSearchTerm("");
+    }
   };
 
   const closeMobileMenu = () => {
@@ -34,7 +93,7 @@ const Header = () => {
     <Container>
       <div className="w-full flex justify-between items-center py-3 px-3 md:px-5 font-nunito border-b-1 border-dashed border-dark-700">
         {/* Logo Section */}
-        <div className="flex items-center">
+        <div className="flex items-center lg:pr-30 pr-10">
           <Link to="/" className="flex items-center space-x-1">
             <div className="w-7 h-7 bg-gradient-to-br from-teal-500 to-emerald-500 rounded-sm flex items-center justify-center">
               <Heart className="w-5 h-5 text-white" />
@@ -43,6 +102,85 @@ const Header = () => {
               VIVANTA
             </h1>
           </Link>
+        </div>
+
+        {/* Search Box */}
+        <div className="w-3/12 hidden  lg:flex items-center gap-2 border-1 border-dark-700 rounded-md py-1.5 pl-2 relative">
+          <input
+            className="flex-1 outline-none text-sm"
+            type="text"
+            placeholder="Tìm kiếm bài viết...."
+            value={searchTerm}
+            onChange={handleSearchArticle}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && searchTerm.trim() !== "") {
+                handleSearchIconClick();
+              }
+            }}
+          />
+          <Link
+            to={searchTerm.trim() !== "" ? "/search" : "#"}
+            state={{ searchValue: searchTerm }}
+            className="px-2 cursor-pointer"
+            onClick={handleSearchIconClick}
+          >
+            <Search className="w-5 h-5" />
+          </Link>
+
+          {/* Search Results Dropdown */}
+          {searchResults.length > 0 && searchTerm.trim() !== "" && (
+            <div className="absolute w-full top-[110%] right-0 flex flex-col gap-1 bg-light-50 border-1 border-dark-800 shadow-lg rounded-lg z-30 max-h-96 overflow-y-auto sidebar-scroll-none">
+              {searchResults.map((article) => {
+                return (
+                  <Link
+                    key={article._id}
+                    to="/search"
+                    state={{
+                      searchValue: searchTerm,
+                      selectedArticle: article,
+                    }}
+                    className="p-2 flex items-center gap-2 hover:bg-gray-100 transition-colors duration-200 border-b border-gray-200 last:border-b-0"
+                    onClick={handleSearchResultClick}
+                  >
+                    <img
+                      className="w-20 h-12 object-cover rounded-md flex-shrink-0"
+                      src={article?.thumbnail?.url}
+                      alt={article?.title || "Article thumbnail"}
+                    />
+                    <div className="flex-1 flex flex-col overflow-hidden">
+                      <h1 className="text-sm line-clamp-2 font-bold text-gray-800">
+                        {article.title}
+                      </h1>
+                      <p className="text-xs line-clamp-1 text-gray-600 mt-1">
+                        {article.summary}
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
+
+              {/* View All Results Link */}
+              {searchResults.length >= 5 && (
+                <Link
+                  to="/search"
+                  state={{ searchValue: searchTerm }}
+                  className="p-3 text-center text-sm font-medium text-vivanta-500 hover:bg-vivanta-50 transition-colors duration-200 border-t border-gray-200"
+                  onClick={handleSearchResultClick}
+                >
+                  Xem tất cả kết quả cho "{searchTerm}"
+                </Link>
+              )}
+            </div>
+          )}
+
+          {/* No Results Message */}
+          {isSearching &&
+            searchResults.length === 0 &&
+            searchTerm.trim() !== "" && (
+              <div className="absolute w-full top-[110%] right-0 bg-light-50 border-1 border-dark-800 shadow-lg rounded-lg z-30 p-4 text-center text-gray-500 text-sm">
+                Không tìm thấy bài viết nào cho "{searchTerm}"
+              </div>
+            )}
         </div>
 
         {/* Desktop Navigation */}
@@ -66,7 +204,7 @@ const Header = () => {
               location.pathname === "/vivanta-ai"
                 ? "bg-dark-800 font-bold text-dark-50"
                 : "text-gray-600"
-            } cursor-pointer border-[1px] border-dark-700 font-bold shadow-sm rounded-full px-6 xl:px-10 py-2`}
+            } cursor-pointer border-[1px] border-dark-700 font-bold shadow-sm rounded-full px-6 xl:px-10  py-2`}
           >
             <Link
               to="/vivanta-ai"
@@ -98,11 +236,11 @@ const Header = () => {
           {/* Vivanta AI Button - Mobile/Tablet */}
           <Link
             to="/vivanta-ai"
-            className={`flex items-center justify-center transition-all duration-300 ease-in-out ${
+            className={`flex  w-10 h-10   items-center justify-center transition-all duration-300 ease-in-out ${
               location.pathname === "/vivanta-ai"
                 ? "bg-dark-800 text-dark-50"
                 : "text-gray-600"
-            } cursor-pointer border-[1px] border-dark-700 shadow-sm rounded-full p-2`}
+            } cursor-pointer border-[1px] border-dark-700 shadow-sm aspect-square rounded-full p-2`}
           >
             <i className="fa-solid fa-hexagon-nodes text-vivanta-500 text-lg"></i>
           </Link>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Eye,
   Calendar,
@@ -20,6 +20,7 @@ import Header from "../../layout/Header";
 import ContentParser from "./ContentParser";
 import Disclaimer from "./Disclaimer";
 import Footer from "../../../pages/user/Footer";
+import VoiceChatbot from "../chatbot/VoiceChatbot";
 
 const DetailArticle = () => {
   const navigate = useNavigate();
@@ -28,7 +29,7 @@ const DetailArticle = () => {
   const [showSidebar, setShowSidebar] = useState(false);
   const { loading, error, article, relatedArticles, articlesAttribute } =
     useSelector((state) => state.article);
-
+  const pageRef = useRef();
   // Tách query string
   const searchParams = new URLSearchParams(location.search);
   const id = searchParams.get("id");
@@ -40,13 +41,21 @@ const DetailArticle = () => {
     dispatch(fetchMostViewedArticles({ limit: 4 }));
   }, [id, slug, dispatch]);
 
+  useEffect(() => {
+    scrollToTop();
+  }, [id]);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   // Responsive Loading Skeleton
   if (loading) {
     return (
       <div className="w-full flex flex-col font-nunito">
         <Header />
         <div className="min-h-screen bg-gray-50">
-          <div className="container max-w-6xl mx-auto px-4 py-8">
+          <div className="container  mx-auto p-8">
             <div className="animate-pulse">
               {/* Back button skeleton */}
               <div className="flex items-center gap-2 mb-6">
@@ -156,12 +165,12 @@ const DetailArticle = () => {
   };
 
   return (
-    <div className="w-full flex flex-col  font-nunito">
+    <div ref={pageRef} className="w-full flex flex-col  font-nunito">
       <Header />
-
+      <VoiceChatbot />
       <div className="min-h-screen">
         {/* Back Navigation */}
-        <div className="container  max-w-7xl  mx-auto py-3 px-4 md:px-6 mt-2">
+        <div className="container    mx-auto py-3 px-4 md:px-6 mt-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <button
@@ -184,7 +193,7 @@ const DetailArticle = () => {
         </div>
 
         {/* Main Container */}
-        <div className="container  max-w-7xl mx-auto px-4 md:px-6 py-3">
+        <div className="container  mx-auto px-4 md:px-6 py-3">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Main Article Content */}
             <div className="lg:col-span-8">
@@ -406,7 +415,7 @@ const DetailArticle = () => {
 
           {/* Mobile Related Articles Modal */}
           {showSidebar && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 lg:hidden">
+            <div className="fixed inset-0 bg-[#00000027] bg-opacity-50 z-50 lg:hidden">
               <div className="absolute right-0 top-0 h-full w-80 max-w-[85vw] bg-white overflow-y-auto">
                 <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
                   <h2 className="font-bold text-gray-900">

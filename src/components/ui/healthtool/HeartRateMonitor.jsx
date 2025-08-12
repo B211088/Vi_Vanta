@@ -470,7 +470,7 @@ const HeartRateMonitor = () => {
               </div>
               <div className="w-6/12 flex flex-col ">
                 <label className="text-xs pb-1" htmlFor="">
-                  Nhịp tim
+                  Tuổi của bạn
                 </label>
                 <div className="w-full flex h-fit items-center gap-2 py-2 px-1  text-sm border border-dark-700 rounded-md hover:border-rose-500 cursor-pointer">
                   <Calendar className="text-rose-600 h-5 w-5 " />

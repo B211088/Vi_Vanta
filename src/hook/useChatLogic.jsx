@@ -520,7 +520,7 @@ export const useChatLogic = (collectionId, currentSectionId) => {
     if (models.length === 0) {
       fetchModelAI();
     }
-  }, [dispatch, models.length, selectedAiModel, notifyError]);
+  }, []);
 
   // Enhanced latest message tracking
   useEffect(() => {

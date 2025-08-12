@@ -42,23 +42,24 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
       >
         <i className="fa-solid fa-caret-left"></i>
       </button>
-      {pages.map((p, idx) =>
-        p === "..." ? (
-          <span key={"ellipsis-" + idx} className="px-2">
-            ...
-          </span>
-        ) : (
-          <button
-            key={p}
-            onClick={() => onPageChange(p)}
-            className={`w-[33px] h-[33px] flex items-center justify-center aspect-square border rounded cursor-pointer  ${
-              currentPage === p ? "bg-blue-500 text-white" : ""
-            }`}
-          >
-            {p}
-          </button>
-        )
-      )}
+      {pages &&
+        pages.map((p, idx) =>
+          p === "..." ? (
+            <span key={"ellipsis-" + idx} className="px-2">
+              ...
+            </span>
+          ) : (
+            <button
+              key={`${p} - ${idx}`}
+              onClick={() => onPageChange(p)}
+              className={`w-[33px] h-[33px] flex items-center justify-center aspect-square border rounded cursor-pointer  ${
+                currentPage === p ? "bg-teal-500 text-white" : ""
+              }`}
+            >
+              {p}
+            </button>
+          )
+        )}
       <button
         disabled={currentPage === totalPages}
         onClick={() => onPageChange(currentPage + 1)}

@@ -258,9 +258,7 @@ const Home = () => {
       <Banner />
       <ArticlesSection />
       <VoiceChatbot />
-      {/* Hero Section */}
       <ArticlesSectionTopic />
-      {/* Health Tools Section */}
       <section id="tools" className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
@@ -418,7 +416,7 @@ const Home = () => {
         </div>
       </section>{" "}
       {/* Stats Section */}
-      <section className="py-16 bg-teal-50">
+      {/* <section className="py-16 bg-teal-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
@@ -442,7 +440,7 @@ const Home = () => {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
       {/* FAQ Section */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-4xl mx-auto px-6">
