@@ -7,17 +7,16 @@
   "type": "module",
   "main": "server.js",
   "scripts": {
-    "start": "node --experimental-specifier-resolution=node src/server.mjs",
+    "start": "node --import=specifier-resolution-node/register src/server.mjs",
     "prod": "node src/server.mjs",
     "dev": "nodemon src/server.mjs",
     "chroma": "chroma run --host localhost --port 8000",
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepare": "node src/scripts/setup-env.js",
-    "build": "node ./src/server.mjs"
-  
+    "build": "node ./src/server.mjs",
+     "postinstall": "patch-package"
   },
   "devDependencies": {
-    "argon": "^2.0.21",
     "body-parser": "^2.2.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
