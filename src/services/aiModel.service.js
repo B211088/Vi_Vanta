@@ -15,7 +15,8 @@ export const createAIModelHandle = async (payload) => {
 // Lấy tất cả model
 export const getAllAIModelsHandle = async (filter = {}) => {
   try {
-    return await AIModel.find(filter).select("-__v");
+    const modals = await AIModel.find(filter).select("-__v");
+    return modals;
   } catch (error) {
     console.error("Lỗi khi lấy danh sách AIModel:", error.message);
     throw error;

@@ -7,7 +7,9 @@ import PaymentService from "../services/payment.service.js";
 import BookingAppointmentService from "../services/booking.service.js";
 import mongoose from "mongoose";
 import { ApiError } from "../utils/ApiResponse.js";
-
+import Notification from "../models/notification.model.js";
+import { notificationService } from "../services/notifycation.service.js";
+import { formatDateDDMMYY } from "../utils/formatDate.js";
 const paymentService = new PaymentService();
 const bookingAppointmentService = new BookingAppointmentService();
 export const getDoctorSlots = async (req, res) => {
@@ -283,7 +285,7 @@ export const updateAppointmentPaymentStatus = async (req, res) => {
 export const updateAppointmentStatus = async (req, res) => {
   try {
     const { appointmentId } = req.params;
-    const { status, note } = req.body;
+    const { status, note, cancelReason } = req.body;
 
     const validStatuses = [
       "pending",
@@ -299,7 +301,16 @@ export const updateAppointmentStatus = async (req, res) => {
       });
     }
 
-    const appointment = await Appointment.findById(appointmentId);
+    const appointment = await Appointment.findById(appointmentId)
+      .populate("services")
+      .populate({
+        path: "doctorId",
+        select: "name specialty infoClinic rate",
+        populate: {
+          path: "infoClinic.address.wardId infoClinic.address.districtId infoClinic.address.provinceId",
+          select: "name",
+        },
+      });
     if (!appointment) {
       return res.status(404).json({
         success: false,
@@ -309,9 +320,39 @@ export const updateAppointmentStatus = async (req, res) => {
 
     appointment.status = status;
     if (note) appointment.note = note;
+    if (status === "confirmed") {
+      notificationService.createNotification({
+        userId: appointment.userId,
+        title: "Thông báo đặt khám!",
+        message: `Lịch khám của bạn với bác sĩ ${
+          appointment.doctorId.name
+        } đã được bác sĩ xác nhận, thời gian khám lúc: ${
+          appointment.timeSlots.startTime
+        } -  ${appointment.timeSlots.endTime}, Ngày: ${formatDateDDMMYY(
+          appointment.date
+        )} vui lòng đến trước 30 phút!`,
+        type: "appointment",
+      });
+    }
 
     if (status === "completed") {
       appointment.completedAt = new Date();
+      notificationService.createNotification({
+        userId: appointment.userId,
+        title: "Thông báo lịch khám!",
+        message: `Lịch khám của bạn với bác sĩ ${appointment.doctorId.name} đã hoàn thành!`,
+        type: "appointment",
+      });
+    }
+
+    if (status === "canceled") {
+      appointment.cancelReason = cancelReason;
+      notificationService.createNotification({
+        userId: appointment.userId,
+        title: "Thông báo lịch khám!",
+        message: `Lịch khám của bạn đã bị hủy!`,
+        type: "appointment",
+      });
     }
 
     await appointment.save();

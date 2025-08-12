@@ -28,8 +28,13 @@ import doctorRouter from "./routes/doctor.route.js";
 import healthAdviceRoutes from "./routes/healthAdvice.route.js";
 import bookingServiceRouter from "./routes/bookingService.route.js";
 import bookingRouter from "./routes/booking.route.js";
+import notifycationRouter from "./routes/notifycation.route.js";
 import fs from "fs";
-
+import path from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const app = express();
 
 const limiter = rateLimit({
@@ -55,9 +60,10 @@ app.use(
   })
 );
 
-if (!fs.existsSync("uploads")) {
-  fs.mkdirSync("uploads");
+if (!fs.existsSync("voices")) {
+  fs.mkdirSync("voices");
 }
+app.use("/voices", express.static(path.join(__dirname, "./voices")));
 app.use(bodyParser.json());
 app.use(helmet());
 app.use(cookieParser());
@@ -100,6 +106,7 @@ app.use("/api/v1/doctors", doctorRouter);
 app.use("/api/v1/health-advices", healthAdviceRoutes);
 app.use("/api/v1/booking-services", bookingServiceRouter);
 app.use("/api/v1/booking", bookingRouter);
+app.use("/api/v1/notifycation", notifycationRouter);
 
 app.get("/api/v1/csrf-token", (req, res) => {
   res.json({ csrfToken: req.csrfToken() });

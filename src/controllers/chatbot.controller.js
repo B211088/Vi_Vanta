@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from "uuid";
 import {
   DEFAULT_K,
   DEFAULT_MAX_TOKEN,
@@ -15,7 +14,16 @@ import { getAIModelByIdHandle } from "../services/aiModel.service.js";
 import chromadbService from "../services/chromadb.service.js";
 import Message from "../models/message.model.js";
 import Section from "../models/section.model.js";
-
+import fs from "fs";
+import path from "path";
+import { v4 as uuidv4 } from "uuid";
+import { fileURLToPath } from "url";
+import VoiceMessage from "../models/voiceMessage.model.js";
+import Health from "../models/health.model.js";
+import User from "../models/user.model.js";
+import Appointment from "../models/appointment.model.js";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const service = new EmbedService();
 const chatService = new AIChatService();
 const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
@@ -505,7 +513,6 @@ export async function chatWithChatBot(req, res) {
     const { relevantDocs, totalFound, relevantCount } = similarityResult;
     const documentContext = buildDocumentContext(relevantDocs, 2000);
 
-    // Generate AI response
     const systemPrompt =
       prompt ||
       `Bạn là bác sĩ chuyên khoa. Trả lời dựa trên thông tin được cung cấp. Ngắn gọn và chính xác.`;
@@ -563,6 +570,350 @@ export async function chatWithChatBot(req, res) {
       },
       500
     );
+  }
+}
+
+// --- Helpers: Cải thiện để xử lý nhiều loại câu hỏi hơn ---
+
+/**
+ * Kiểm tra xem câu hỏi có phải về thông tin cá nhân của user không
+ * Bao gồm cả y tế và thông tin cá nhân khác
+ */
+function isPersonalQuestion(text) {
+  if (!text) return false;
+
+  const pronouns =
+    /(tôi|mình|em|anh|chị|tui|của tôi|của mình|cho tôi|giúp tôi)\b/i;
+  const personalTopics =
+    /(bmi|cân nặng|chiều cao|tuổi|mỡ|vòng\s*eo|dị ứng|bệnh nền|nhóm máu|hồ\s*sơ|profile|thông tin|dữ liệu|lịch sử)/i;
+  const healthTopics =
+    /(sức khỏe|khám bệnh|thuốc|bác sĩ|triệu chứng|đau|ốm|khỏe|dinh dưỡng|ăn uống|tập luyện|vận động)/i;
+  const appointmentTopics =
+    /(lịch\s*khám|cuộc\s*hẹn|đặt lịch|hủy lịch|bác sĩ|phòng khám)/i;
+
+  return (
+    pronouns.test(text) ||
+    personalTopics.test(text) ||
+    (pronouns.test(text) &&
+      (healthTopics.test(text) || appointmentTopics.test(text)))
+  );
+}
+
+/**
+ * Tạo tóm tắt thông tin cá nhân đầy đủ hơn
+ */
+function createPersonalSummary({ user, health, appointments }) {
+  const sections = [];
+
+  // Thông tin cơ bản
+  if (user) {
+    const basicInfo = [];
+    if (user.fullName) basicInfo.push(`Tên: ${user.fullName}`);
+    if (user.gender && user.gender !== "other") {
+      const genderText =
+        user.gender === "male"
+          ? "Nam"
+          : user.gender === "female"
+          ? "Nữ"
+          : user.gender;
+      basicInfo.push(`Giới tính: ${genderText}`);
+    }
+    if (user.phone) basicInfo.push(`SĐT: ${user.phone}`);
+    if (user.dateOfBirth) {
+      const age = Math.max(
+        0,
+        Math.floor(
+          (Date.now() - new Date(user.dateOfBirth)) /
+            (365.25 * 24 * 3600 * 1000)
+        )
+      );
+      basicInfo.push(`Tuổi: ${age}`);
+    }
+    if (user.userType && user.userType !== "normal") {
+      basicInfo.push(`Loại người dùng: ${user.userType}`);
+    }
+    if (basicInfo.length)
+      sections.push(`THÔNG TIN CÁ NHÂN: ${basicInfo.join(" • ")}`);
+  }
+
+  // Thông tin sức khỏe
+  if (health) {
+    const healthInfo = [];
+
+    // Chỉ số cơ thể
+    const measurements = [];
+    if (health.height) measurements.push(`cao ${health.height}cm`);
+    if (health.weight) measurements.push(`nặng ${health.weight}kg`);
+    if (health.waist) measurements.push(`eo ${health.waist}cm`);
+    if (health.hip) measurements.push(`mông ${health.hip}cm`);
+    if (health.neck) measurements.push(`cổ ${health.neck}cm`);
+    if (measurements.length)
+      healthInfo.push(`Số đo: ${measurements.join(", ")}`);
+
+    // Tính BMI nếu có đủ thông tin
+    if (health.height && health.weight && health.height > 0) {
+      const bmi = (health.weight / Math.pow(health.height / 100, 2)).toFixed(1);
+      let bmiStatus = "";
+      if (bmi < 18.5) bmiStatus = "(thiếu cân)";
+      else if (bmi < 25) bmiStatus = "(bình thường)";
+      else if (bmi < 30) bmiStatus = "(thừa cân)";
+      else bmiStatus = "(béo phì)";
+      healthInfo.push(`BMI: ${bmi} ${bmiStatus}`);
+    }
+
+    // Thông tin y tế
+    if (health.bloodType && health.bloodType !== "unknown") {
+      healthInfo.push(`Nhóm máu: ${health.bloodType}`);
+    }
+    if (health.heartRate && health.heartRate > 0) {
+      healthInfo.push(`Nhịp tim: ${health.heartRate} bpm`);
+    }
+    if (health.activityLevel) {
+      const activityMap = {
+        sedentary: "ít vận động",
+        light: "vận động nhẹ",
+        moderate: "vận động vừa",
+        active: "vận động nhiều",
+        very_active: "vận động rất nhiều",
+      };
+      healthInfo.push(
+        `Mức độ vận động: ${
+          activityMap[health.activityLevel] || health.activityLevel
+        }`
+      );
+    }
+    if (health.goal) {
+      const goalMap = {
+        lose: "giảm cân",
+        maintain: "duy trì cân nặng",
+        gain: "tăng cân",
+      };
+      healthInfo.push(`Mục tiêu: ${goalMap[health.goal] || health.goal}`);
+    }
+
+    // Bệnh lý và dị ứng
+    if (
+      Array.isArray(health.chronicDiseases) &&
+      health.chronicDiseases.length
+    ) {
+      healthInfo.push(`Bệnh nền: ${health.chronicDiseases.join(", ")}`);
+    }
+    if (Array.isArray(health.allergies) && health.allergies.length) {
+      healthInfo.push(`Dị ứng: ${health.allergies.join(", ")}`);
+    }
+
+    if (healthInfo.length)
+      sections.push(`THÔNG TIN SỨC KHỎE: ${healthInfo.join(" • ")}`);
+  }
+
+  // Lịch khám gần nhất
+  if (appointments?.length) {
+    const recentAppointments = appointments.slice(0, 3).map((a) => {
+      const date = a?.date
+        ? new Date(a.date).toLocaleDateString("vi-VN")
+        : "N/A";
+      const time = a?.timeSlots
+        ? `${a.timeSlots.startTime}-${a.timeSlots.endTime}`
+        : "";
+      const doctor = a?.doctorId?.name
+        ? `BS ${a.doctorId.name}`
+        : "Bác sĩ không rõ";
+      const status = a?.status ? `(${a.status})` : "";
+      return `${date} ${time} ${doctor} ${status}`.trim();
+    });
+    sections.push(`LỊCH KHÁM GỦI NHẤT: ${recentAppointments.join(" | ")}`);
+  }
+
+  return sections.join("\n");
+}
+
+/**
+ * Kiểm tra xem câu hỏi có liên quan đến y tế/sức khỏe không
+ */
+function isHealthRelated(text) {
+  if (!text) return false;
+
+  const healthKeywords =
+    /(y tế|sức khỏe|bệnh|thuốc|triệu chứng|đau|ốm|khỏe|bác sĩ|phòng khám|khám bệnh|chữa trị|điều trị|dị ứng|cảm cúm|sốt|ho|nhức đầu|bụng|tim|gan|thận|phổi|da|mắt|tai|miệng|răng|xương|khớp|cơ|máu|huyết áp|tiểu đường|cholesterol|vitamin|khoáng chất|dinh dưỡng|ăn uống|tập luyện|vận động|yoga|gym|chạy bộ|đạp xe|bơi lội|giảm cân|tăng cân|diet|kiêng ăn|chế độ ăn|bmi|calo|protein|carb|chất béo|nước|ngủ|mất ngủ|stress|trầm cảm|lo âu|tâm lý|tinh thần)/i;
+
+  return healthKeywords.test(text);
+}
+
+/**
+ * Main function xử lý chat với voice
+ */
+export async function chatWithVoice(req, res) {
+  const { question, userId } = req.body;
+
+  if (!question?.trim()) {
+    return res.status(400).json({ error: "Vui lòng nhập câu hỏi." });
+  }
+
+  try {
+    let context = [];
+    let personalSummary = null;
+    let userProfile = null;
+    let healthProfile = null;
+    let appointmentList = [];
+
+    // Lấy thông tin người dùng nếu có userId
+    if (userId) {
+      // Lấy lịch sử hội thoại gần nhất
+      const recentMessages = await VoiceMessage.find({ userId })
+        .select("role content")
+        .sort({ createdAt: -1 })
+        .limit(8); // Tăng lên 8 để có context tốt hơn
+
+      if (recentMessages?.length) {
+        context = recentMessages.reverse(); // Đảo ngược để có thứ tự cũ -> mới
+      }
+
+      // Lấy thông tin profile
+      userProfile = await User.findById(userId).lean();
+
+      // Lấy thông tin sức khỏe
+      healthProfile = await Health.findOne({ userId }).lean();
+
+      // Lấy danh sách lịch khám
+      appointmentList = await Appointment.find({ userId })
+        .populate("services")
+        .populate({
+          path: "doctorId",
+          select: "name specialty infoClinic",
+          populate: {
+            path: "infoClinic.address.wardId infoClinic.address.districtId infoClinic.address.provinceId",
+            select: "name",
+          },
+        })
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .lean();
+
+      // Tạo summary nếu câu hỏi liên quan đến cá nhân
+      if (isPersonalQuestion(question)) {
+        personalSummary = createPersonalSummary({
+          user: userProfile,
+          health: healthProfile,
+          appointments: appointmentList,
+        });
+      }
+    }
+
+    // Tạo context cho AI
+    const contextString = context.length
+      ? context.map((m) => `${m.role}: ${m.content}`).join("\n")
+      : "Không có lịch sử trò chuyện trước đó.";
+
+    const personalInfo = personalSummary
+      ? `\n=== THÔNG TIN CÁ NHÂN CỦA NGƯỜI DÙNG ===\n${personalSummary}\n=== KẾT THÚC THÔNG TIN CÁ NHÂN ===\n`
+      : "";
+
+    // Kiểm tra xem có phải câu hỏi về y tế không
+    const isHealthQuestion = isHealthRelated(question);
+
+    // Tạo system message
+    let systemMessage = "";
+
+    if (isHealthQuestion) {
+      systemMessage =
+        `Bạn là trợ lý AI chuyên về y tế và sức khỏe. Hãy trả lời bằng tiếng Việt một cách thân thiện, chính xác và hữu ích.\n` +
+        `QUAN TRỌNG: Luôn khuyên người dùng tham khảo ý kiến bác sĩ chuyên khoa cho những vấn đề sức khỏe nghiêm trọng.\n` +
+        personalInfo +
+        `Lịch sử cuộc trò chuyện:\n${contextString}\n\n` +
+        `Hãy trả lời câu hỏi dựa trên thông tin cá nhân (nếu có) và kiến thức y tế. Bắt đầu câu trả lời bằng cách tương tác thân thiện với người dùng. nên gọi người dùng bằng tên hạn chế gọi cả họ và tên`;
+    } else {
+      systemMessage =
+        `Tôi là trợ lý AI chuyên về y tế và sức khỏe. Tôi chỉ có thể trả lời các câu hỏi liên quan đến:\n` +
+        `- Y tế, sức khỏe, bệnh tật\n` +
+        `- Dinh dưỡng, chế độ ăn uống\n` +
+        `- Tập luyện, vận động\n` +
+        `- Chăm sóc sức khỏe cá nhân\n` +
+        `- Quản lý thông tin sức khỏe và lịch khám\n\n` +
+        personalInfo +
+        `Với câu hỏi "${question}", tôi không thể trả lời vì nó nằm ngoài phạm vi chuyên môn của tôi. ` +
+        `Vui lòng hỏi tôi về các vấn đề liên quan đến sức khỏe nhé!`;
+    }
+
+    // Gọi OpenAI API
+    const chatCompletion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: systemMessage },
+        { role: "user", content: question },
+      ],
+      temperature: 0.7,
+      max_tokens: 1000,
+    });
+
+    const answer = chatCompletion.choices[0].message.content;
+
+    // Tạo file âm thanh
+    const speechResponse = await openai.audio.speech.create({
+      model: "tts-1",
+      input: answer,
+      voice: "nova",
+      response_format: "mp3",
+      speed: 1.1,
+    });
+
+    const filename = `${uuidv4()}.mp3`;
+    const audioFilePath = path.resolve(__dirname, "../voices", filename);
+
+    const buffer = Buffer.from(await speechResponse.arrayBuffer());
+    fs.writeFileSync(audioFilePath, buffer);
+
+    // Lưu lịch sử hội thoại
+    if (userId) {
+      await VoiceMessage.create({
+        userId,
+        role: "user",
+        content: question,
+      });
+
+      await VoiceMessage.create({
+        userId,
+        role: "assistant",
+        content: answer,
+        voiceUrl: `/voices/${filename}`,
+      });
+    }
+
+    return res.json({
+      success: true,
+      answer,
+      file: `/voices/${filename}`,
+      isHealthRelated: isHealthQuestion,
+      hasPersonalInfo: !!personalSummary,
+    });
+  } catch (error) {
+    console.error("❌ Error in chatWithVoice:", error);
+    return res.status(500).json({
+      error: "Không thể xử lý yêu cầu.",
+      message: error?.message || "Lỗi không xác định",
+    });
+  }
+}
+
+export async function getVoiceMessages(req, res) {
+  const { userId } = req.params;
+  if (!userId) {
+    return res.status(400).json({ error: "Thiếu userId trong query." });
+  }
+  try {
+    let messages = await VoiceMessage.find({ userId })
+      .sort({ createdAt: -1 }) // mới nhất trước
+      .limit(50); // chỉ lấy 50 cái
+
+    messages = messages.reverse(); // để client render từ cũ → mới
+
+    return res.status(200).json({ success: true, messages });
+  } catch (error) {
+    console.error("❌ Lỗi khi lấy voice messages:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Lỗi máy chủ.",
+      message: error?.message || "Unknown error",
+    });
   }
 }
 

@@ -5,6 +5,7 @@ import Appointment from "../models/appointment.model.js";
 import { ApiError } from "../utils/ApiResponse.js";
 import BookingService from "../models/bookingService.model.js";
 import { EXPIRE_MINUTES } from "../config/appointment.config.js";
+import { notificationService } from "./notifycation.service.js";
 
 class BookingAppointmentService {
   async getDoctorAllSlots(doctorId, date) {
@@ -197,6 +198,13 @@ class BookingAppointmentService {
         totalFee = doctor.consultationFee || 200000; // Phí mặc định
       }
 
+      notificationService.createNotification({
+        userId: doctor.userId,
+        title: "Thông báo đặt khám!",
+        message: `Bạn có một lịch khám mới với bệnh nhân ${patientInfo.fullName}, sdt: ${patientInfo.phone} vui lòng xác nhận lịch khám`,
+        type: "appointment",
+      });
+
       // Tạo appointment
       const appointment = new Appointment({
         userId,
@@ -246,6 +254,14 @@ class BookingAppointmentService {
         {
           path: "userId",
           select: "fullName phone email",
+        },
+        {
+          path: "doctorId",
+          select: "name specialty infoClinic rate avatar",
+          populate: {
+            path: "infoClinic.address.wardId infoClinic.address.districtId infoClinic.address.provinceId",
+            select: "name",
+          },
         },
       ]);
 

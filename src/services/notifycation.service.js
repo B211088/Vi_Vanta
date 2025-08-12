@@ -1,7 +1,5 @@
-// services/notificationService.js
-
-import { ApiError } from "../middlewares/booking.validation";
-import Notification from "../models/notification.model";
+import Notification from "../models/notification.model.js";
+import { ApiError } from "../utils/ApiResponse.js";
 
 class NotificationService {
   // Tạo notification mới
@@ -68,7 +66,6 @@ class NotificationService {
   // Đánh dấu tất cả đã đọc
   async markAllAsRead(userId) {
     await Notification.updateMany({ userId, isRead: false }, { isRead: true });
-
     return true;
   }
 
