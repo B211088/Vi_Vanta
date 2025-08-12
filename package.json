@@ -7,9 +7,9 @@
   "type": "module",
   "main": "server.js",
   "scripts": {
-    "start": "nodemon src/server.mjs",
+    "start": "node --experimental-specifier-resolution=node src/server.mjs",
     "prod": "node src/server.mjs",
-    "dev": "nodemon server.js",
+    "dev": "nodemon src/server.mjs",
     "chroma": "chroma run --host localhost --port 8000",
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepare": "node src/scripts/setup-env.js",
