@@ -14,7 +14,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepare": "node src/scripts/setup-env.js",
     "build": "node ./src/server.mjs",
-     "postinstall": "patch-package"
+    "postinstall": "patch-package"
   },
   "devDependencies": {
     "body-parser": "^2.2.0",
@@ -58,6 +58,7 @@
     "path": "^0.12.7",
     "pdf-parse": "^1.1.1",
     "redis": "^5.0.1",
+    "specifier-resolution-node": "^1.1.4",
     "uuid": "^11.1.0",
     "vnpay": "^2.4.0",
     "xss-clean": "^0.1.4"
